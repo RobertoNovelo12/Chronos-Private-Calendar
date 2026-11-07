@@ -1,0 +1,21 @@
+# Dependencias y compilación
+node_modules/
+dist/
+target/
+src-tauri/gen/
+
+# Datos locales: nunca deben subirse al repositorio
+*.db
+*.db-wal
+*.db-shm
+keystore.json
+*.chronosbak
+
+# Editor / SO
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.log
+*.tsbuildinfo

@@ -1,0 +1,29 @@
+[workspace]
+resolver = "2"
+members = ["crates/chronos-core", "src-tauri"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+rust-version = "1.80"
+
+# Argon2 y los primitivos criptográficos son muy lentos sin optimizar.
+# Se optimizan incluso en modo debug para que el desbloqueo y las pruebas sean usables.
+[profile.dev.package.argon2]
+opt-level = 3
+[profile.dev.package.blake2]
+opt-level = 3
+[profile.dev.package.chacha20poly1305]
+opt-level = 3
+[profile.dev.package.chacha20]
+opt-level = 3
+[profile.dev.package.libsqlite3-sys]
+opt-level = 3
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "unwind"
+strip = true

@@ -1,0 +1,79 @@
+# Seguridad y privacidad
+
+## Qué protege Chronos
+
+| Amenaza | Protección | Estado |
+|---|---|---|
+| Robo del disco o del portátil apagado/bloqueado | Base de datos cifrada con SQLCipher (AES-256 + HMAC por página); clave derivada de la contraseña | ✅ Implementado |
+| Copia de los archivos de datos por otra persona o programa | Sin la contraseña, `chronos.db`, `-wal` y `keystore.json` no revelan contenido | ✅ |
+| Filtración de copias de seguridad (USB, nube del usuario) | Cada `.chronosbak` va cifrado y autenticado con XChaCha20-Poly1305 | ✅ |
+| Manipulación de una copia | Etiqueta Poly1305 sobre contenido + cabecera; SHA-256 del archivo | ✅ |
+| Envío de datos a terceros | Sin código de red; CSP del WebView bloquea conexiones; sin telemetría | ✅ |
+| Alguien frente al equipo con la app abierta | Bloqueo manual (botón / Ctrl+L) | ✅ · bloqueo por inactividad: Fase 5 |
+| Fuerza bruta de la contraseña | Argon2id (64 MiB, t=3) + retardo creciente tras 3 fallos | ✅ |
+
+## Qué NO protege (limitaciones honestas)
+
+* **Malware con privilegios en el equipo mientras la app está desbloqueada.** Puede leer la memoria del proceso, capturar el teclado o la pantalla. Ninguna aplicación de escritorio puede impedirlo.
+* **Memoria no siempre borrada.** Las claves (`SecretKey`) y las contraseñas recibidas por los comandos se borran con `zeroize`. Pero las cadenas de texto que viajan por el WebView (JavaScript no permite borrar memoria), las páginas en caché de SQLite mientras está abierta y la instantánea JSON intermedia al crear copias pueden permanecer en memoria hasta que el sistema la reutilice. El sistema operativo podría escribirlas en el archivo de paginación/hibernación.
+* **Contraseña olvidada = datos irrecuperables.** No hay servidor ni "puerta trasera". La única vía es una copia de seguridad cuya contraseña se recuerde.
+* **Metadatos del sistema de archivos.** Tamaño y fechas de modificación de los archivos son visibles.
+* **Contraseña débil.** Argon2id encarece cada intento, pero no compensa una contraseña trivial. Se exige un mínimo de 8 caracteres; se recomienda una frase larga.
+
+## Esquema criptográfico
+
+Todo con bibliotecas auditadas de **RustCrypto** y **SQLCipher**. No hay algoritmos ni protocolos propios.
+
+```
+contraseña ──Argon2id(sal 16 B, m=64 MiB, t=3, p=1)──▶ clave maestra (32 B)
+clave maestra ──HKDF-SHA256 info="chronos/v1/key-wrap"──▶ KEK
+clave maestra ──HKDF-SHA256 info="chronos/v1/backup"────▶ clave de copias
+
+DEK = 32 B aleatorios (CSPRNG del SO), generada UNA vez
+wrapped_key = XChaCha20-Poly1305(KEK, nonce 24 B aleatorio,
+                                 AAD = "chronos-keystore/v1|" + parámetros KDF, DEK)
+SQLCipher: PRAGMA key = "x'<DEK en hex>'"   (clave en bruto: sin PBKDF2 adicional)
+```
+
+* **Por qué una DEK envuelta:** cambiar la contraseña solo reescribe `keystore.json` (no se recifra la base de datos) y la DEK nunca depende directamente de la contraseña.
+* **Por qué HKDF:** una única ejecución de Argon2id (la parte costosa) produce claves independientes para cada propósito.
+* **Parámetros KDF autenticados:** forman parte del AAD; si alguien los altera en `keystore.json`, el desenvolvimiento falla.
+* **Parámetros acotados al leer:** memoria 8 MiB–2 GiB, t 1–20, p 1–16, para que un archivo manipulado no agote los recursos del equipo.
+* **Nonces:** 192 bits aleatorios por cifrado; la probabilidad de colisión es despreciable.
+* **Comprobación de SQLCipher:** al abrir se ejecuta `PRAGMA cipher_version`. Si la biblioteca enlazada no fuese SQLCipher, la app **se niega** a abrir la base de datos en lugar de crearla sin cifrar.
+
+## Configuración de SQLite
+
+| PRAGMA | Valor | Motivo |
+|---|---|---|
+| `foreign_keys` | ON | Integridad referencial |
+| `journal_mode` | WAL | Escrituras atómicas; el WAL también está cifrado |
+| `temp_store` | MEMORY | Las tablas temporales nunca se escriben en claro al disco |
+| `secure_delete` | ON | Las páginas liberadas se sobrescriben |
+| `synchronous` | NORMAL | Equilibrio durabilidad/rendimiento con WAL |
+
+## Copias de seguridad
+
+* Cifradas **siempre**; no existe opción para crearlas sin cifrar.
+* Por defecto usan la contraseña de la aplicación (vía la clave de copias derivada al desbloquear), lo que permite copias automáticas sin volver a pedirla.
+* Opción de proteger una copia manual con otra contraseña (`BackupKey::from_password`, nueva sal).
+* Una copia queda ligada a la contraseña vigente **cuando se creó**. Tras cambiar la contraseña, las copias anteriores siguen necesitando la antigua (la interfaz lo advertirá).
+* Formato y procedimiento de restauración: [BACKUP_FORMAT.md](BACKUP_FORMAT.md).
+
+## Privacidad: garantías de funcionamiento
+
+* **Sin red en el backend:** ni `chronos-core` ni `src-tauri` dependen de clientes HTTP. Verificable con `cargo tree | grep -Ei "reqwest|hyper|ureq|surf"` (sin resultados).
+* **CSP de producción** (`tauri.conf.json`): `default-src 'self'`, `connect-src ipc: http://ipc.localhost` (solo el puente interno de Tauri), sin `frame-src`, `object-src`, ni formularios hacia fuera.
+* **Sin recursos remotos:** fuentes e iconos van dentro del binario.
+* **Capacidades mínimas de Tauri:** solo `core:default`; el frontend no tiene acceso a shell, sistema de archivos, HTTP ni actualizador.
+* **Sin telemetría, analítica, informes de errores remotos ni publicidad.**
+* **Prueba realizada (Fase 2):** con la aplicación en ejecución en Linux, `ss -tunp` no mostró ninguna conexión TCP/UDP del proceso; solo sockets Unix locales entre los procesos de WebKit.
+* **Logs:** solo locales (salida estándar; nivel con `CHRONOS_LOG`). Registran códigos de error, identificadores y recuentos, nunca títulos, descripciones, ubicaciones, contraseñas ni claves.
+
+### WebView en Windows
+
+Tauri usa Microsoft Edge WebView2. El *runtime* de WebView2 lo actualiza Windows/Edge, no Chronos. Chronos no carga contenido remoto y la CSP lo impide; aun así, el comportamiento de servicios del propio WebView2 depende de Microsoft. Si se desea máximo aislamiento, puede bloquearse la aplicación en el cortafuegos de Windows sin pérdida de funcionalidad.
+
+## Eliminación permanente (Fase 5)
+
+Se ofrecerá "Eliminar todos mis datos": cerrar la base de datos y borrar `chronos.db*`, `keystore.json` y, opcionalmente, las copias. Al estar cifrada, destruir `keystore.json` deja la base de datos ilegible aunque el sistema de archivos conserve bloques antiguos (borrado criptográfico). En SSD no puede garantizarse la sobrescritura física de bloques.

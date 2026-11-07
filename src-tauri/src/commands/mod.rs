@@ -1,0 +1,6 @@
+//! Comandos de Tauri: la única vía de comunicación entre React y Rust.
+//! El frontend nunca accede a la base de datos directamente.
+
+pub mod backup;
+pub mod calendars;
+pub mod vault;

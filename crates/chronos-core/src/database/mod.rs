@@ -1,0 +1,135 @@
+//! Apertura de la base de datos SQLite cifrada con SQLCipher.
+
+pub mod migrations;
+
+use crate::crypto::{to_hex_zeroizing, SecretKey};
+use crate::error::{CoreError, Result};
+use rusqlite::{Connection, ErrorCode, OpenFlags};
+use std::path::Path;
+use std::time::Duration;
+use zeroize::Zeroizing;
+
+/// Abre (o crea) la base de datos cifrada con la clave en bruto `key`
+/// y la deja configurada y migrada.
+///
+/// La función se niega a continuar si la biblioteca SQLite enlazada no es
+/// SQLCipher: así nunca se crea por error una base de datos sin cifrar.
+pub fn open_encrypted(path: &Path, key: &SecretKey) -> Result<Connection> {
+    let flags = OpenFlags::SQLITE_OPEN_READ_WRITE
+        | OpenFlags::SQLITE_OPEN_CREATE
+        | OpenFlags::SQLITE_OPEN_NO_MUTEX
+        | OpenFlags::SQLITE_OPEN_URI;
+    let mut conn = Connection::open_with_flags(path, flags)?;
+    apply_key(&conn, key)?;
+    ensure_sqlcipher(&conn)?;
+    verify_key(&conn)?;
+    configure(&conn)?;
+    migrations::migrate(&mut conn)?;
+    Ok(conn)
+}
+
+/// `PRAGMA key` con clave en bruto (`x'..'`): SQLCipher no aplica su propio
+/// PBKDF2 porque la clave ya proviene de Argon2id + envoltura.
+fn apply_key(conn: &Connection, key: &SecretKey) -> Result<()> {
+    let hex = to_hex_zeroizing(key.as_ref());
+    let mut stmt = Zeroizing::new(String::with_capacity(hex.len() + 24));
+    stmt.push_str("PRAGMA key = \"x'");
+    stmt.push_str(&hex);
+    stmt.push_str("'\";");
+    conn.execute_batch(&stmt)?;
+    Ok(())
+}
+
+fn ensure_sqlcipher(conn: &Connection) -> Result<()> {
+    let version: Option<String> = conn
+        .query_row("PRAGMA cipher_version", [], |r| r.get(0))
+        .ok();
+    match version {
+        Some(v) if !v.is_empty() => Ok(()),
+        _ => Err(CoreError::Keystore(
+            "la biblioteca SQLite no incluye SQLCipher; se aborta para no guardar datos sin cifrar"
+                .into(),
+        )),
+    }
+}
+
+/// La primera lectura real falla con SQLITE_NOTADB si la clave no coincide.
+fn verify_key(conn: &Connection) -> Result<()> {
+    match conn.query_row("SELECT count(*) FROM sqlite_master", [], |r| {
+        r.get::<_, i64>(0)
+    }) {
+        Ok(_) => Ok(()),
+        Err(rusqlite::Error::SqliteFailure(e, _)) if e.code == ErrorCode::NotADatabase => {
+            Err(CoreError::InvalidPassword)
+        }
+        Err(e) => Err(e.into()),
+    }
+}
+
+fn configure(conn: &Connection) -> Result<()> {
+    conn.busy_timeout(Duration::from_secs(5))?;
+    // Integridad referencial.
+    conn.pragma_update(None, "foreign_keys", "ON")?;
+    // Las tablas temporales viven en memoria: nunca se escriben en claro al disco.
+    conn.pragma_update(None, "temp_store", "MEMORY")?;
+    // WAL: escrituras atómicas y lecturas concurrentes. El WAL también está cifrado.
+    let _mode: String = conn.query_row("PRAGMA journal_mode = WAL", [], |r| r.get(0))?;
+    conn.pragma_update(None, "synchronous", "NORMAL")?;
+    // Al borrar, las páginas liberadas se sobrescriben con ceros.
+    conn.pragma_update(None, "secure_delete", "ON")?;
+    Ok(())
+}
+
+/// Instante actual en milisegundos UTC.
+pub fn now_ms() -> i64 {
+    chrono::Utc::now().timestamp_millis()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::crypto::random;
+
+    #[test]
+    fn encrypted_database_rejects_wrong_key_and_is_not_plaintext() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("t.db");
+        let key = random::secret_key().unwrap();
+        {
+            let conn = open_encrypted(&path, &key).unwrap();
+            conn.execute(
+                "INSERT INTO settings (key, value, updated_at) VALUES ('marcador', '\"SECRETO-VISIBLE\"', 0)",
+                [],
+            )
+            .unwrap();
+            // Fuerza el volcado del WAL al archivo principal.
+            conn.query_row("PRAGMA wal_checkpoint(TRUNCATE)", [], |_| Ok(()))
+                .unwrap();
+        }
+        let raw = std::fs::read(&path).unwrap();
+        assert!(
+            !raw.starts_with(b"SQLite format 3"),
+            "la cabecera no debe ser la de SQLite en claro"
+        );
+        assert!(
+            !raw.windows(15).any(|w| w == b"SECRETO-VISIBLE"),
+            "los datos no deben aparecer en claro"
+        );
+
+        let wrong = random::secret_key().unwrap();
+        assert!(matches!(
+            open_encrypted(&path, &wrong),
+            Err(CoreError::InvalidPassword)
+        ));
+
+        let conn = open_encrypted(&path, &key).unwrap();
+        let v: String = conn
+            .query_row(
+                "SELECT value FROM settings WHERE key = 'marcador'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(v, "\"SECRETO-VISIBLE\"");
+    }
+}

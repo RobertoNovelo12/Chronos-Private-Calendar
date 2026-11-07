@@ -1,0 +1,27 @@
+[package]
+name = "chronos-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Núcleo local y cifrado de Chronos Private Calendar"
+
+[dependencies]
+argon2 = { version = "0.5", features = ["zeroize"] }
+base64 = "0.22"
+chacha20poly1305 = "0.10"
+chrono = { version = "0.4.45", features = ["serde"] }
+chrono-tz = "0.10.4"
+getrandom = "0.3"
+hkdf = "0.12"
+rusqlite = { version = "0.41.1", features = ["bundled-sqlcipher-vendored-openssl"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+sha2 = "0.10"
+thiserror = "2.0.21"
+tracing = "0.1.44"
+uuid = { version = "1.29.1", features = ["v4", "serde"] }
+zeroize = "1.9.1"
+
+[dev-dependencies]
+tempfile = "3.27.0"
