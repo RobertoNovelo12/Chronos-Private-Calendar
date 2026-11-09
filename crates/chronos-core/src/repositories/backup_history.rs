@@ -51,3 +51,25 @@ pub fn list(conn: &Connection, limit: u32) -> Result<Vec<BackupRecord>> {
     let rows = stmt.query_map([limit], from_row)?;
     Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
 }
+
+/// Copias correctas de un tipo, de la más reciente a la más antigua.
+pub fn list_kind(conn: &Connection, kind: BackupKind) -> Result<Vec<BackupRecord>> {
+    let mut stmt = conn.prepare_cached(
+        "SELECT id, file_name, file_path, kind, status, format_version, schema_version, size_bytes, sha256, error_code, created_at
+         FROM backup_history WHERE kind = ?1 AND status = 'ok' ORDER BY created_at DESC",
+    )?;
+    let rows = stmt.query_map([kind.as_str()], from_row)?;
+    Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
+}
+
+/// Todas las rutas registradas (para "Eliminar todos mis datos").
+pub fn all_paths(conn: &Connection) -> Result<Vec<String>> {
+    let mut stmt = conn.prepare("SELECT DISTINCT file_path FROM backup_history")?;
+    let rows = stmt.query_map([], |r| r.get(0))?;
+    Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
+}
+
+pub fn delete(conn: &Connection, id: &str) -> Result<()> {
+    conn.execute("DELETE FROM backup_history WHERE id = ?1", [id])?;
+    Ok(())
+}

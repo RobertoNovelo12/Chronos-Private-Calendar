@@ -313,3 +313,59 @@ fn local_settings_are_not_exported_or_overwritten() {
     assert_eq!(get("theme"), "\"dark\"");
     assert_eq!(get("local.backup_dir"), "\"D:/b\"");
 }
+
+#[test]
+fn automatic_backups_rotate_and_pre_update_copy() {
+    use chronos_core::repositories::settings;
+    let dir = tempfile::tempdir().unwrap();
+    let mut v = new_vault(dir.path());
+    v.setup(PW).unwrap();
+    let conn = v.session().unwrap().conn();
+    settings::set(conn, settings::BACKUPS_KEEP, &2.into()).unwrap();
+
+    // Por defecto: diaria. La primera vez siempre toca.
+    let day = 86_400_000i64;
+    let now = chronos_core::database::now_ms();
+    assert!(v.auto_backup_if_due(now).unwrap().is_some());
+    assert!(v.auto_backup_if_due(now + 1000).unwrap().is_none(), "no repite en el mismo día");
+    // El historial usa la hora real; se simulan días posteriores.
+    assert!(v.auto_backup_if_due(now + day + 5000).unwrap().is_some());
+    assert!(v.auto_backup_if_due(now + 3 * day).unwrap().is_some());
+    let autos = backup::history(conn, 50).unwrap().into_iter().filter(|r| r.kind == BackupKind::Automatic).collect::<Vec<_>>();
+    assert_eq!(autos.len(), 2, "solo se conservan 2");
+    let files = std::fs::read_dir(v.paths().default_backup_dir()).unwrap().count();
+    assert_eq!(files, 2);
+
+    settings::set(conn, settings::BACKUPS_AUTO, &"off".into()).unwrap();
+    assert!(v.auto_backup_if_due(now + 30 * day).unwrap().is_none());
+
+    // Al abrir con otra versión registrada se crea una copia previa a actualizar.
+    settings::set(conn, settings::LOCAL_APP_VERSION, &"0.0.1".into()).unwrap();
+    v.lock();
+    v.unlock(PW).unwrap();
+    let h = backup::history(v.session().unwrap().conn(), 50).unwrap();
+    assert!(h.iter().any(|r| r.kind == BackupKind::PreUpdate));
+    v.lock();
+    v.unlock(PW).unwrap();
+    let h2 = backup::history(v.session().unwrap().conn(), 50).unwrap();
+    assert_eq!(h.len(), h2.len(), "no se repite con la misma versión");
+}
+
+#[test]
+fn destroy_removes_everything() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut v = new_vault(dir.path());
+    v.setup(PW).unwrap();
+    v.create_backup(None, BackupKind::Manual).unwrap();
+    assert!(matches!(v.destroy("incorrecta", true), Err(CoreError::InvalidPassword)));
+    assert!(v.status().unlocked, "con contraseña errónea no se toca nada");
+    let r = v.destroy(PW, true).unwrap();
+    assert_eq!(r.backups_removed, 1);
+    let st = v.status();
+    assert!(!st.initialized && !st.unlocked);
+    let data = dir.path().join("data");
+    let left: Vec<_> = std::fs::read_dir(&data).unwrap().flatten().map(|e| e.file_name()).collect();
+    assert!(left.is_empty(), "quedaron archivos: {left:?}");
+    // Se puede empezar de cero.
+    v.setup(PW).unwrap();
+}

@@ -35,4 +35,17 @@ impl AppState {
         .await
         .map_err(|_| CommandError::internal())?
     }
+
+    /// Versión síncrona para hilos propios (programador de recordatorios).
+    /// No usa `try_lock`: espera su turno como cualquier comando.
+    pub fn with_vault_blocking<T>(
+        &self,
+        f: impl FnOnce(&mut Vault) -> CoreResult<T>,
+    ) -> CoreResult<T> {
+        let mut guard = self
+            .vault
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        f(&mut guard)
+    }
 }

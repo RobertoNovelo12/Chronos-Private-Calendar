@@ -42,7 +42,7 @@ export function ConfirmDialog({
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="confirm-title"
-        className="w-[380px] rounded-xl border border-border bg-background p-5 shadow-2xl"
+        className="w-[380px] rounded-xl border border-border-strong bg-popover p-5 shadow-2xl"
         onMouseDown={(e) => e.stopPropagation()}
       >
         <h2 id="confirm-title" className="text-[15px] font-semibold">

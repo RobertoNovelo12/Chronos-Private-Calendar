@@ -5,9 +5,21 @@ import { invoke } from "@tauri-apps/api/core";
 import type {
   BackupInfo,
   BackupRecord,
+  BackupSettings,
   Calendar,
+  DestroyReport,
+  ExportKind,
+  ExportOptions,
+  ExportReport,
+  ImportPreview,
+  ImportReport,
+  ImportTarget,
+  CalendarEvent,
   CalendarPatch,
+  EventPatch,
+  NewEvent,
   CommandError,
+  EditScope,
   NewCalendar,
   RestoreReport,
   VaultStatus,
@@ -52,6 +64,20 @@ export const api = {
     setDefault: (id: string) => call<Calendar>("calendars_set_default", { id }),
     reorder: (ids: string[]) => call<Calendar[]>("calendars_reorder", { ids }),
   },
+  events: {
+    listRange: (from: number, to: number) => call<CalendarEvent[]>("events_list_range", { from, to }),
+    create: (input: NewEvent) => call<CalendarEvent>("events_create", { input }),
+    update: (id: string, patch: EventPatch, scope?: EditScope) =>
+      call<CalendarEvent>("events_update", { id, patch, scope: scope ?? null }),
+    remove: (id: string, scope?: EditScope) => call<CalendarEvent>("events_delete", { id, scope: scope ?? null }),
+    restore: (event: CalendarEvent) => call<CalendarEvent>("events_restore", { event }),
+    duplicate: (id: string) => call<CalendarEvent>("events_duplicate", { id }),
+    search: (query: string) => call<CalendarEvent[]>("events_search", { query }),
+  },
+  settings: {
+    get: <T>(key: string) => call<T | null>("settings_get", { key }),
+    set: (key: string, value: unknown) => call<void>("settings_set", { key, value }),
+  },
   backup: {
     create: () => call<BackupRecord>("backup_create"),
     history: () => call<BackupRecord[]>("backup_history"),
@@ -59,6 +85,24 @@ export const api = {
     verify: (path: string, password: string) => call<BackupInfo>("backup_verify", { path, password }),
     restore: (path: string, password: string, confirmOverwrite: boolean) =>
       call<RestoreReport>("backup_restore", { path, password, confirmOverwrite }),
+    /** Copia manual. `pickDir` pregunta la carpeta; `password` usa otra contraseña. */
+    createIn: (pickDir: boolean, password?: string) =>
+      call<BackupRecord | null>("backup_create_in", { pickDir, password: password ?? null }),
+    settings: () => call<BackupSettings>("backup_settings_get"),
+    setSettings: (s: { auto?: BackupSettings["auto"]; keep?: number }) =>
+      call<BackupSettings>("backup_settings_set", { auto: s.auto ?? null, keep: s.keep ?? null }),
+    chooseDir: (reset: boolean) => call<BackupSettings>("backup_choose_dir", { reset }),
+    pickFile: () => call<string | null>("backup_pick_file"),
+  },
+  data: {
+    /** Abre el diálogo de guardar; `null` si se cancela. */
+    export: (kind: ExportKind, options: ExportOptions, suggestedName: string) =>
+      call<ExportReport | null>("export_data", { kind, options, suggestedName }),
+    pickImport: (defaultTz: string) => call<ImportPreview | null>("import_pick", { defaultTz }),
+    applyImport: (path: string, target: ImportTarget, defaultTz: string) =>
+      call<ImportReport>("import_apply", { path, target, defaultTz }),
+    destroy: (password: string, confirmation: string, removeBackups: boolean) =>
+      call<DestroyReport>("vault_destroy", { password, confirmation, removeBackups }),
   },
 };
 

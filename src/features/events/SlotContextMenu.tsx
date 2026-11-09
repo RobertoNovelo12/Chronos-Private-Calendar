@@ -1,0 +1,46 @@
+import { addDays } from "date-fns";
+import { ClipboardPaste, Plus } from "lucide-react";
+import { ContextMenuItem, ContextMenuShell } from "@/components/ui/context-menu";
+import { MINUTE_MS, snap } from "@/lib/dates";
+import { usePrefsStore } from "@/stores/prefsStore";
+import { useUiStore } from "@/stores/uiStore";
+import { createEventAt } from "./actions";
+import { pasteEvent, useClipboard } from "./clipboard";
+
+const MOD = typeof navigator !== "undefined" && /Mac/i.test(navigator.platform) ? "⌘" : "Ctrl+";
+
+/** Menú del clic derecho sobre un hueco vacío: crear o pegar ahí. */
+export function SlotContextMenu() {
+  const menu = useUiStore((s) => s.slotMenu);
+  const copied = useClipboard((s) => s.copied);
+  if (!menu) return null;
+  const close = () => useUiStore.getState().openSlotMenu(null);
+
+  function create() {
+    if (!menu) return;
+    close();
+    if (menu.allDay) {
+      const day = new Date(menu.time);
+      void createEventAt(day, addDays(day, 1), true);
+    } else {
+      const start = snap(new Date(menu.time), "floor");
+      void createEventAt(start, new Date(start.getTime() + usePrefsStore.getState().defaultDurationMin * MINUTE_MS), false);
+    }
+  }
+
+  return (
+    <ContextMenuShell key={`${menu.x}-${menu.y}`} x={menu.x} y={menu.y} onClose={close}>
+      <ContextMenuItem icon={<Plus />} label="Crear evento" shortcut="C" onSelect={create} />
+      <ContextMenuItem
+        icon={<ClipboardPaste />}
+        label="Pegar evento"
+        shortcut={`${MOD}V`}
+        disabled={!copied}
+        onSelect={() => {
+          close();
+          void pasteEvent({ time: menu.time, allDay: menu.allDay });
+        }}
+      />
+    </ContextMenuShell>
+  );
+}

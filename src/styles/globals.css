@@ -5,51 +5,72 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Tokens de diseño. Paleta neutra y sobria inspirada en aplicaciones de
- * productividad: superficies casi blancas/negras, bordes sutiles y un único
- * acento azul. Los colores de cada calendario los elige el usuario.
+ * Tokens de diseño. Estética de aplicación de productividad minimalista:
+ * superficies neutras, líneas de rejilla casi invisibles, rojo para "hoy" y
+ * la hora actual, azul como acento de interacción.
  */
 :root {
   --background: #ffffff;
-  --foreground: #1f1f1f;
-  --surface: #f7f7f5;
-  --surface-hover: #efefed;
-  --muted: #73726e;
-  --border: #e9e9e7;
-  --border-strong: #dcdcd9;
-  --accent: #2f80ed;
+  --foreground: #2f2f2f;
+  --strong: #1a1a1a;
+  --surface: #f9f9f8;
+  --surface-hover: #efefee;
+  --control: #f0f0ef;
+  --muted: #8e8e8b;
+  --faint: #b9b9b6;
+  --border: #ececeb;
+  --grid: #f0f0ef;
+  --border-strong: #dededc;
+  --accent: #2383e2;
   --accent-foreground: #ffffff;
-  --danger: #d93f3f;
-  --ring: rgba(47, 128, 237, 0.35);
+  --today: #eb5757;
+  --danger: #e03e3e;
+  --ring: rgba(35, 131, 226, 0.35);
+  --popover: #ffffff;
+  --shade: rgba(0, 0, 0, 0.018);
 }
 
 .dark {
   --background: #191919;
-  --foreground: #e6e6e4;
+  --foreground: #d4d4d4;
+  --strong: #f1f1f1;
   --surface: #202020;
-  --surface-hover: #2a2a2a;
-  --muted: #9b9a97;
-  --border: #2c2c2c;
-  --border-strong: #383838;
-  --accent: #529cf5;
-  --accent-foreground: #0d0d0d;
-  --danger: #ef6b6b;
-  --ring: rgba(82, 156, 245, 0.4);
+  --surface-hover: #2c2c2c;
+  --control: #2b2b2b;
+  --muted: #8a8a8a;
+  --faint: #5a5a5a;
+  --border: #2a2a2a;
+  --grid: #242424;
+  --border-strong: #363636;
+  --accent: #2383e2;
+  --accent-foreground: #ffffff;
+  --today: #eb5757;
+  --danger: #eb5757;
+  --ring: rgba(35, 131, 226, 0.45);
+  --popover: #252525;
+  --shade: rgba(255, 255, 255, 0.012);
 }
 
 @theme inline {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-strong: var(--strong);
   --color-surface: var(--surface);
   --color-surface-hover: var(--surface-hover);
+  --color-control: var(--control);
   --color-muted: var(--muted);
+  --color-faint: var(--faint);
   --color-border: var(--border);
+  --color-grid: var(--grid);
   --color-border-strong: var(--border-strong);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-today: var(--today);
   --color-danger: var(--danger);
   --color-ring: var(--ring);
+  --color-popover: var(--popover);
+  --color-shade: var(--shade);
 }
 
 @layer base {
@@ -65,7 +86,8 @@
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: 13px;
+    letter-spacing: -0.003em;
     -webkit-font-smoothing: antialiased;
     font-feature-settings: "cv11", "ss01";
     user-select: none;
@@ -77,5 +99,61 @@
   }
   ::selection {
     background: var(--ring);
+  }
+  /* Barras de desplazamiento discretas */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  select {
+    background-color: transparent;
+  }
+  select option {
+    background: var(--popover);
+    color: var(--foreground);
+  }
+}
+
+@layer components {
+  /* Botón de opción coherente en claro y oscuro */
+  .radio {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    border: 1.5px solid var(--faint);
+    background: transparent;
+    transition: border 0.1s;
+  }
+  .radio:checked {
+    border: 4.5px solid var(--accent);
+  }
+  .radio:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  .kbd {
+    display: inline-flex;
+    min-width: 18px;
+    height: 18px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    background: var(--control);
+    padding: 0 4px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--foreground);
   }
 }

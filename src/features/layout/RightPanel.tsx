@@ -1,0 +1,64 @@
+import { PanelRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { EventPanel } from "@/features/events/EventPanel";
+import { SearchBox } from "@/features/search/SearchBox";
+import { useSelectedEvent } from "@/stores/eventStore";
+import { usePrefsStore } from "@/stores/prefsStore";
+import { useUiStore } from "@/stores/uiStore";
+
+const SHORTCUTS: { label: string; keys: string[] }[] = [
+  { label: "Buscar eventos", keys: ["Ctrl", "K"] },
+  { label: "Nuevo evento", keys: ["C"] },
+  { label: "Ir a hoy", keys: ["T"] },
+  { label: "Mostrar/ocultar barra lateral", keys: ["`"] },
+  { label: "Deshacer", keys: ["Ctrl", "Z"] },
+  { label: "Bloquear Chronos", keys: ["Ctrl", "L"] },
+];
+
+/** Panel derecho: buscador + detalles del evento o atajos útiles. */
+export function RightPanel() {
+  const selectedId = useUiStore((s) => s.selectedEventId);
+  const selected = useSelectedEvent(selectedId);
+  const setShortcutsOpen = useUiStore((s) => s.setShortcutsOpen);
+  const setPrefs = usePrefsStore((s) => s.set);
+
+  return (
+    <aside className="flex w-[290px] shrink-0 flex-col bg-surface">
+      <div className="flex h-11 shrink-0 items-center gap-1 pl-1 pr-2.5">
+        <div className="min-w-0 flex-1">
+          <SearchBox />
+        </div>
+        <Button variant="ghost" size="icon" onClick={() => setPrefs({ rightPanelOpen: false })} aria-label="Ocultar panel" title="Ocultar panel">
+          <PanelRight />
+        </Button>
+      </div>
+      {selectedId && selected ? (
+        <EventPanel />
+      ) : (
+        <div className="px-4 pt-6">
+          <h2 className="pb-2 text-[13px] font-semibold text-strong">Atajos útiles</h2>
+          <ul className="space-y-1">
+            {SHORTCUTS.map((s) => (
+              <li key={s.label} className="flex h-6 items-center justify-between text-[12px] text-muted">
+                <span>{s.label}</span>
+                <span className="flex gap-1">
+                  {s.keys.map((k) => (
+                    <kbd key={k} className="kbd">
+                      {k}
+                    </kbd>
+                  ))}
+                </span>
+              </li>
+            ))}
+            <li>
+              <button className="flex h-6 w-full items-center justify-between text-[12px] text-muted hover:text-strong" onClick={() => setShortcutsOpen(true)}>
+                <span>Todos los atajos de teclado</span>
+                <kbd className="kbd">?</kbd>
+              </button>
+            </li>
+          </ul>
+        </div>
+      )}
+    </aside>
+  );
+}

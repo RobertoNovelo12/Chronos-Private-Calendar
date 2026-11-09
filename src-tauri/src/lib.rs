@@ -1,8 +1,10 @@
 //! Capa de escritorio de Chronos: inicializa Tauri, resuelve la carpeta de
 //! datos y expone los comandos. Toda la lógica vive en `chronos-core`.
 
+mod backups;
 mod commands;
 mod errors;
+mod notifier;
 mod state;
 
 use chronos_core::crypto::kdf::KdfParams;
@@ -27,13 +29,18 @@ pub fn run() {
     init_logging();
 
     let result = tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             // Carpeta LOCAL (no "roaming"): en Windows, %LOCALAPPDATA% no se
             // sincroniza con perfiles móviles del dominio.
             let data_dir = app.path().app_local_data_dir()?;
             tracing::info!("carpeta de datos lista");
             let vault = Vault::new(VaultPaths::new(data_dir), KdfParams::RECOMMENDED);
-            app.manage(AppState::new(vault));
+            let state = AppState::new(vault);
+            notifier::spawn(app.handle().clone(), state.clone());
+            backups::spawn(state.clone());
+            app.manage(state);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -48,11 +55,29 @@ pub fn run() {
             commands::calendars::calendars_delete,
             commands::calendars::calendars_set_default,
             commands::calendars::calendars_reorder,
+            commands::events::events_list_range,
+            commands::events::events_create,
+            commands::events::events_update,
+            commands::events::events_delete,
+            commands::events::events_restore,
+            commands::events::events_duplicate,
+            commands::events::events_search,
+            commands::settings::settings_get,
+            commands::settings::settings_set,
             commands::backup::backup_create,
             commands::backup::backup_history,
             commands::backup::backup_inspect,
             commands::backup::backup_verify,
             commands::backup::backup_restore,
+            commands::data::export_data,
+            commands::data::import_pick,
+            commands::data::import_apply,
+            commands::data::backup_settings_get,
+            commands::data::backup_settings_set,
+            commands::data::backup_choose_dir,
+            commands::data::backup_create_in,
+            commands::data::backup_pick_file,
+            commands::data::vault_destroy,
         ])
         .run(tauri::generate_context!());
 

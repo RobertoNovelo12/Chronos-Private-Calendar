@@ -3,14 +3,26 @@
 Calendario de escritorio **local, privado y cifrado**, escrito en Rust (Tauri 2) y React.
 Sin cuentas, sin servidores, sin telemetría: tus datos no salen de tu equipo.
 
-> **Estado: Fase 2 de 7.** Ya funcionan la base de datos cifrada, la configuración y el desbloqueo con contraseña, el bloqueo, la gestión de calendarios y las copias de seguridad cifradas. Las vistas de calendario y los eventos llegan en las Fases 3 y 4. Ver [docs/ROADMAP.md](docs/ROADMAP.md).
+> **Estado: Fases 1–4 completas.** Calendario utilizable con eventos cifrados, vistas Día/Semana/Mes/Agenda/N días, eventos que se repiten (RFC 5545), recordatorios con notificaciones locales, borradores, búsqueda, deshacer/rehacer y bloqueo automático. Faltan importación/exportación y la pantalla de restauración de copias (Fase 5). Ver [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Qué hay implementado
 
 * Base de datos SQLite **cifrada con SQLCipher**; clave derivada con Argon2id y envuelta con XChaCha20-Poly1305
-* Pantallas de primera configuración y de desbloqueo; bloqueo manual (botón o `Ctrl+L`)
+* Pantallas de primera configuración y de desbloqueo; bloqueo manual (botón o `Ctrl+L`) y automático por inactividad
+* Vistas **Día, Semana, Mes, Agenda y número de días a elegir** (2–21), mini calendario con números de semana, indicador de hora actual, formato 12/24 h
+* Diseño minimalista de tres columnas con panel derecho (buscador, atajos útiles o detalles del evento) o tarjeta flotante junto al evento
+* Segunda zona horaria en la rejilla, zona horaria por evento y control «±» del número de días
+* **Eventos**: crear con clic o arrastrando, mover, redimensionar, día completo y de varios días, eventos simultáneos lado a lado, aviso de conflictos
+* Panel de detalles con guardado automático (título, fechas, calendario, color, ubicación, disponibilidad, privacidad, enlaces, notas)
+* **Eventos que se repiten** (cada día, semana, día laborable, mes, año o personalizado) con edición de «este», «este y los siguientes» o «todos»
+* **Recordatorios** con notificaciones locales del sistema (con opción de ocultar el título)
+* **Borradores**: un clic crea un evento provisional que solo se guarda si escribes un título o cambias algo
+* Menú contextual en eventos y en huecos vacíos (**crear / pegar evento**), copiar y pegar (`Ctrl+C` / `Ctrl+V`), duplicar, eliminar con confirmación, **deshacer/rehacer** (`Ctrl+Z` / `Ctrl+Shift+Z`)
+* Búsqueda local (`/` o `Ctrl+K`) y atajos de teclado (lista completa en Configuración)
 * Calendarios: crear, renombrar y recolorear (doble clic), mostrar/ocultar, reordenar, predeterminado, eliminar con confirmación
-* Copias de seguridad cifradas `.chronosbak` (backend completo: crear, inspeccionar, verificar, restaurar con copia previa; en la interfaz, por ahora, "Crear copia")
+* Copias de seguridad cifradas `.chronosbak`: **automáticas** (diarias/semanales, con retención y carpeta elegible), manuales, antes de restaurar y antes de actualizar; historial, verificar y restaurar desde la interfaz
+* **Importar** `.ics` y `.json` sin duplicados; **exportar** ICS, JSON, CSV o copia cifrada, por calendario, por fechas o un solo evento
+* Cambio de contraseña y **«Eliminar todos mis datos»**
 * Tema claro, oscuro o del sistema
 * CSP estricta, sin acceso a red, fuentes empaquetadas localmente
 
@@ -63,8 +75,9 @@ npm run tauri build      # instalador de producción en target/release/bundle/
 ## Pruebas
 
 ```powershell
-cargo test -p chronos-core      # 21 pruebas: cifrado, migraciones, calendarios, copias, restauración
-npm run typecheck
+cargo test -p chronos-core      # 49 pruebas: cifrado, migraciones, eventos, recurrencias, recordatorios, copias, importar/exportar
+npm.cmd test                    # 18 pruebas de fechas, zonas horarias, disposición, reglas de repetición y pegar eventos
+npm.cmd run typecheck
 ```
 
 ## Dónde se guardan los datos

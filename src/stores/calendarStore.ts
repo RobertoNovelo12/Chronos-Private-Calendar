@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { api } from "@/lib/ipc";
+import { useEventStore } from "./eventStore";
 import type { Calendar, CalendarPatch, NewCalendar } from "@/types/domain";
 
 interface CalendarState {
@@ -43,8 +44,9 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
   },
   remove: async (id) => {
     await api.calendars.remove(id);
-    // El backend puede reasignar el predeterminado: se recarga la lista.
+    // El backend puede reasignar el predeterminado y borra en cascada los eventos.
     await get().load();
+    await useEventStore.getState().reload();
   },
   setDefault: async (id) => {
     await api.calendars.setDefault(id);

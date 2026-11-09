@@ -80,6 +80,50 @@ fn configure(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
+/// Bloque atómico anidable basado en `SAVEPOINT`.
+///
+/// A diferencia de `BEGIN`, funciona tanto en el nivel superior como dentro
+/// de otra transacción (p. ej. una importación que crea miles de eventos,
+/// cada uno atómico, dentro de una operación también atómica). Si no se llama
+/// a [`Atomic::commit`], al liberarse deshace sus cambios.
+pub struct Atomic<'c> {
+    conn: &'c Connection,
+    name: String,
+    done: bool,
+}
+
+static SAVEPOINT_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+impl<'c> Atomic<'c> {
+    pub fn begin(conn: &'c Connection) -> Result<Self> {
+        let n = SAVEPOINT_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let name = format!("chronos_sp_{n}");
+        conn.execute_batch(&format!("SAVEPOINT {name}"))?;
+        Ok(Atomic { conn, name, done: false })
+    }
+
+    pub fn commit(mut self) -> Result<()> {
+        self.conn.execute_batch(&format!("RELEASE {}", self.name))?;
+        self.done = true;
+        Ok(())
+    }
+}
+
+impl std::ops::Deref for Atomic<'_> {
+    type Target = Connection;
+    fn deref(&self) -> &Connection {
+        self.conn
+    }
+}
+
+impl Drop for Atomic<'_> {
+    fn drop(&mut self) {
+        if !self.done {
+            let _ = self.conn.execute_batch(&format!("ROLLBACK TO {0}; RELEASE {0}", self.name));
+        }
+    }
+}
+
 /// Instante actual en milisegundos UTC.
 pub fn now_ms() -> i64 {
     chrono::Utc::now().timestamp_millis()

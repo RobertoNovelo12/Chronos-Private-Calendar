@@ -50,13 +50,19 @@ Restricciones: `end_at >= start_at`; `recurrence_master_id` y `original_start_at
 | Editar **todas** | Se modifica la fila maestra (y su `rrule`) |
 | Editar **esta y las siguientes** | La regla original se corta con `UNTIL` justo antes; se crea una serie nueva desde esta ocurrencia |
 
-Las ocurrencias **nunca** se materializan en la base de datos; el motor de expansión (Fase 4) las genera para el rango consultado.
+Las ocurrencias **nunca** se materializan en la base de datos; `recurrence.rs` las genera para el rango consultado con el crate `rrule`:
+
+* Eventos con hora: `DTSTART;TZID=<zona IANA>`, así una reunión a las 9:00 sigue a las 9:00 tras un cambio de horario.
+* Día completo: fechas flotantes en UTC.
+* Frecuencias permitidas: diaria, semanal, mensual y anual; intervalo ≤ 999 y ≤ 5000 repeticiones (las frecuencias por hora/minuto/segundo se rechazan para que una regla no genere millones de ocurrencias).
+* El frontend recibe cada ocurrencia con id `serie@inicio_original_ms`, `recurrence` (la regla), `recurrenceMasterId` y `originalStartAt`.
+* Al cambiar la hora o la regla de **toda** la serie se eliminan sus excepciones (ya no corresponderían a ninguna ocurrencia). «Este y los siguientes» elimina las excepciones a partir del corte y la nueva serie hereda las repeticiones restantes si la regla usaba `COUNT`.
 
 ### `event_attendees`
 Lista local de personas (`name`, `email`, `role`, `status`). Chronos **no envía invitaciones**: es solo información.
 
 ### `event_reminders`
-`offset_minutes` (0 a 28 días) con propietario **exclusivo**: `event_id` o `task_id` (`CHECK`). Varios por evento. `method` solo admite `notification` (local).
+`offset_minutes` (0 a 28 días) con propietario **exclusivo**: `event_id` o `task_id` (`CHECK`). Hasta 10 por evento. `method` solo admite `notification` (local). En una serie, los recordatorios de la maestra valen para cada ocurrencia; una excepción modificada lleva los suyos. En eventos de día completo el aviso se calcula desde la medianoche **local** de la fecha.
 
 ### `tasks`
 `title, notes, due_at, is_all_day, priority (0–3), completed_at, sort_order, calendar_id (opcional)`.
@@ -73,6 +79,13 @@ Registro de copias creadas en este equipo (ruta, tipo, tamaño, SHA-256, estado)
 ## Migraciones
 
 `database/migrations.rs` aplica, en orden y cada una en su transacción, las migraciones con versión mayor que `user_version`. Si la base de datos es de una versión **más nueva**, se rechaza abrirla (`unsupported_version`) en lugar de arriesgar datos.
+
+| Versión | Cambio |
+|---|---|
+| 1 | Esquema inicial (11 tablas) |
+| 2 | `events.ical_uid` + índice `(calendar_id, ical_uid)`: UID de iCalendar de los eventos importados, para no duplicarlos al reimportar. Los eventos creados en Chronos lo tienen vacío y se exportan como `<id>@chronos.local` |
+
+Ajustes en `settings` usados por las copias: `backups.auto` (`off`/`daily`/`weekly`), `backups.keep` (1–100). Los que empiezan por `local.` son propios del equipo y **no** viajan en las copias ni se sobrescriben al restaurar: `local.backups.dir` (carpeta de copias) y `local.app_version` (para la copia previa a una actualización).
 
 ## Consulta por rango (diseño, Fase 4)
 

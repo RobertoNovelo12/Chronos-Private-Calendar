@@ -1,6 +1,6 @@
 # Arquitectura de Chronos Private Calendar
 
-> Estado: Fase 1 (arquitectura) completa · Fase 2 (infraestructura) completa.
+> Estado: Fases 1–4 completas.
 > Este documento describe lo que **existe** y lo que está **planificado**; cada sección lo indica.
 
 ## 1. Principios
@@ -61,6 +61,8 @@ Chronos-Private-Calendar/
 │       │   ├── models/           # tipos de dominio serializables
 │       │   ├── repositories/     # único lugar con SQL de dominio
 │       │   ├── backup/           # format.rs (archivo .chronosbak), snapshot.rs, mod.rs (servicio)
+│       │   ├── recurrence.rs     # RFC 5545: validación, expansión por rango, corte de series
+│       │   ├── reminders.rs      # cálculo de avisos pendientes
 │       │   └── fs_util.rs        # escritura atómica
 │       └── tests/vault_and_backup.rs
 ├── src-tauri/                    # CAPA DE ESCRITORIO (fina)
@@ -71,14 +73,17 @@ Chronos-Private-Calendar/
 │       ├── main.rs  lib.rs       # arranque, carpeta de datos, registro de comandos
 │       ├── state.rs              # AppState: Arc<Mutex<Vault>> + spawn_blocking
 │       ├── errors.rs             # CommandError {code, message}
-│       └── commands/             # vault.rs, calendars.rs, backup.rs
+│       ├── notifier.rs           # hilo de recordatorios → notificaciones locales
+│       └── commands/             # vault.rs, calendars.rs, events.rs, backup.rs (23 comandos)
 └── src/                          # FRONTEND
     ├── main.tsx  App.tsx
     ├── lib/ipc.ts                # única puerta hacia Rust (tipada)
     ├── types/domain.ts           # espejo de los modelos Rust
-    ├── stores/                   # Zustand: vault, calendars, theme
-    ├── components/ui/            # primitivas estilo shadcn/ui
-    ├── features/                 # security/, calendars/, backup/, layout/  (+ events/, settings/, import-export/ en fases siguientes)
+    ├── lib/dates.ts layout.ts    # fechas flotantes, rangos, ajuste a 15 min; columnas de solapamiento y barras
+    ├── hooks/                    # datos visibles, atajos de teclado, bloqueo automático
+    ├── stores/                   # Zustand: vault, calendars, events (caché por rango + deshacer), ui, prefs, theme, toast
+    ├── components/ui/            # primitivas estilo shadcn/ui (button, input, confirm-dialog, toaster)
+    ├── features/                 # security/, calendar/ (vistas), events/ (panel, menú, acciones), calendars/, search/, settings/, backup/, layout/
     └── styles/globals.css        # Tailwind v4 + tokens claro/oscuro
 ```
 
@@ -144,11 +149,19 @@ React 19 · TypeScript · Vite · Tailwind CSS 4 · primitivas estilo **shadcn/u
 
 ### Bloqueo (`vault_lock`, botón o Ctrl+L)
 
-Se cierra la conexión SQLite y se destruyen (zeroize) DEK y clave de copias. El frontend vacía su caché de calendarios. El bloqueo automático por inactividad se implementa en la Fase 5.
+Se cierra la conexión SQLite y se destruyen (zeroize) DEK y clave de copias. El frontend vacía sus cachés (calendarios, eventos, deshacer y evento copiado). También hay bloqueo automático por inactividad.
 
 ### Copias y restauración
 
-Ver [BACKUP_FORMAT.md](BACKUP_FORMAT.md) y [SECURITY.md](SECURITY.md).
+Ver [BACKUP_FORMAT.md](BACKUP_FORMAT.md) y [SECURITY.md](SECURITY.md). Hilos de fondo en `src-tauri`: `notifier.rs` (recordatorios, cada 15 s) y `backups.rs` (copias automáticas, cada 5 min). Ambos toman el mismo `Mutex` de la bóveda que los comandos.
+
+### Importar y exportar (`chronos-core/src/interop`)
+
+* `mod.rs`: modelo común (`ImportEvent`, `ExportItem`), recogida de lo que se exporta (`collect`: eventos simples, series con sus EXDATE y excepciones con RECURRENCE-ID) y aplicación atómica de la importación (`apply`, dentro de un `SAVEPOINT`; desduplicación por UID por calendario).
+* `ics.rs`: escritor y lector RFC 5545 propios (plegado a 75 octetos, escapes, fechas `DATE`/UTC/`TZID`/flotantes, `DURATION`, `VALARM`). Es un analizador de texto, no criptografía.
+* `json.rs`: formato `chronos-export` v1. `csv.rs`: solo exportación.
+* Los comandos (`commands/data.rs`) abren los diálogos nativos desde Rust y llaman al núcleo.
+* `database::Atomic`: bloque atómico anidable con `SAVEPOINT`, para que cada operación de eventos siga siendo atómica también dentro de una importación.
 
 ## 6. Manejo de errores
 
@@ -161,4 +174,19 @@ Ver [BACKUP_FORMAT.md](BACKUP_FORMAT.md) y [SECURITY.md](SECURITY.md).
 * Consultas de eventos siempre por rango (`idx_events_range`, `idx_events_series`).
 * Las series recurrentes se guardan una vez y se expanden solo para el rango visible (`series_until_at` descarta series terminadas sin expandirlas).
 * Operaciones costosas fuera del hilo de la interfaz (`spawn_blocking`).
-* Frontend: stores por dominio en Zustand con selectores para evitar renders innecesarios; virtualización en la vista Agenda (Fase 3).
+* Frontend: stores por dominio en Zustand con selectores; la caché de eventos solo contiene el rango visible ± 1 día y se sustituye al navegar; las disposiciones (columnas, barras) se memorizan con `useMemo`. Virtualización de la Agenda pendiente para rangos largos.
+
+## 8. Decisiones de interfaz (Fase 3)
+
+* **Interacción con punteros propios** (Pointer Events + `setPointerCapture`) en lugar de una biblioteca de arrastrar y soltar: menos dependencias y control total del ajuste a 15 minutos y de la vista previa.
+* **Guardado automático:** cada cambio del panel se envía al backend (el título tras 600 ms sin escribir). No hay botón "Guardar".
+* **Borradores:** crear con clic o arrastre abre un evento provisional (solo en memoria) con el título enfocado. Se guarda al escribir un título o cambiar cualquier dato del panel; arrastrarlo solo lo recoloca. Si se cierra, se pulsa Esc o se hace clic fuera, desaparece.
+* **Eventos repetidos:** cada edición, arrastre o eliminación pregunta «este / este y los siguientes / todos» y, tras aplicarla, se recarga el rango visible (la serie la recalcula el backend). Estos cambios no entran en deshacer/rehacer.
+* **Deshacer/rehacer** vive en memoria del frontend (100 pasos) usando operaciones inversas (`events_restore` reinserta con el mismo id). Se borra al bloquear para no conservar datos.
+* **Enlaces** de eventos se muestran como texto seleccionable, no como hipervínculos: la app no abre navegadores ni conexiones.
+* **Tarjeta flotante:** con el panel derecho oculto, los detalles se muestran en una tarjeta que se coloca junto al bloque del evento (localizado por `data-event-key`) y lo sigue al desplazar o mover; un botón la acopla al panel.
+* **Zonas horarias** (`lib/timezones.ts`): solo la API `Intl` del motor, sin bases de datos externas. Cambiar la zona de un evento conserva la hora de reloj que se ve y la reinterpreta en la nueva zona.
+* **Diseño de tres columnas:** barra lateral izquierda plegable (`` ` ``), área del calendario y panel derecho fijo que muestra el buscador y, según el contexto, los atajos útiles o los detalles del evento. Los menús flotantes usan un `Popover` propio con grupos para submenús.
+* **Menús contextuales:** clic derecho sobre un evento (abrir, copiar, duplicar, exportar .ics, mover de calendario, eliminar) y sobre un hueco vacío (crear evento, pegar evento). La vista informa al módulo `clipboard.ts` de la franja bajo el puntero para que `Ctrl+V` pegue ahí.
+* **Configuración en secciones:** General, Copias de seguridad, Importar y exportar, Privacidad y seguridad.
+* **Preferencias de presentación** (tema, vista, número de días, formato horario, números de semana, paneles, horario laboral, bloqueo automático) en `localStorage` del WebView: no contienen datos del calendario y deben aplicarse antes de desbloquear.

@@ -3,4 +3,7 @@
 
 pub mod backup;
 pub mod calendars;
+pub mod data;
+pub mod events;
+pub mod settings;
 pub mod vault;

@@ -91,6 +91,12 @@ Inspeccionar + derivar clave + descifrar + leer la instantánea.
 * Copia de un esquema anterior → se restaura si sus columnas existen en el esquema actual (migraciones aditivas). Migraciones no aditivas futuras incluirán su conversión de instantáneas.
 * `format_version` distinto de 1 → rechazado hasta que se implemente su lector.
 
+### Copias automáticas y retención
+
+* Frecuencia `backups.auto`: diaria (predeterminada), semanal o desactivada. Un hilo comprueba cada 5 min (el primero, 1 min tras abrir) si la última copia automática es más antigua que el intervalo. Solo funciona con la app desbloqueada: bloqueada no hay claves en memoria.
+* Retención `backups.keep` (predeterminado 7): tras cada copia automática se eliminan las automáticas más antiguas. Solo se borran archivos con extensión `.chronosbak` que figuran en el historial como `automatic`; las manuales, las previas a restaurar y las previas a actualizar nunca se borran solas.
+* `pre_update`: al desbloquear, si `local.app_version` difiere de la versión actual, se crea una copia antes de seguir (un fallo se registra pero no impide abrir los datos).
+
 ## Pruebas automatizadas
 
 `crates/chronos-core/tests/vault_and_backup.rs` verifica: ida y vuelta completa, que la copia no contiene texto en claro, contraseña incorrecta, archivo con un bit cambiado, archivo truncado, archivo ajeno, restauración sin confirmación, copia previa restaurable, contraseña alternativa, copias anteriores a un cambio de contraseña y ajustes locales preservados.

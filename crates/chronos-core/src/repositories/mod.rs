@@ -2,3 +2,5 @@
 
 pub mod backup_history;
 pub mod calendars;
+pub mod events;
+pub mod settings;
