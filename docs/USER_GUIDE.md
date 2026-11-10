@@ -77,6 +77,8 @@ En la barra izquierda: casilla de color para mostrar u ocultar; doble clic para 
 - Chronos no tiene código de red: no hay cuentas, sincronización, estadísticas, anuncios ni informes de errores.
 - **Eliminar todos mis datos** (Configuración → Privacidad y seguridad): pide escribir ELIMINAR y tu contraseña. Puedes conservar o borrar también las copias.
 
+- **Configuración → Acerca de** muestra la versión y el repositorio. El botón **Donar con PayPal** es la única opción que abre una página web: lo hace en tu navegador, solo cuando lo pulsas, y Chronos no envía ningún dato.
+
 Detalles técnicos y limitaciones: [SECURITY.md](SECURITY.md).
 
 ## 9. Dónde están tus datos

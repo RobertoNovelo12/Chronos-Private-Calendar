@@ -115,6 +115,14 @@ npm.cmd run typecheck
 Contiene `chronos.db` (cifrada), `keystore.json` (clave envuelta, sin secretos en claro) y `backups/`.
 **Si olvidas la contraseña no hay forma de recuperar los datos**, salvo desde una copia cuya contraseña recuerdes.
 
+## Apoya el proyecto
+
+Chronos es gratuito y de código abierto. Si te resulta útil, puedes apoyar su desarrollo con una donación voluntaria:
+
+**[paypal.me/robertonovelo](https://paypal.me/robertonovelo)**
+
+También desde la app: **Configuración → Acerca de → Donar con PayPal** (abre el enlace en tu navegador; la aplicación no se conecta a internet ni envía datos). Donar no desbloquea ninguna función.
+
 ## Licencia
 
 MIT — ver [LICENSE](LICENSE).

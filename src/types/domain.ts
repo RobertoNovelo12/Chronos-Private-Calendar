@@ -197,3 +197,10 @@ export interface DestroyReport {
   backupsRemoved: number;
   backupsNotRemoved: number;
 }
+
+export interface AboutInfo {
+  version: string;
+  license: string;
+  repository: string;
+  donationUrl: string;
+}

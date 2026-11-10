@@ -66,3 +66,31 @@ describe("privacidad: sin red", () => {
     expect(cargo).not.toMatch(/^(reqwest|hyper|ureq|surf|isahc|tauri-plugin-(http|updater|shell))\s*=/m);
   });
 });
+
+describe("privacidad: enlace de donaciones", () => {
+  const about = read("src-tauri/src/commands/about.rs");
+
+  it("la URL de donaciones es fija, https y exacta", () => {
+    expect(about).toContain('pub const DONATION_URL: &str = "https://paypal.me/robertonovelo";');
+    expect(about).toMatch(/open_url\(DONATION_URL,/);
+  });
+
+  it("el frontend no puede abrir enlaces por su cuenta", () => {
+    const cap = read("src-tauri/capabilities/default.json");
+    expect(cap).not.toContain("opener");
+    expect(read("package.json")).not.toContain("plugin-opener");
+  });
+
+  it("ningún otro código de Rust abre direcciones externas", () => {
+    const rustFiles = (dir: string): string[] =>
+      readdirSync(dir).flatMap((name) => {
+        const p = join(dir, name);
+        if (statSync(p).isDirectory()) return rustFiles(p);
+        return name.endsWith(".rs") ? [p] : [];
+      });
+    const openers = rustFiles(join(root, "src-tauri", "src")).filter((f) =>
+      /\.opener\(\)|open_url|open_path/.test(readFileSync(f, "utf8")),
+    );
+    expect(openers.map((f) => f.replace(/\\/g, "/").split("/src-tauri/")[1])).toEqual(["src/commands/about.rs"]);
+  });
+});

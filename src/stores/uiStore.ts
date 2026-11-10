@@ -20,7 +20,7 @@ export interface SlotMenuState {
   allDay: boolean;
 }
 
-export type SettingsTab = "general" | "backups" | "data" | "privacy";
+export type SettingsTab = "general" | "backups" | "data" | "privacy" | "about";
 
 export interface ScopeRequest {
   kind: "edit" | "delete";

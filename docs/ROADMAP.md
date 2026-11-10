@@ -90,6 +90,115 @@ Arquitectura, estructura, dependencias, modelo de datos, seguridad, copias y cif
   | Sin servicios externos | ✅ 0 conexiones; sin clientes HTTP en las dependencias de Windows, Linux y macOS |
 
 ### Pendiente fuera del alcance de 1.0
-* Firma de código de los instaladores (requiere certificados de pago de Microsoft/Apple): hoy Windows SmartScreen y macOS Gatekeeper muestran un aviso
-* macOS: compilado por CI pero no probado en un Mac real
-* Etiquetas, asistentes y tareas en la interfaz (el esquema ya existe); deshacer/rehacer para cambios en series
+* macOS: compilado por CI pero no probado en un Mac real (ver «Más adelante»)
+
+---
+
+# Próximas versiones
+
+Plan acordado tras la 1.0. Cada versión se entrega igual que las anteriores: código con pruebas, prueba en la app real (Windows y Linux), documentación actualizada y un mensaje de commit para que el autor haga el commit.
+
+Leyenda: ⬜ pendiente · 🔄 en curso · ✅ hecho
+
+## Versión 1.1 — Completar el enunciado + donaciones
+
+### 1.1.1 Apoyar el proyecto (donaciones por PayPal)
+Principio: la aplicación **no se conecta a PayPal**. Solo abre el enlace en el navegador cuando el usuario pulsa el botón; sin ventanas emergentes, sin recordatorios insistentes, sin rastreo.
+1. ✅ Enlace del autor: `https://paypal.me/robertonovelo` (sin parámetros de seguimiento).
+2. ✅ `tauri-plugin-opener` registrado **solo en Rust**: el frontend no recibe ningún permiso `opener:*` (más estricto que un permiso con alcance).
+3. ✅ Comandos `open_donation_link` (abre únicamente la URL fija de `commands/about.rs`) y `app_about` (versión, licencia, repositorio).
+4. ✅ **Configuración → Acerca de**: versión, licencia, repositorio (texto copiable) y botón **«Donar con PayPal»** con la explicación de que se abre el navegador y Chronos no envía datos.
+5. ✅ README: apartado «Apoya el proyecto».
+6. ✅ `.github/FUNDING.yml` con `custom: ["https://paypal.me/robertonovelo"]` (botón **Sponsor** de GitHub).
+7. ✅ `privacy.test.ts`: capacidades sin cambios, sin `opener` en el frontend, URL fija exacta y única llamada a `open_url` en el código.
+8. ✅ SECURITY.md: es la única acción que abre un sitio externo y la inicia el usuario.
+
+### 1.1.2 Etiquetas
+1. ⬜ Repositorio `labels` en Rust: crear, renombrar, recolorear, eliminar (tablas `labels` y `event_labels` ya existen).
+2. ⬜ Asignar etiquetas a eventos y a series (las ocurrencias heredan las de la serie).
+3. ⬜ Comandos Tauri + tipos en `ipc.ts`.
+4. ⬜ Panel del evento: fila «Etiquetas» con selector y creación rápida.
+5. ⬜ Barra lateral: sección «Etiquetas» con filtro (mostrar solo eventos con una etiqueta).
+6. ⬜ Incluir etiquetas en exportar/importar (ICS `CATEGORIES`, JSON) y en las copias.
+7. ⬜ Pruebas: CRUD, filtro por rango, ida y vuelta ICS/JSON, borrado en cascada.
+
+### 1.1.3 Tareas
+1. ⬜ Repositorio `tasks`: crear, editar, completar, reabrir, ordenar, eliminar (tabla `tasks` ya existe).
+2. ⬜ Recordatorios para tareas (la tabla `event_reminders` ya admite `task_id`) en el programador de notificaciones.
+3. ⬜ Panel «Tareas» en la barra lateral: pendientes, de hoy, vencidas y completadas.
+4. ⬜ Tareas con fecha en el calendario (franja «Todo el día» o a su hora), con casilla para completarlas.
+5. ⬜ Atajo para crear tarea (p. ej. `Shift+C`) y opción en el menú de clic derecho.
+6. ⬜ Exportar/importar tareas (ICS `VTODO`, JSON, CSV) y en las copias.
+7. ⬜ Pruebas: CRUD, recordatorios de tareas, vencidas según zona horaria, exportación.
+
+### 1.1.4 Participantes (solo como nota local)
+1. ⬜ Repositorio `event_attendees` (tabla ya existe): nombre, correo, rol, estado.
+2. ⬜ Panel del evento: fila «Participantes» con añadir/quitar y estado (pendiente, acepta, rechaza, quizá).
+3. ⬜ Texto claro: **Chronos no envía invitaciones**.
+4. ⬜ Exportar/importar `ATTENDEE`/`ORGANIZER` en ICS y en JSON.
+5. ⬜ Pruebas de ida y vuelta.
+
+### 1.1.5 Deshacer/rehacer en eventos repetidos
+1. ⬜ Guardar en memoria una instantánea de la serie (maestra, regla, excepciones) antes de cada cambio.
+2. ⬜ Comando `events_restore_series` que la reponga en una transacción.
+3. ⬜ Integrarlo en la pila de `Ctrl+Z` / `Ctrl+Shift+Z` (se sigue borrando al bloquear).
+4. ⬜ Pruebas: deshacer «este», «este y los siguientes» y «todos».
+
+### 1.1.6 Correcciones
+1. ✅ La lista de copias se actualiza sola (cada 20 s) cuando se crea una copia automática con la pestaña abierta.
+
+## Versión 1.2 — Funciones de productividad
+
+### 1.2.1 Menú de comandos (`Ctrl+K`)
+1. ⬜ Caja única con resultados agrupados: eventos, acciones (vistas, ir a hoy, nuevo evento, nueva tarea, bloquear, copias…) y fechas.
+2. ⬜ Navegación con flechas y `Enter`; búsqueda sin acentos.
+3. ⬜ El buscador actual pasa a ser parte del menú (se mantiene `/`).
+4. ⬜ Pruebas de filtrado y ranking.
+
+### 1.2.2 Ir a la fecha (`.`)
+1. ⬜ Ventana pequeña con selector de fecha y texto libre («15 dic», «próximo lunes»).
+2. ⬜ Pruebas del intérprete de fechas.
+
+### 1.2.3 Crear eventos escribiendo
+1. ⬜ Intérprete local en español: «Dentista mañana 5pm 1h», «Gimnasio lunes y miércoles 7am», «Viaje 10–12 dic».
+2. ⬜ Vista previa de lo entendido antes de crear (fecha, hora, duración, repetición).
+3. ⬜ Disponible desde el menú de comandos y desde el botón «Nuevo evento».
+4. ⬜ Batería de pruebas con frases reales.
+
+### 1.2.4 Navegación con teclado
+1. ⬜ `Tab` / flechas para moverse entre eventos de la vista; `Enter` abre detalles.
+2. ⬜ Mover el evento seleccionado con `Alt+flechas` (15 min / un día).
+3. ⬜ Revisión de accesibilidad (foco visible, lectores de pantalla).
+
+### 1.2.5 Horario laboral por día
+1. ⬜ Configuración: horario distinto para cada día de la semana (o día libre).
+2. ⬜ Sombreado de la rejilla según el día.
+
+## Versión 1.3 — Privacidad y comodidad
+
+### 1.3.1 Desbloqueo con Windows Hello (opcional)
+1. ⬜ Investigar y documentar el modelo: la clave se protege con el almacén del sistema (Windows Hello / Llavero de macOS) **además** de la contraseña, nunca en su lugar.
+2. ⬜ Desactivado por defecto; activarlo exige la contraseña.
+3. ⬜ La contraseña sigue siendo necesaria tras reiniciar y para restaurar copias.
+4. ⬜ SECURITY.md: ventajas, riesgos y cómo desactivarlo.
+
+### 1.3.2 Copia automática a memoria USB
+1. ⬜ Elegir una unidad/carpeta externa como destino secundario.
+2. ⬜ Al detectar que está conectada, copiar la última copia cifrada (sin pedir nada).
+3. ⬜ Retención propia en el destino externo.
+
+### 1.3.3 Exportar disponibilidad
+1. ⬜ Exportar «ocupado/libre» de un rango como `.ics` (`VFREEBUSY`) **sin títulos ni detalles**.
+2. ⬜ Elegir calendarios y respetar la disponibilidad «Libre» de cada evento.
+3. ⬜ Pruebas: que el archivo no contenga ningún dato del evento.
+
+## Más adelante
+
+### Distribución
+* ⬜ Firma de código de los instaladores (Windows: certificado de firma; macOS: cuenta de desarrollador de Apple y notarización).
+* ⬜ Probar en un Mac real.
+* ⬜ Buscar actualizaciones **solo cuando el usuario lo pide** (única excepción de red del enunciado), con verificación de firma.
+
+### Nuevas plataformas
+* ⬜ Android e iPhone con Tauri 2 (adaptar la interfaz a pantallas táctiles).
+* ⬜ Sincronización entre equipos sin servidores: red local o archivo cifrado en una carpeta que el usuario sincronice, con resolución de conflictos.

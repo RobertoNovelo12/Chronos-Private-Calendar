@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Database, HardDriveDownload, Settings2, ShieldCheck, X } from "lucide-react";
+import { Database, HardDriveDownload, Info, Settings2, ShieldCheck, X } from "lucide-react";
 import { BackupsTab } from "@/features/data/BackupsTab";
 import { DataTab } from "@/features/data/DataTab";
 import { PrivacyTab } from "@/features/data/PrivacyTab";
+import { AboutTab } from "./AboutTab";
 import { Button } from "@/components/ui/button";
 import { systemTimeZone } from "@/lib/dates";
 import { api, errorMessage } from "@/lib/ipc";
@@ -16,6 +17,7 @@ const TABS: { id: SettingsTab; label: string; icon: typeof X }[] = [
   { id: "backups", label: "Copias de seguridad", icon: HardDriveDownload },
   { id: "data", label: "Importar y exportar", icon: Database },
   { id: "privacy", label: "Privacidad y seguridad", icon: ShieldCheck },
+  { id: "about", label: "Acerca de", icon: Info },
 ];
 
 const NOTIF_KEY = "notifications.show_details";
@@ -81,6 +83,7 @@ export function SettingsDialog() {
             {current.id === "backups" && <BackupsTab />}
             {current.id === "data" && <DataTab />}
             {current.id === "privacy" && <PrivacyTab />}
+            {current.id === "about" && <AboutTab />}
           </div>
         </div>
       </div>

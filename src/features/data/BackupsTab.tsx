@@ -29,6 +29,18 @@ export function BackupsTab() {
     void refresh();
   }, [refresh]);
 
+  // Las copias automáticas se crean en segundo plano: mientras la pestaña está
+  // abierta, el historial se vuelve a leer cada 20 s para mostrarlas sin reabrir.
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      api.backup
+        .history()
+        .then(setHistory)
+        .catch(() => {});
+    }, 20_000);
+    return () => window.clearInterval(id);
+  }, []);
+
   async function update(patch: { auto?: BackupSettings["auto"]; keep?: number }) {
     try {
       setSettings(await api.backup.setSettings(patch));

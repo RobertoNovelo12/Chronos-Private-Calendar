@@ -65,9 +65,10 @@ SQLCipher: PRAGMA key = "x'<DEK en hex>'"   (clave en bruto: sin PBKDF2 adiciona
 * **Sin red en el backend:** ni `chronos-core` ni `src-tauri` dependen de clientes HTTP. Verificable con `cargo tree | grep -Ei "reqwest|hyper|ureq|surf"` (sin resultados).
 * **CSP de producción** (`tauri.conf.json`): `default-src 'self'`, `connect-src ipc: http://ipc.localhost` (solo el puente interno de Tauri), sin `frame-src`, `object-src`, ni formularios hacia fuera.
 * **Sin recursos remotos:** fuentes e iconos van dentro del binario.
-* **Capacidades mínimas de Tauri:** `core:default` y `notification:default` (notificaciones locales); el frontend no tiene acceso a shell, sistema de archivos, HTTP ni actualizador.
+* **Capacidades mínimas de Tauri:** `core:default` y `notification:default` (notificaciones locales); el frontend no tiene acceso a shell, sistema de archivos, HTTP, apertura de enlaces ni actualizador.
 * **Selector de archivos solo desde Rust:** `tauri-plugin-dialog` se usa en los comandos de Rust; el frontend no recibe el permiso `dialog:*` ni puede elegir rutas de escritura: solo decide formato y qué exportar. Las rutas de lectura que vuelven del selector se validan otra vez (extensión, tamaño máx. 20 MB, máx. 50 000 eventos).
 * **Sin telemetría, analítica, informes de errores remotos ni publicidad.**
+* **Única acción que abre un sitio externo: «Donar con PayPal»** (Configuración → Acerca de). La inicia siempre el usuario con un clic; Rust abre en el navegador del sistema la URL fija `https://paypal.me/robertonovelo` mediante `tauri-plugin-opener`. El frontend no tiene permisos `opener:*`, por lo que no puede abrir otras direcciones, y Chronos no envía ningún dato: es el navegador el que carga la página. Las pruebas (`privacy.test.ts`) fallan si cambia la URL, si se concede `opener` al frontend o si otro código abre enlaces.
 * **Prueba realizada (Fase 2):** con la aplicación en ejecución en Linux, `ss -tunp` no mostró ninguna conexión TCP/UDP del proceso; solo sockets Unix locales entre los procesos de WebKit.
 * **Logs:** solo locales (salida estándar; nivel con `CHRONOS_LOG`). Registran códigos de error, identificadores y recuentos, nunca títulos, descripciones, ubicaciones, contraseñas ni claves.
 

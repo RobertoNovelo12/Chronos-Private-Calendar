@@ -31,6 +31,9 @@ pub fn run() {
     let result = tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_dialog::init())
+        // Solo para abrir la página de donaciones desde Rust (URL fija); el
+        // frontend no tiene permisos `opener:*`.
+        .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             // Carpeta LOCAL (no "roaming"): en Windows, %LOCALAPPDATA% no se
             // sincroniza con perfiles móviles del dominio.
@@ -78,6 +81,8 @@ pub fn run() {
             commands::data::backup_create_in,
             commands::data::backup_pick_file,
             commands::data::vault_destroy,
+            commands::about::app_about,
+            commands::about::open_donation_link,
         ])
         .run(tauri::generate_context!());
 

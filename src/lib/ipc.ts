@@ -3,6 +3,7 @@
 
 import { invoke } from "@tauri-apps/api/core";
 import type {
+  AboutInfo,
   BackupInfo,
   BackupRecord,
   BackupSettings,
@@ -103,6 +104,11 @@ export const api = {
       call<ImportReport>("import_apply", { path, target, defaultTz }),
     destroy: (password: string, confirmation: string, removeBackups: boolean) =>
       call<DestroyReport>("vault_destroy", { password, confirmation, removeBackups }),
+  },
+  about: {
+    info: () => call<AboutInfo>("app_about"),
+    /** Abre la página de donaciones (URL fija en Rust) en el navegador. */
+    openDonation: () => call<void>("open_donation_link"),
   },
 };
 
