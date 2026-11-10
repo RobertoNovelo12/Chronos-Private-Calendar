@@ -4,6 +4,13 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
   AboutInfo,
+  Label,
+  LabelPatch,
+  NewLabel,
+  NewTask,
+  SeriesSnapshot,
+  Task,
+  TaskPatch,
   BackupInfo,
   BackupRecord,
   BackupSettings,
@@ -74,6 +81,24 @@ export const api = {
     restore: (event: CalendarEvent) => call<CalendarEvent>("events_restore", { event }),
     duplicate: (id: string) => call<CalendarEvent>("events_duplicate", { id }),
     search: (query: string) => call<CalendarEvent[]>("events_search", { query }),
+    snapshot: (id: string) => call<SeriesSnapshot>("events_snapshot", { id }),
+    snapshots: (ids: string[]) => call<SeriesSnapshot[]>("events_snapshots", { ids }),
+    replaceSeries: (removeIds: string[], snapshots: SeriesSnapshot[]) =>
+      call<void>("events_replace_series", { removeIds, snapshots }),
+  },
+  labels: {
+    list: () => call<Label[]>("labels_list"),
+    create: (input: NewLabel) => call<Label>("labels_create", { input }),
+    update: (id: string, patch: LabelPatch) => call<Label>("labels_update", { id, patch }),
+    remove: (id: string) => call<void>("labels_delete", { id }),
+  },
+  tasks: {
+    list: () => call<Task[]>("tasks_list"),
+    create: (input: NewTask) => call<Task>("tasks_create", { input }),
+    update: (id: string, patch: TaskPatch) => call<Task>("tasks_update", { id, patch }),
+    remove: (id: string) => call<Task>("tasks_delete", { id }),
+    restore: (task: Task) => call<Task>("tasks_restore", { task }),
+    removeCompleted: () => call<number>("tasks_delete_completed"),
   },
   settings: {
     get: <T>(key: string) => call<T | null>("settings_get", { key }),

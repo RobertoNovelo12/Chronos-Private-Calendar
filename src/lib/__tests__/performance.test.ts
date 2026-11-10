@@ -28,6 +28,8 @@ function ev(i: number, start: number, end: number, isAllDay = false): CalendarEv
     originalStartAt: null,
     recurrence: null,
     reminders: [],
+    labels: [],
+    attendees: [],
     createdAt: 0,
     updatedAt: 0,
   };

@@ -25,6 +25,7 @@ struct Pending {
     key: String,
     fire_at: i64,
     offset_minutes: i32,
+    is_task: bool,
 }
 
 pub fn spawn(app: AppHandle, state: AppState) {
@@ -62,6 +63,7 @@ pub fn spawn(app: AppHandle, state: AppState) {
                                 key: d.key,
                                 fire_at: d.fire_at,
                                 offset_minutes: d.offset_minutes,
+                                is_task: d.is_task,
                             })
                             .collect();
                     }
@@ -72,7 +74,7 @@ pub fn spawn(app: AppHandle, state: AppState) {
                             .filter(|p| p.fire_at > from && p.fire_at <= now)
                         {
                             if fired.insert(p.key.clone()) {
-                                notify_generic(&app, p.offset_minutes);
+                                notify_generic(&app, p.offset_minutes, p.is_task);
                             }
                         }
                         pending.retain(|p| p.fire_at > now);
@@ -91,14 +93,20 @@ pub fn spawn(app: AppHandle, state: AppState) {
 
 fn notify_detailed(app: &AppHandle, d: &DueReminder, show_details: bool) {
     if !show_details {
-        return notify_generic(app, d.offset_minutes);
+        return notify_generic(app, d.offset_minutes, d.is_task);
     }
     let title = if d.title.trim().is_empty() {
         "Sin título"
     } else {
         d.title.as_str()
     };
-    let mut body = if d.is_all_day {
+    let mut body = if d.is_task {
+        if d.is_all_day {
+            format!("Tarea para {}", describe_day(d.offset_minutes))
+        } else {
+            format!("Tarea · vence {}", describe_offset(d.offset_minutes))
+        }
+    } else if d.is_all_day {
         format!("Todo el día · {}", describe_offset(d.offset_minutes))
     } else {
         format!("Empieza {}", describe_offset(d.offset_minutes))
@@ -110,12 +118,22 @@ fn notify_detailed(app: &AppHandle, d: &DueReminder, show_details: bool) {
     show(app, title, &body);
 }
 
-fn notify_generic(app: &AppHandle, offset_minutes: i32) {
+fn notify_generic(app: &AppHandle, offset_minutes: i32, is_task: bool) {
+    let what = if is_task { "una tarea" } else { "un evento" };
     show(
         app,
         "Chronos",
-        &format!("Tienes un evento {}", describe_offset(offset_minutes)),
+        &format!("Tienes {what} {}", describe_offset(offset_minutes)),
     );
+}
+
+/// «hoy», «mañana» o «dentro de N días» para tareas de día completo.
+fn describe_day(offset_minutes: i32) -> String {
+    match offset_minutes / (24 * 60) {
+        0 => "hoy".into(),
+        1 => "mañana".into(),
+        n => format!("dentro de {n} días"),
+    }
 }
 
 fn show(app: &AppHandle, title: &str, body: &str) {

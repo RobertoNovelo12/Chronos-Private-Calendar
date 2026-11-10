@@ -1,4 +1,4 @@
-//! Persistencia de eventos, series recurrentes y recordatorios.
+//! Persistencia de eventos, series recurrentes, recordatorios y etiquetas asignadas.
 //!
 //! Tipos de fila en `events`:
 //! * **Simple**: `is_recurring = 0`, sin `recurrence_master_id`.
@@ -12,9 +12,11 @@
 use crate::database::{now_ms, Atomic};
 use crate::error::{CoreError, Result};
 use crate::models::event::*;
+use crate::models::label::normalize_label_ids;
 use crate::recurrence::{self, instance_id, parse_instance_id};
 use crate::repositories::calendars;
 use rusqlite::{params, Connection, OptionalExtension, Row};
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 
@@ -50,6 +52,8 @@ fn from_row(r: &Row<'_>) -> rusqlite::Result<Event> {
         original_start_at: r.get(16)?,
         recurrence: r.get(17)?,
         reminders: Vec::new(),
+        labels: Vec::new(),
+        attendees: Vec::new(),
         created_at: r.get(18)?,
         updated_at: r.get(19)?,
     })
@@ -89,6 +93,8 @@ fn validate(mut e: Event) -> Result<Event> {
     e.color = normalize_color_opt(e.color.as_deref())?;
     e.timezone = normalize_timezone(&e.timezone)?;
     e.reminders = normalize_reminders(&e.reminders)?;
+    e.labels = normalize_label_ids(&e.labels)?;
+    e.attendees = normalize_attendees(&e.attendees)?;
     validate_times(e.start_at, e.end_at, e.is_all_day)?;
     Ok(e)
 }
@@ -102,16 +108,108 @@ fn get_row(conn: &Connection, id: &str) -> Result<Event> {
         .query_row(&format!("{SELECT} WHERE e.id = ?1"), [id], from_row)
         .optional()?
         .ok_or(CoreError::NotFound("evento"))?;
-    e.reminders = reminders_of(conn, id)?;
+    attach(conn, std::slice::from_mut(&mut e))?;
     Ok(e)
 }
 
-fn reminders_of(conn: &Connection, event_id: &str) -> Result<Vec<i32>> {
+/// Carga recordatorios y etiquetas de un grupo de filas (dos consultas).
+fn attach(conn: &Connection, events: &mut [Event]) -> Result<()> {
+    if events.is_empty() {
+        return Ok(());
+    }
+    let ids: Vec<String> = events.iter().map(|e| e.id.clone()).collect();
+    let mut reminders = reminders_for(conn, &ids)?;
+    let mut labels = labels_for(conn, &ids)?;
+    let mut attendees = attendees_for(conn, &ids)?;
+    for e in events.iter_mut() {
+        e.reminders = reminders.remove(&e.id).unwrap_or_default();
+        e.labels = labels.remove(&e.id).unwrap_or_default();
+        e.attendees = attendees.remove(&e.id).unwrap_or_default();
+    }
+    Ok(())
+}
+
+/// Participantes por evento: organizador primero, después en el orden en que se añadieron.
+fn attendees_for(conn: &Connection, ids: &[String]) -> Result<HashMap<String, Vec<Attendee>>> {
+    let mut map: HashMap<String, Vec<Attendee>> = HashMap::new();
     let mut stmt = conn.prepare_cached(
-        "SELECT offset_minutes FROM event_reminders WHERE event_id = ?1 ORDER BY offset_minutes",
+        "SELECT event_id, name, email, role, status FROM event_attendees
+         WHERE event_id IN (SELECT value FROM json_each(?1))
+         ORDER BY role = 'organizer' DESC, created_at, rowid",
     )?;
-    let rows = stmt.query_map([event_id], |r| r.get(0))?;
-    Ok(rows.collect::<rusqlite::Result<Vec<i32>>>()?)
+    let rows = stmt.query_map([serde_json::to_string(ids)?], |r| {
+        Ok((
+            r.get::<_, String>(0)?,
+            r.get::<_, String>(1)?,
+            r.get::<_, String>(2)?,
+            r.get::<_, String>(3)?,
+            r.get::<_, String>(4)?,
+        ))
+    })?;
+    for row in rows {
+        let (id, name, email, role, status) = row?;
+        map.entry(id).or_default().push(Attendee {
+            name,
+            email,
+            role: AttendeeRole::parse(&role).unwrap_or_default(),
+            status: AttendeeStatus::parse(&status).unwrap_or_default(),
+        });
+    }
+    Ok(map)
+}
+
+fn set_attendees(conn: &Connection, event_id: &str, list: &[Attendee]) -> Result<()> {
+    conn.execute(
+        "DELETE FROM event_attendees WHERE event_id = ?1",
+        [event_id],
+    )?;
+    let now = now_ms();
+    let mut stmt = conn.prepare_cached(
+        "INSERT INTO event_attendees (id, event_id, name, email, role, status, created_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+    )?;
+    for (i, a) in list.iter().enumerate() {
+        stmt.execute(params![
+            Uuid::new_v4().to_string(),
+            event_id,
+            a.name,
+            a.email,
+            a.role.as_str(),
+            a.status.as_str(),
+            now + i as i64
+        ])?;
+    }
+    Ok(())
+}
+
+/// Etiquetas por evento, en orden alfabético de nombre.
+fn labels_for(conn: &Connection, ids: &[String]) -> Result<HashMap<String, Vec<String>>> {
+    let mut map: HashMap<String, Vec<String>> = HashMap::new();
+    let mut stmt = conn.prepare_cached(
+        "SELECT el.event_id, el.label_id FROM event_labels el JOIN labels l ON l.id = el.label_id
+         WHERE el.event_id IN (SELECT value FROM json_each(?1)) ORDER BY l.name COLLATE NOCASE",
+    )?;
+    let rows = stmt.query_map([serde_json::to_string(ids)?], |r| {
+        Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?))
+    })?;
+    for row in rows {
+        let (id, l) = row?;
+        map.entry(id).or_default().push(l);
+    }
+    Ok(map)
+}
+
+/// Sustituye las etiquetas de una fila. Las que ya no existen (p. ej. borradas
+/// mientras se deshacía un cambio) se ignoran.
+fn set_labels(conn: &Connection, event_id: &str, labels: &[String]) -> Result<()> {
+    conn.execute("DELETE FROM event_labels WHERE event_id = ?1", [event_id])?;
+    let mut stmt = conn.prepare_cached(
+        "INSERT OR IGNORE INTO event_labels (event_id, label_id) SELECT ?1, id FROM labels WHERE id = ?2",
+    )?;
+    for l in labels {
+        stmt.execute(params![event_id, l])?;
+    }
+    Ok(())
 }
 
 fn reminders_for(conn: &Connection, ids: &[String]) -> Result<HashMap<String, Vec<i32>>> {
@@ -192,6 +290,8 @@ fn insert_row(
         ],
     )?;
     set_reminders(conn, &e.id, &e.reminders)?;
+    set_labels(conn, &e.id, &e.labels)?;
+    set_attendees(conn, &e.id, &e.attendees)?;
     Ok(())
 }
 
@@ -228,6 +328,8 @@ fn write_row(
         ],
     )?;
     set_reminders(conn, &e.id, &e.reminders)?;
+    set_labels(conn, &e.id, &e.labels)?;
+    set_attendees(conn, &e.id, &e.attendees)?;
     Ok(())
 }
 
@@ -365,6 +467,8 @@ pub fn create(conn: &Connection, input: &NewEvent) -> Result<Event> {
         original_start_at: None,
         recurrence: rule.clone(),
         reminders: input.reminders.clone(),
+        labels: input.labels.clone(),
+        attendees: input.attendees.clone(),
         created_at: now,
         updated_at: now,
     })?;
@@ -429,6 +533,12 @@ fn apply_fields(e: &mut Event, patch: &EventPatch) -> Result<()> {
     }
     if let Some(v) = &patch.reminders {
         e.reminders = v.clone();
+    }
+    if let Some(v) = &patch.labels {
+        e.labels = v.clone();
+    }
+    if let Some(v) = &patch.attendees {
+        e.attendees = v.clone();
     }
     Ok(())
 }
@@ -775,17 +885,13 @@ pub fn list_range(conn: &Connection, from: i64, to: i64) -> Result<Vec<Event>> {
         let rows = stmt.query_map(params![from, to], from_row)?;
         rows.collect::<rusqlite::Result<Vec<_>>>()?
     };
-    let mut ids: Vec<String> = out.iter().map(|e| e.id.clone()).collect();
-    ids.extend(masters.iter().map(|m| m.id.clone()));
-    let reminders = reminders_for(conn, &ids)?;
-    for e in out.iter_mut() {
-        e.reminders = reminders.get(&e.id).cloned().unwrap_or_default();
-    }
-    for mut m in masters {
+    let mut masters = masters;
+    attach(conn, &mut out)?;
+    attach(conn, &mut masters)?;
+    for m in masters {
         let Some(rule) = m.recurrence.clone() else {
             continue;
         };
-        m.reminders = reminders.get(&m.id).cloned().unwrap_or_default();
         let skip = exceptions_of(conn, &m.id)?;
         for t in recurrence::occurrences(&m, &rule, from, to)? {
             if !skip.contains(&t) {
@@ -822,9 +928,10 @@ pub fn search(conn: &Connection, query: &str, limit: u32) -> Result<Vec<Event>> 
          ORDER BY e.start_at DESC LIMIT ?2"
     ))?;
     let rows = stmt.query_map(params![pattern, limit.min(200)], from_row)?;
+    let mut found = rows.collect::<rusqlite::Result<Vec<_>>>()?;
+    attach(conn, &mut found)?;
     let mut out = Vec::new();
-    for r in rows {
-        let e = r?;
+    for e in found {
         out.push(if kind(&e) == RowKind::Master {
             let t = e.start_at;
             instance(&e, t)
@@ -833,6 +940,192 @@ pub fn search(conn: &Connection, query: &str, limit: u32) -> Result<Vec<Event>> 
         });
     }
     Ok(out)
+}
+
+// ---------------------------------------------------------------------------
+// Instantáneas de series (deshacer/rehacer en eventos repetidos)
+// ---------------------------------------------------------------------------
+
+/// Excepción de una serie tal como está en `event_exceptions`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExceptionSnapshot {
+    pub original_start_at: i64,
+    /// `None` = ocurrencia cancelada; `Some(id)` = sustituida por esa excepción modificada.
+    pub override_event_id: Option<String>,
+}
+
+/// Todo lo necesario para reponer una serie (o un evento simple) tal como estaba.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SeriesSnapshot {
+    /// Fila raíz: la maestra de la serie (con su regla) o el evento simple.
+    pub root: Event,
+    #[serde(default)]
+    pub ical_uid: Option<String>,
+    /// Excepciones modificadas (filas propias).
+    #[serde(default)]
+    pub overrides: Vec<Event>,
+    #[serde(default)]
+    pub exceptions: Vec<ExceptionSnapshot>,
+}
+
+fn ical_uid_of(conn: &Connection, id: &str) -> Result<Option<String>> {
+    Ok(conn
+        .query_row("SELECT ical_uid FROM events WHERE id = ?1", [id], |r| {
+            r.get::<_, Option<String>>(0)
+        })
+        .optional()?
+        .flatten())
+}
+
+/// Instantánea de la serie a la que pertenece `id` (ocurrencia, excepción o
+/// maestra) o del propio evento si es simple.
+pub fn snapshot(conn: &Connection, id: &str) -> Result<SeriesSnapshot> {
+    let root_id = match parse_instance_id(id) {
+        Some((master, _)) => master.to_string(),
+        None => {
+            let row = get_row(conn, id)?;
+            row.recurrence_master_id.unwrap_or(row.id)
+        }
+    };
+    let mut root = get_row(conn, &root_id)?;
+    if kind(&root) == RowKind::Simple {
+        root.recurrence = None;
+    }
+    let mut overrides: Vec<Event> = {
+        let mut stmt = conn.prepare_cached(&format!(
+            "{SELECT} WHERE e.recurrence_master_id = ?1 ORDER BY e.original_start_at"
+        ))?;
+        let rows = stmt.query_map([&root_id], from_row)?;
+        rows.collect::<rusqlite::Result<Vec<_>>>()?
+    };
+    attach(conn, &mut overrides)?;
+    for o in overrides.iter_mut() {
+        // La regla que trae la consulta es la de la serie: no pertenece a la fila.
+        o.recurrence = None;
+        o.is_recurring = false;
+    }
+    let exceptions = {
+        let mut stmt = conn.prepare_cached(
+            "SELECT original_start_at, override_event_id FROM event_exceptions WHERE event_id = ?1
+             ORDER BY original_start_at",
+        )?;
+        let rows = stmt.query_map([&root_id], |r| {
+            Ok(ExceptionSnapshot {
+                original_start_at: r.get(0)?,
+                override_event_id: r.get(1)?,
+            })
+        })?;
+        rows.collect::<rusqlite::Result<Vec<_>>>()?
+    };
+    Ok(SeriesSnapshot {
+        ical_uid: ical_uid_of(conn, &root_id)?,
+        root,
+        overrides,
+        exceptions,
+    })
+}
+
+/// Instantáneas de varias raíces; las que ya no existen se omiten.
+pub fn snapshots(conn: &Connection, ids: &[String]) -> Result<Vec<SeriesSnapshot>> {
+    let mut out = Vec::new();
+    for id in ids {
+        match snapshot(conn, id) {
+            Ok(s) => out.push(s),
+            Err(CoreError::NotFound(_)) => {}
+            Err(e) => return Err(e),
+        }
+    }
+    Ok(out)
+}
+
+fn check_uuid(id: &str) -> Result<()> {
+    Uuid::parse_str(id)
+        .map(|_| ())
+        .map_err(|_| CoreError::Validation("identificador no válido".into()))
+}
+
+/// Elimina las filas raíz `remove_ids` (con todo lo que cuelga de ellas) y
+/// repone las instantáneas, en una única transacción.
+pub fn replace_series(
+    conn: &Connection,
+    remove_ids: &[String],
+    snaps: &[SeriesSnapshot],
+) -> Result<()> {
+    if remove_ids.len() > 50 || snaps.len() > 50 {
+        return Err(CoreError::Validation("demasiadas series".into()));
+    }
+    let tx = Atomic::begin(conn)?;
+    for id in remove_ids.iter().chain(snaps.iter().map(|s| &s.root.id)) {
+        check_uuid(id)?;
+        tx.execute("DELETE FROM events WHERE id = ?1", [id])?;
+    }
+    for snap in snaps {
+        let root = &snap.root;
+        let rule = match root.recurrence.as_deref().map(str::trim) {
+            Some(r) if !r.is_empty() => Some(recurrence::validate_rule(r)?),
+            _ => None,
+        };
+        let root = validate(Event {
+            is_recurring: rule.is_some(),
+            recurrence: rule.clone(),
+            recurrence_master_id: None,
+            original_start_at: None,
+            ..root.clone()
+        })?;
+        let until = match &rule {
+            Some(r) => recurrence::series_end(&root, r)?,
+            None => None,
+        };
+        insert_row(&tx, &root, rule.is_some(), until)?;
+        if let Some(r) = &rule {
+            set_rule(&tx, &root.id, r)?;
+        }
+        if let Some(uid) = snap.ical_uid.as_deref().filter(|u| !u.trim().is_empty()) {
+            set_ical_uid(&tx, &root.id, &uid.chars().take(500).collect::<String>())?;
+        }
+        if rule.is_none() {
+            continue;
+        }
+        for ov in &snap.overrides {
+            check_uuid(&ov.id)?;
+            let Some(t) = ov.original_start_at else {
+                continue;
+            };
+            let ov = validate(Event {
+                is_recurring: false,
+                recurrence: None,
+                recurrence_master_id: Some(root.id.clone()),
+                original_start_at: Some(t),
+                ..ov.clone()
+            })?;
+            insert_row(&tx, &ov, false, None)?;
+        }
+        let now = now_ms();
+        for x in &snap.exceptions {
+            let kind = if x.override_event_id.is_some() {
+                "modified"
+            } else {
+                "cancelled"
+            };
+            tx.execute(
+                "INSERT INTO event_exceptions (id, event_id, original_start_at, kind, override_event_id, created_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                params![
+                    Uuid::new_v4().to_string(),
+                    root.id,
+                    x.original_start_at,
+                    kind,
+                    x.override_event_id,
+                    now
+                ],
+            )?;
+        }
+    }
+    tx.commit()?;
+    tracing::debug!(series = snaps.len(), "series repuestas");
+    Ok(())
 }
 
 // ---------------------------------------------------------------------------
@@ -896,10 +1189,10 @@ pub(crate) fn export_rows(
             rows.push(row?);
         }
     }
-    let ids: Vec<String> = rows.iter().map(|r| r.event.id.clone()).collect();
-    let reminders = reminders_for(conn, &ids)?;
-    for r in rows.iter_mut() {
-        r.event.reminders = reminders.get(&r.event.id).cloned().unwrap_or_default();
+    let mut evs: Vec<Event> = rows.iter().map(|r| r.event.clone()).collect();
+    attach(conn, &mut evs)?;
+    for (r, e) in rows.iter_mut().zip(evs) {
+        r.event = e;
     }
     Ok(rows)
 }
@@ -1010,6 +1303,8 @@ mod tests {
             availability: None,
             recurrence: None,
             reminders: vec![],
+            labels: vec![],
+            attendees: vec![],
             ical_uid: None,
         }
     }
@@ -1371,5 +1666,314 @@ mod tests {
             found.iter().any(|f| f.id == s.id),
             "las series se devuelven como su primera ocurrencia"
         );
+    }
+
+    #[test]
+    fn labels_on_events_and_series() {
+        use crate::models::label::NewLabel;
+        use crate::repositories::labels;
+        let (c, a, _) = setup();
+        let mk = |name: &str| {
+            labels::create(
+                &c,
+                &NewLabel {
+                    name: name.into(),
+                    color: "#112233".into(),
+                },
+            )
+            .unwrap()
+            .id
+        };
+        let (work, home) = (mk("Trabajo"), mk("Casa"));
+
+        // Evento simple: duplicados eliminados, orden alfabético al leer.
+        let mut input = new(&a, 10 * H, 11 * H);
+        input.labels = vec![work.clone(), home.clone(), work.clone()];
+        let e = create(&c, &input).unwrap();
+        assert_eq!(
+            get(&c, &e.id).unwrap().labels,
+            vec![home.clone(), work.clone()]
+        );
+
+        // Un id desconocido se ignora en lugar de fallar.
+        let changed = update(
+            &c,
+            &e.id,
+            &EventPatch {
+                labels: Some(vec![work.clone(), "no-existe".into()]),
+                ..Default::default()
+            },
+            EditScope::This,
+        )
+        .unwrap();
+        assert_eq!(changed.labels, vec![work.clone()]);
+
+        // Serie: todas las ocurrencias heredan; una excepción puede cambiarlas.
+        let mut s = new(&a, 12 * H, 13 * H);
+        s.recurrence = Some("FREQ=DAILY;COUNT=3".into());
+        s.labels = vec![home.clone()];
+        let first = create(&c, &s).unwrap();
+        let master = first.recurrence_master_id.clone().unwrap();
+        let list = list_range(&c, 0, 5 * DAY_MS).unwrap();
+        let occ: Vec<&Event> = list.iter().filter(|e| e.is_recurring).collect();
+        assert_eq!(occ.len(), 3);
+        assert!(occ.iter().all(|e| e.labels == vec![home.clone()]));
+        update(
+            &c,
+            &instance_id(&master, 12 * H + DAY_MS),
+            &EventPatch {
+                labels: Some(vec![]),
+                ..Default::default()
+            },
+            EditScope::This,
+        )
+        .unwrap();
+        let list = list_range(&c, 0, 5 * DAY_MS).unwrap();
+        let without: Vec<&Event> = list
+            .iter()
+            .filter(|e| e.is_recurring && e.labels.is_empty())
+            .collect();
+        assert_eq!(without.len(), 1);
+
+        // Duplicar conserva las etiquetas; borrar una etiqueta no borra eventos.
+        let dup = duplicate(&c, &e.id).unwrap();
+        assert_eq!(get(&c, &dup.id).unwrap().labels, vec![work.clone()]);
+        labels::delete(&c, &work).unwrap();
+        assert!(get(&c, &e.id).unwrap().labels.is_empty());
+        assert!(get(&c, &dup.id).is_ok());
+
+        // Búsqueda devuelve también etiquetas y recordatorios.
+        let found = search(&c, "Reunión", 10).unwrap();
+        assert!(found.iter().any(|e| e.labels == vec![home.clone()]));
+
+        // Límite por evento.
+        let many: Vec<String> = (0..21).map(|i| mk(&format!("L{i}"))).collect();
+        let mut too_many = new(&a, 0, H);
+        too_many.labels = many;
+        assert!(create(&c, &too_many).is_err());
+    }
+
+    #[test]
+    fn attendees_are_validated_and_inherited() {
+        let (c, a, _) = setup();
+        let att = |name: &str, email: &str, role| Attendee {
+            name: name.into(),
+            email: email.into(),
+            role,
+            status: AttendeeStatus::NeedsAction,
+        };
+        let mut s = new(&a, 10 * H, 11 * H);
+        s.recurrence = Some("FREQ=DAILY;COUNT=2".into());
+        s.attendees = vec![
+            att(" Ana ", "ANA@Ejemplo.com ", AttendeeRole::Organizer),
+            att("Luis", "luis@ejemplo.com", AttendeeRole::Required),
+            att("Repetido", "ana@ejemplo.com", AttendeeRole::Optional),
+            att("", "", AttendeeRole::Required),
+        ];
+        create(&c, &s).unwrap();
+        let list = list_range(&c, 0, 3 * DAY_MS).unwrap();
+        assert_eq!(list.len(), 2);
+        for e in &list {
+            let emails: Vec<&str> = e.attendees.iter().map(|x| x.email.as_str()).collect();
+            assert_eq!(emails, ["ana@ejemplo.com", "luis@ejemplo.com"]);
+            assert_eq!(e.attendees[0].name, "Ana");
+        }
+
+        // Cambiar el estado de uno en «solo este evento».
+        let mut changed = list[1].attendees.clone();
+        changed[1].status = AttendeeStatus::Accepted;
+        let ov = update(
+            &c,
+            &list[1].id,
+            &EventPatch {
+                attendees: Some(changed),
+                ..Default::default()
+            },
+            EditScope::This,
+        )
+        .unwrap();
+        assert_eq!(ov.attendees[1].status, AttendeeStatus::Accepted);
+        let first = get(&c, &list[0].id).unwrap();
+        assert_eq!(first.attendees[1].status, AttendeeStatus::NeedsAction);
+
+        // Validación.
+        for bad in [
+            vec![att("x", "sin-arroba", AttendeeRole::Required)],
+            vec![att("x", "a b@c.com", AttendeeRole::Required)],
+            vec![
+                att("x", "x@a.com", AttendeeRole::Organizer),
+                att("y", "y@a.com", AttendeeRole::Organizer),
+            ],
+            (0..101)
+                .map(|i| att(&format!("p{i}"), "", AttendeeRole::Required))
+                .collect(),
+        ] {
+            let mut e = new(&a, 0, H);
+            e.attendees = bad;
+            assert!(create(&c, &e).is_err());
+        }
+    }
+
+    /// Lista legible de lo que se ve en un rango (para comparar estados).
+    fn visible(c: &Connection) -> Vec<(String, i64, i64, Vec<String>)> {
+        list_range(c, 0, 40 * DAY_MS)
+            .unwrap()
+            .into_iter()
+            .map(|e| (e.title, e.start_at, e.end_at, e.labels))
+            .collect()
+    }
+
+    #[test]
+    fn series_snapshots_undo_and_redo_every_scope() {
+        use crate::models::label::NewLabel;
+        use crate::repositories::labels;
+        let (c, a, _) = setup();
+        let tag = labels::create(
+            &c,
+            &NewLabel {
+                name: "Equipo".into(),
+                color: "#112233".into(),
+            },
+        )
+        .unwrap()
+        .id;
+        let mut input = new(&a, 9 * H, 10 * H);
+        input.recurrence = Some("FREQ=DAILY;COUNT=10".into());
+        input.labels = vec![tag.clone()];
+        input.reminders = vec![15];
+        let first = create(&c, &input).unwrap();
+        let master = first.recurrence_master_id.clone().unwrap();
+        // Estado con una excepción modificada y una cancelada.
+        update(
+            &c,
+            &instance_id(&master, 9 * H + 2 * DAY_MS),
+            &EventPatch {
+                title: Some("Movida".into()),
+                start_at: Some(11 * H + 2 * DAY_MS),
+                end_at: Some(12 * H + 2 * DAY_MS),
+                ..Default::default()
+            },
+            EditScope::This,
+        )
+        .unwrap();
+        delete(
+            &c,
+            &instance_id(&master, 9 * H + 4 * DAY_MS),
+            EditScope::This,
+        )
+        .unwrap();
+        let original = visible(&c);
+        assert_eq!(original.len(), 9);
+
+        type Change = Box<dyn Fn(&Connection) -> Option<String>>;
+        let id5 = instance_id(&master, 9 * H + 5 * DAY_MS);
+        let changes: Vec<(&str, Change)> = vec![
+            ("editar todos", {
+                let id = id5.clone();
+                Box::new(move |c| {
+                    let e = update(
+                        c,
+                        &id,
+                        &EventPatch {
+                            title: Some("Nuevo".into()),
+                            start_at: Some(8 * H + 5 * DAY_MS),
+                            end_at: Some(9 * H + 5 * DAY_MS),
+                            ..Default::default()
+                        },
+                        EditScope::All,
+                    )
+                    .unwrap();
+                    e.recurrence_master_id
+                })
+            }),
+            ("editar siguientes", {
+                let id = id5.clone();
+                Box::new(move |c| {
+                    let e = update(
+                        c,
+                        &id,
+                        &EventPatch {
+                            title: Some("Después".into()),
+                            ..Default::default()
+                        },
+                        EditScope::Following,
+                    )
+                    .unwrap();
+                    e.recurrence_master_id
+                })
+            }),
+            ("quitar repetición", {
+                let id = id5.clone();
+                Box::new(move |c| {
+                    update(
+                        c,
+                        &id,
+                        &EventPatch {
+                            recurrence: Some(String::new()),
+                            ..Default::default()
+                        },
+                        EditScope::All,
+                    )
+                    .unwrap();
+                    None
+                })
+            }),
+            ("eliminar siguientes", {
+                let id = id5.clone();
+                Box::new(move |c| {
+                    delete(c, &id, EditScope::Following).unwrap();
+                    None
+                })
+            }),
+            ("eliminar todos", {
+                let id = id5.clone();
+                Box::new(move |c| {
+                    delete(c, &id, EditScope::All).unwrap();
+                    None
+                })
+            }),
+        ];
+        for (name, change) in changes {
+            let before = snapshot(&c, &id5).unwrap();
+            let new_root = change(&c);
+            let mut roots = vec![master.clone()];
+            roots.extend(new_root.filter(|r| r != &master));
+            let after = snapshots(&c, &roots).unwrap();
+            let changed = visible(&c);
+            assert_ne!(changed, original, "{name}: el cambio no tuvo efecto");
+
+            // Deshacer: se borran las raíces de después y se repone la de antes.
+            replace_series(&c, &roots, std::slice::from_ref(&before)).unwrap();
+            assert_eq!(visible(&c), original, "{name}: deshacer");
+            let rem = list_range(&c, 0, 40 * DAY_MS).unwrap();
+            assert!(rem.iter().all(|e| e.reminders == vec![15]), "{name}");
+
+            // Rehacer y volver a deshacer.
+            replace_series(&c, &roots, &after).unwrap();
+            assert_eq!(visible(&c), changed, "{name}: rehacer");
+            replace_series(&c, &roots, std::slice::from_ref(&before)).unwrap();
+            assert_eq!(visible(&c), original, "{name}: deshacer otra vez");
+        }
+
+        // Un evento simple convertido en serie también se deshace.
+        let simple = create(&c, &new(&a, 30 * DAY_MS, 30 * DAY_MS + H)).unwrap();
+        let before = snapshot(&c, &simple.id).unwrap();
+        assert!(before.root.recurrence.is_none());
+        update(
+            &c,
+            &simple.id,
+            &EventPatch {
+                recurrence: Some("FREQ=DAILY;COUNT=3".into()),
+                ..Default::default()
+            },
+            EditScope::This,
+        )
+        .unwrap();
+        replace_series(&c, std::slice::from_ref(&simple.id), &[before]).unwrap();
+        let e = get(&c, &simple.id).unwrap();
+        assert!(!e.is_recurring && e.recurrence.is_none());
+
+        // Identificadores no válidos se rechazan.
+        assert!(replace_series(&c, &["no-uuid".into()], &[]).is_err());
     }
 }

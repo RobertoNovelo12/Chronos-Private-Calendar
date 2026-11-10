@@ -72,3 +72,37 @@ pub async fn events_search(state: State<'_, AppState>, query: String) -> Command
         .with_vault(move |v| events::search(v.session()?.conn(), &query, 50))
         .await
 }
+
+/// Instantánea de la serie (o del evento simple) de `id`, para deshacer.
+#[tauri::command]
+pub async fn events_snapshot(
+    state: State<'_, AppState>,
+    id: String,
+) -> CommandResult<events::SeriesSnapshot> {
+    state
+        .with_vault(move |v| events::snapshot(v.session()?.conn(), &id))
+        .await
+}
+
+/// Instantáneas de varias raíces (las que ya no existen se omiten).
+#[tauri::command]
+pub async fn events_snapshots(
+    state: State<'_, AppState>,
+    ids: Vec<String>,
+) -> CommandResult<Vec<events::SeriesSnapshot>> {
+    state
+        .with_vault(move |v| events::snapshots(v.session()?.conn(), &ids))
+        .await
+}
+
+/// Deshacer/rehacer en eventos repetidos: borra `remove_ids` y repone las instantáneas.
+#[tauri::command]
+pub async fn events_replace_series(
+    state: State<'_, AppState>,
+    remove_ids: Vec<String>,
+    snapshots: Vec<events::SeriesSnapshot>,
+) -> CommandResult<()> {
+    state
+        .with_vault(move |v| events::replace_series(v.session()?.conn(), &remove_ids, &snapshots))
+        .await
+}

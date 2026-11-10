@@ -38,9 +38,10 @@ Al abrirlo por primera vez, elige una contraseña (mínimo 8 caracteres). Con el
   Lo que creas empieza como **borrador**: se guarda cuando escribes un título o cambias algún dato. Si cierras sin cambiar nada, desaparece.
 - **Clic derecho en un hueco:** Crear evento (`C`) o Pegar evento (`Ctrl+V`) justo en ese lugar.
 - **Clic derecho en un evento:** abrir, Copiar (`Ctrl+C`), Duplicar (`Ctrl+D`), exportar como `.ics`, moverlo a otro calendario o eliminarlo (`Supr`).
+- **Participantes:** en los detalles, **Participantes** → nombre y, si quieres, correo. Puedes marcar su respuesta (pendiente, acepta, quizá, rechaza) y su papel (obligatorio, opcional u organizador). Es solo una lista para ti: **Chronos no envía invitaciones ni correos**. Al exportar a ICS solo van los que tienen correo; el JSON los incluye a todos.
 - **Mover / cambiar duración:** arrastra el evento; arrastra su borde inferior para alargarlo.
 - **Detalles** (panel derecho): título, horas con duración, fecha, todo el día, zona horaria, repetición, ubicación, enlaces, descripción, calendario, disponibilidad, visibilidad, recordatorios y color. Todo se guarda solo.
-- **Deshacer / rehacer:** `Ctrl+Z` / `Ctrl+Shift+Z` (eventos simples, mientras la app esté desbloqueada).
+- **Deshacer / rehacer:** `Ctrl+Z` / `Ctrl+Shift+Z`, también en eventos que se repiten (cualquier alcance: este, este y los siguientes, todos). El historial dura mientras la app esté desbloqueada.
 - **Buscar:** `Ctrl+K` o `/`.
 
 ### Eventos que se repiten
@@ -54,6 +55,23 @@ Si no quieres que el título aparezca en las notificaciones: Configuración → 
 ## 5. Calendarios
 
 En la barra izquierda: casilla de color para mostrar u ocultar; doble clic para renombrar; **⋯** para cambiar color, hacerlo predeterminado, ordenarlo o eliminarlo (borra también sus eventos); **Añadir calendario** abajo.
+
+### Tareas
+En la barra izquierda, sección **Tareas**, agrupadas en **Vencidas**, **Hoy**, **Próximas**, **Sin fecha** y **Completadas**.
+- **Crear:** `Shift+C` (tarea para hoy, con el título listo para escribir), **Añadir tarea** en la barra izquierda (sin fecha; `Enter` para encadenar varias) o clic derecho en un hueco del calendario → **Crear tarea** (vence en ese día y hora).
+- **Completar:** pulsa el círculo, en la lista o en el calendario. Las completadas se pueden borrar todas con **Eliminar completadas**.
+- **Detalles** (panel derecho): título, fecha y hora (o todo el día), prioridad, calendario, recordatorios y notas. Todo se guarda solo.
+- **Eliminar:** icono de papelera o `Supr` con la tarea abierta; aparece **Deshacer** durante unos segundos.
+- **En el calendario:** las tareas con fecha aparecen en la franja **Tareas** de las vistas Día y Semana, en la Agenda, y como recuento en cada día del Mes. Si su calendario está oculto, tampoco se muestran ahí.
+- **Recordatorios:** avisan antes del vencimiento (las de todo el día, respecto a la medianoche) y dejan de avisar al completarlas.
+- Se exportan e importan en ICS (`VTODO`, compatible con Apple Recordatorios, Thunderbird u Outlook) y en JSON. El CSV solo incluye eventos.
+
+### Etiquetas
+En la barra izquierda, sección **Etiquetas**: **Añadir etiqueta**, doble clic para renombrar y **⋯** para cambiar el color o eliminarla (los eventos no se borran, solo pierden la etiqueta).
+- **Asignar:** en los detalles del evento, fila **Etiquetas**: busca una existente o escribe un nombre nuevo y pulsa `Enter` para crearla. Un evento puede tener hasta 20.
+- **Filtrar:** pulsa una etiqueta en la barra izquierda para ver solo los eventos que la tienen; vuelve a pulsarla (o **Quitar filtro**) para verlos todos.
+- En un evento que se repite, las etiquetas se aplican a la serie según el alcance que elijas (este, este y los siguientes, o todos).
+- Al exportar, las etiquetas van en ICS como categorías (`CATEGORIES`, las muestran Outlook y Apple Calendar), en JSON con su color y en CSV en la columna «Etiquetas». Al importar se crean las que falten.
 
 ## 6. Copias de seguridad (Configuración → Copias de seguridad)
 

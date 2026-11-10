@@ -1,9 +1,9 @@
 //! Formato JSON propio de Chronos (legible y completo, sin cifrar).
 
-use super::{ExportItem, ImportBatch, ImportEvent};
+use super::{ExportItem, ImportBatch, ImportEvent, ImportTask, TaskItem};
 use crate::error::{CoreError, Result};
-use crate::models::event::{Availability, EventLink, EventStatus, Visibility};
-use crate::models::Calendar;
+use crate::models::event::{Attendee, Availability, EventLink, EventStatus, Visibility};
+use crate::models::{Calendar, Label};
 use crate::recurrence;
 use serde::{Deserialize, Serialize};
 
@@ -22,7 +22,41 @@ struct Doc {
     #[serde(default)]
     calendars: Vec<CalDoc>,
     #[serde(default)]
+    labels: Vec<LabelDoc>,
+    #[serde(default)]
     events: Vec<EventDoc>,
+    #[serde(default)]
+    tasks: Vec<TaskDoc>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TaskDoc {
+    #[serde(default)]
+    uid: Option<String>,
+    #[serde(default)]
+    calendar: String,
+    title: String,
+    #[serde(default)]
+    notes: String,
+    #[serde(default)]
+    due_at: Option<i64>,
+    #[serde(default)]
+    is_all_day: bool,
+    #[serde(default)]
+    priority: u8,
+    #[serde(default)]
+    completed_at: Option<i64>,
+    #[serde(default)]
+    reminders: Vec<i32>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct LabelDoc {
+    name: String,
+    #[serde(default)]
+    color: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -70,13 +104,22 @@ struct EventDoc {
     exdates: Vec<i64>,
     #[serde(default)]
     recurrence_id: Option<i64>,
+    #[serde(default)]
+    labels: Vec<String>,
+    #[serde(default)]
+    attendees: Vec<Attendee>,
 }
 
 fn utc() -> String {
     "UTC".into()
 }
 
-pub fn write(items: &[ExportItem], calendars: &[Calendar]) -> Result<String> {
+pub fn write(
+    items: &[ExportItem],
+    tasks: &[TaskItem],
+    calendars: &[Calendar],
+    labels: &[Label],
+) -> Result<String> {
     let doc = Doc {
         format: FORMAT_TAG.into(),
         version: FORMAT_VERSION,
@@ -88,6 +131,13 @@ pub fn write(items: &[ExportItem], calendars: &[Calendar]) -> Result<String> {
                 name: c.name.clone(),
                 color: Some(c.color.clone()),
                 description: c.description.clone(),
+            })
+            .collect(),
+        labels: labels
+            .iter()
+            .map(|l| LabelDoc {
+                name: l.name.clone(),
+                color: Some(l.color.clone()),
             })
             .collect(),
         events: items
@@ -113,7 +163,23 @@ pub fn write(items: &[ExportItem], calendars: &[Calendar]) -> Result<String> {
                     reminders: e.reminders.clone(),
                     exdates: it.exdates.clone(),
                     recurrence_id: it.recurrence_id.as_ref().map(|r| r.0),
+                    labels: it.labels.clone(),
+                    attendees: e.attendees.clone(),
                 }
+            })
+            .collect(),
+        tasks: tasks
+            .iter()
+            .map(|it| TaskDoc {
+                uid: Some(it.uid.clone()),
+                calendar: it.calendar_name.clone().unwrap_or_default(),
+                title: it.task.title.clone(),
+                notes: it.task.notes.clone(),
+                due_at: it.task.due_at,
+                is_all_day: it.task.is_all_day,
+                priority: it.task.priority,
+                completed_at: it.task.completed_at,
+                reminders: it.task.reminders.clone(),
             })
             .collect(),
     };
@@ -137,11 +203,16 @@ pub fn parse(text: &str) -> Result<Vec<ImportBatch>> {
             "la exportación es de una versión más nueva de Chronos".into(),
         ));
     }
-    if doc.events.len() > super::MAX_IMPORT_EVENTS {
+    if doc.events.len() + doc.tasks.len() > super::MAX_IMPORT_EVENTS {
         return Err(CoreError::Validation(
             "el archivo tiene demasiados eventos".into(),
         ));
     }
+    let label_colors: Vec<(String, String)> = doc
+        .labels
+        .iter()
+        .filter_map(|l| Some((l.name.clone(), l.color.clone()?)))
+        .collect();
     // Un lote por calendario, en el orden en que aparecen.
     let mut batches: Vec<ImportBatch> = doc
         .calendars
@@ -198,8 +269,43 @@ pub fn parse(text: &str) -> Result<Vec<ImportBatch>> {
             reminders: e.reminders,
             exdates: e.exdates,
             recurrence_id: e.recurrence_id,
+            labels: e.labels,
+            attendees: e.attendees,
         });
     }
-    batches.retain(|b| !b.events.is_empty());
+    for t in doc.tasks {
+        let name = if t.calendar.is_empty() {
+            "Tareas".to_string()
+        } else {
+            t.calendar.clone()
+        };
+        let idx = match batches
+            .iter()
+            .position(|b| b.calendar_name.as_deref() == Some(name.as_str()))
+        {
+            Some(i) => i,
+            None => {
+                batches.push(ImportBatch {
+                    calendar_name: Some(name),
+                    ..Default::default()
+                });
+                batches.len() - 1
+            }
+        };
+        batches[idx].tasks.push(ImportTask {
+            uid: t.uid.filter(|u| !u.trim().is_empty()),
+            title: t.title,
+            notes: t.notes,
+            due_at: t.due_at,
+            is_all_day: t.is_all_day,
+            priority: t.priority,
+            completed_at: t.completed_at,
+            reminders: t.reminders,
+        });
+    }
+    batches.retain(|b| !b.events.is_empty() || !b.tasks.is_empty());
+    if let Some(first) = batches.first_mut() {
+        first.label_colors = label_colors;
+    }
     Ok(batches)
 }

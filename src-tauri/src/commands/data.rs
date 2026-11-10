@@ -115,6 +115,7 @@ pub struct ImportPreview {
     /// "ics", "json" o "backup" (copia cifrada: se restaura, no se importa).
     pub format: String,
     pub events: usize,
+    pub tasks: usize,
     pub calendars: Vec<String>,
     pub rules_dropped: usize,
 }
@@ -158,6 +159,7 @@ pub async fn import_pick(
                     file_name,
                     format: "backup".into(),
                     events: 0,
+                    tasks: 0,
                     calendars: vec![],
                     rules_dropped: 0,
                 }));
@@ -173,6 +175,7 @@ pub async fn import_pick(
                 }
                 .into(),
                 events: batches.iter().map(|b| b.events.len()).sum(),
+                tasks: batches.iter().map(|b| b.tasks.len()).sum(),
                 calendars: batches
                     .iter()
                     .filter_map(|b| b.calendar_name.clone())

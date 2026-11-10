@@ -12,9 +12,12 @@
 //! VALARM (avisos relativos al inicio). Zonas IANA, UTC, hora flotante y los
 //! nombres de zona de Windows más comunes.
 
-use super::{ExportItem, ImportBatch, ImportEvent};
+use super::{ExportItem, ImportBatch, ImportEvent, ImportTask, TaskItem};
 use crate::error::{CoreError, Result};
-use crate::models::event::{Availability, EventLink, EventStatus, Visibility, DAY_MS};
+use crate::models::event::{
+    Attendee, AttendeeRole, AttendeeStatus, Availability, EventLink, EventStatus, Visibility,
+    DAY_MS,
+};
 use crate::recurrence;
 use chrono::{NaiveDate, NaiveDateTime, TimeZone, Utc};
 
@@ -98,7 +101,7 @@ fn trigger(minutes: i32) -> String {
     s
 }
 
-pub fn write(items: &[ExportItem], calendar_name: Option<&str>) -> String {
+pub fn write(items: &[ExportItem], tasks: &[TaskItem], calendar_name: Option<&str>) -> String {
     let mut out = String::new();
     let stamp = utc_stamp(Utc::now().timestamp_millis());
     for l in [
@@ -151,11 +154,14 @@ pub fn write(items: &[ExportItem], calendar_name: Option<&str>) -> String {
         if let Some(link) = e.links.iter().find(|l| l.url.starts_with("http")) {
             fold(&format!("URL:{}", link.url), &mut out);
         }
-        if !it.calendar_name.is_empty() {
-            fold(
-                &format!("CATEGORIES:{}", escape(&it.calendar_name)),
-                &mut out,
-            );
+        // Participantes: solo los que tienen correo (iCalendar exige una dirección).
+        for a in e.attendees.iter().filter(|a| !a.email.is_empty()) {
+            fold(&attendee_prop(a), &mut out);
+        }
+        // CATEGORIES lleva las etiquetas (Outlook y Apple las muestran como categorías).
+        if !it.labels.is_empty() {
+            let cats: Vec<String> = it.labels.iter().map(|l| escape(l)).collect();
+            fold(&format!("CATEGORIES:{}", cats.join(",")), &mut out);
         }
         fold(
             if e.availability == Availability::Free {
@@ -185,8 +191,149 @@ pub fn write(items: &[ExportItem], calendar_name: Option<&str>) -> String {
         }
         fold("END:VEVENT", &mut out);
     }
+    for it in tasks {
+        write_todo(it, &stamp, &mut out);
+    }
     fold("END:VCALENDAR", &mut out);
     out
+}
+
+/// Valor de parámetro entre comillas si lo necesita (RFC 5545 §3.2).
+fn param_value(v: &str) -> String {
+    let clean: String = v.chars().filter(|c| *c != '"' && !c.is_control()).collect();
+    if clean.contains([':', ';', ',']) {
+        format!("\"{clean}\"")
+    } else {
+        clean
+    }
+}
+
+fn attendee_prop(a: &Attendee) -> String {
+    let cn = if a.name.is_empty() {
+        String::new()
+    } else {
+        format!(";CN={}", param_value(&a.name))
+    };
+    if a.role == AttendeeRole::Organizer {
+        return format!("ORGANIZER{cn}:mailto:{}", a.email);
+    }
+    let role = match a.role {
+        AttendeeRole::Optional => "OPT-PARTICIPANT",
+        _ => "REQ-PARTICIPANT",
+    };
+    let stat = match a.status {
+        AttendeeStatus::Accepted => "ACCEPTED",
+        AttendeeStatus::Declined => "DECLINED",
+        AttendeeStatus::Tentative => "TENTATIVE",
+        AttendeeStatus::NeedsAction => "NEEDS-ACTION",
+    };
+    format!(
+        "ATTENDEE{cn};ROLE={role};PARTSTAT={stat}:mailto:{}",
+        a.email
+    )
+}
+
+/// ORGANIZER y ATTENDEE de un VEVENT. El organizador no se repite como asistente.
+fn attendees_of(props: &[Prop]) -> Vec<Attendee> {
+    let email = |v: &str| {
+        let v = v.trim();
+        let v = v
+            .get(..7)
+            .filter(|p| p.eq_ignore_ascii_case("mailto:"))
+            .map_or(v, |_| &v[7..]);
+        v.trim().to_ascii_lowercase()
+    };
+    let mut out: Vec<Attendee> = Vec::new();
+    if let Some(o) = props.iter().find(|p| p.name == "ORGANIZER") {
+        out.push(Attendee {
+            name: o
+                .param("CN")
+                .map(|c| c.trim_matches('"').to_string())
+                .unwrap_or_default(),
+            email: email(&o.value),
+            role: AttendeeRole::Organizer,
+            status: AttendeeStatus::Accepted,
+        });
+    }
+    for p in props.iter().filter(|p| p.name == "ATTENDEE") {
+        let mail = email(&p.value);
+        if out.iter().any(|a| !mail.is_empty() && a.email == mail) {
+            continue;
+        }
+        let up = |k: &str| p.param(k).map(|v| v.trim_matches('"').to_ascii_uppercase());
+        out.push(Attendee {
+            name: p
+                .param("CN")
+                .map(|c| c.trim_matches('"').to_string())
+                .unwrap_or_default(),
+            email: mail,
+            role: match up("ROLE").as_deref() {
+                Some("OPT-PARTICIPANT" | "NON-PARTICIPANT") => AttendeeRole::Optional,
+                _ => AttendeeRole::Required,
+            },
+            status: match up("PARTSTAT").as_deref() {
+                Some("ACCEPTED") => AttendeeStatus::Accepted,
+                Some("DECLINED") => AttendeeStatus::Declined,
+                Some("TENTATIVE") => AttendeeStatus::Tentative,
+                _ => AttendeeStatus::NeedsAction,
+            },
+        });
+    }
+    out
+}
+
+/// Prioridad de Chronos (0 ninguna, 1 baja, 2 media, 3 alta) ↔ iCalendar (1 alta … 9 baja).
+fn ics_priority(p: u8) -> Option<u8> {
+    match p {
+        3 => Some(1),
+        2 => Some(5),
+        1 => Some(9),
+        _ => None,
+    }
+}
+
+fn chronos_priority(v: &str) -> u8 {
+    match v.trim().parse::<u8>() {
+        Ok(1..=4) => 3,
+        Ok(5) => 2,
+        Ok(6..=9) => 1,
+        _ => 0,
+    }
+}
+
+/// Tarea como VTODO. Los recordatorios se relacionan con el vencimiento (RELATED=END).
+fn write_todo(it: &TaskItem, stamp: &str, out: &mut String) {
+    let t = &it.task;
+    fold("BEGIN:VTODO", out);
+    fold(&format!("UID:{}", escape(&it.uid)), out);
+    fold(&format!("DTSTAMP:{stamp}"), out);
+    fold(&format!("SUMMARY:{}", escape(&t.title)), out);
+    if !t.notes.is_empty() {
+        fold(&format!("DESCRIPTION:{}", escape(&t.notes)), out);
+    }
+    if let Some(due) = t.due_at {
+        fold(&dt_prop("DUE", due, "UTC", t.is_all_day, false), out);
+    }
+    if let Some(p) = ics_priority(t.priority) {
+        fold(&format!("PRIORITY:{p}"), out);
+    }
+    match t.completed_at {
+        Some(done) => {
+            fold("STATUS:COMPLETED", out);
+            fold(&format!("COMPLETED:{}", utc_stamp(done)), out);
+        }
+        None => fold("STATUS:NEEDS-ACTION", out),
+    }
+    if t.due_at.is_some() {
+        for m in &t.reminders {
+            fold("BEGIN:VALARM", out);
+            fold("ACTION:DISPLAY", out);
+            fold("DESCRIPTION:Recordatorio", out);
+            fold(&format!("TRIGGER;RELATED=END:{}", trigger(*m)), out);
+            fold("END:VALARM", out);
+        }
+    }
+    fold("END:VTODO", out);
 }
 
 // ---------------------------------------------------------------------------
@@ -242,7 +389,21 @@ fn parse_prop(line: &str) -> Option<Prop> {
     }
     let i = split?;
     let (head, value) = (&line[..i], &line[i + 1..]);
-    let mut parts = head.split(';');
+    // Los parámetros se separan por ';' fuera de comillas (CN="Apellido; Nombre").
+    let mut pieces: Vec<&str> = Vec::new();
+    let (mut start, mut quoted) = (0, false);
+    for (j, c) in head.char_indices() {
+        match c {
+            '"' => quoted = !quoted,
+            ';' if !quoted => {
+                pieces.push(&head[start..j]);
+                start = j + 1;
+            }
+            _ => {}
+        }
+    }
+    pieces.push(&head[start..]);
+    let mut parts = pieces.into_iter();
     let name = parts.next()?.trim().to_ascii_uppercase();
     let params = parts
         .filter_map(|p| {
@@ -442,6 +603,8 @@ pub fn parse(text: &str, default_tz: &str) -> Result<ImportBatch> {
     }
     let mut batch = ImportBatch::default();
     let mut current: Option<Vec<Prop>> = None;
+    // true si el componente abierto es una tarea (VTODO).
+    let mut in_todo = false;
     let mut alarms: Vec<i32> = Vec::new();
     let mut in_alarm = false;
     let mut alarm_trigger: Option<Prop> = None;
@@ -450,8 +613,9 @@ pub fn parse(text: &str, default_tz: &str) -> Result<ImportBatch> {
     for line in &lines {
         let Some(p) = parse_prop(line) else { continue };
         match (p.name.as_str(), p.value.to_ascii_uppercase().as_str()) {
-            ("BEGIN", "VEVENT") if current.is_none() => {
+            ("BEGIN", "VEVENT" | "VTODO") if current.is_none() => {
                 current = Some(Vec::new());
+                in_todo = p.value.eq_ignore_ascii_case("VTODO");
                 alarms.clear();
             }
             ("BEGIN", "VALARM") if current.is_some() => {
@@ -467,12 +631,21 @@ pub fn parse(text: &str, default_tz: &str) -> Result<ImportBatch> {
                     let absolute = t
                         .param("VALUE")
                         .is_some_and(|v| v.eq_ignore_ascii_case("DATE-TIME"));
-                    if !related_end && !absolute {
+                    // En tareas el aviso se relaciona con el vencimiento (DUE).
+                    if (in_todo || !related_end) && !absolute {
                         if let Some(ms) = parse_duration(&t.value) {
                             if ms <= 0 {
                                 alarms.push((-ms / 60_000) as i32);
                             }
                         }
+                    }
+                }
+            }
+            ("END", "VTODO") if in_todo => {
+                in_todo = false;
+                if let Some(props) = current.take() {
+                    if let Some(t) = build_task(&props, std::mem::take(&mut alarms), default_tz) {
+                        batch.tasks.push(t);
                     }
                 }
             }
@@ -504,7 +677,7 @@ pub fn parse(text: &str, default_tz: &str) -> Result<ImportBatch> {
                 }
             }
         }
-        if batch.events.len() > super::MAX_IMPORT_EVENTS {
+        if batch.events.len() + batch.tasks.len() > super::MAX_IMPORT_EVENTS {
             return Err(CoreError::Validation(
                 "el archivo tiene demasiados eventos".into(),
             ));
@@ -605,7 +778,73 @@ fn build_event(
         reminders: alarms,
         exdates,
         recurrence_id,
+        labels: categories(props),
+        attendees: attendees_of(props),
     })
+}
+
+fn build_task(props: &[Prop], alarms: Vec<i32>, default_tz: &str) -> Option<ImportTask> {
+    let get = |n: &str| props.iter().find(|p| p.name == n);
+    let text = |n: &str| get(n).map(|p| unescape(&p.value)).unwrap_or_default();
+    let title = text("SUMMARY");
+    if title.trim().is_empty() {
+        return None;
+    }
+    // Vencimiento: DUE, o DTSTART si no hay DUE.
+    let due = get("DUE")
+        .or_else(|| get("DTSTART"))
+        .and_then(|p| parse_dt(p, default_tz));
+    let status = get("STATUS").map(|p| p.value.to_ascii_uppercase());
+    if status.as_deref() == Some("CANCELLED") {
+        return None;
+    }
+    let completed_at = get("COMPLETED")
+        .and_then(|p| parse_dt(p, "UTC"))
+        .map(|d| d.0)
+        .or_else(|| (status.as_deref() == Some("COMPLETED")).then(crate::database::now_ms));
+    Some(ImportTask {
+        uid: get("UID")
+            .map(|p| unescape(&p.value))
+            .filter(|u| !u.trim().is_empty()),
+        title,
+        notes: text("DESCRIPTION"),
+        due_at: due.as_ref().map(|d| d.0),
+        is_all_day: due.as_ref().is_some_and(|d| d.1),
+        priority: get("PRIORITY")
+            .map(|p| chronos_priority(&p.value))
+            .unwrap_or(0),
+        completed_at,
+        reminders: if due.is_some() { alarms } else { vec![] },
+    })
+}
+
+/// Valores de todas las propiedades CATEGORIES (separados por comas no escapadas).
+fn categories(props: &[Prop]) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for p in props.iter().filter(|p| p.name == "CATEGORIES") {
+        let mut cur = String::new();
+        let mut chars = p.value.chars();
+        while let Some(c) = chars.next() {
+            match c {
+                '\\' => {
+                    cur.push(c);
+                    if let Some(n) = chars.next() {
+                        cur.push(n);
+                    }
+                }
+                ',' => out.push(std::mem::take(&mut cur)),
+                _ => cur.push(c),
+            }
+        }
+        out.push(cur);
+    }
+    let mut seen = Vec::new();
+    for name in out.into_iter().map(|v| unescape(&v).trim().to_string()) {
+        if !name.is_empty() && !seen.iter().any(|s: &String| s.eq_ignore_ascii_case(&name)) {
+            seen.push(name);
+        }
+    }
+    seen
 }
 
 #[cfg(test)]

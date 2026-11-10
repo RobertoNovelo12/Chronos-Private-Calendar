@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { MINUTE_MS } from "@/lib/dates";
 import { createEventNow, duplicateEvent, redo, undo } from "@/features/events/actions";
 import { copyEvent, pasteEvent } from "@/features/events/clipboard";
+import { createTask, deleteTask } from "@/features/tasks/actions";
 import { usePrefsStore } from "@/stores/prefsStore";
 import { useUiStore } from "@/stores/uiStore";
 
@@ -103,7 +104,8 @@ export function useShortcuts(onLock: () => void) {
           ui.step(-1);
           break;
         case "c":
-          void createEventNow();
+          // Shift+C: nueva tarea para hoy.
+          void (e.shiftKey ? createTask() : createEventNow());
           break;
         case "/":
           window.dispatchEvent(new Event("chronos:focus-search"));
@@ -111,11 +113,13 @@ export function useShortcuts(onLock: () => void) {
         case "delete":
         case "backspace":
           if (ui.selectedEventId) ui.askDelete(ui.selectedEventId);
+          else if (ui.selectedTaskId) void deleteTask(ui.selectedTaskId);
           break;
         case "escape":
           if (ui.slotMenu) ui.openSlotMenu(null);
           else if (ui.contextMenu) ui.openContextMenu(null);
           else if (ui.selectedEventId) ui.select(null);
+          else if (ui.selectedTaskId) ui.selectTask(null);
           break;
         default:
           return;

@@ -112,8 +112,9 @@ pub fn validate_rule(rule: &str) -> Result<String> {
         ));
     }
     let normalized = join(&ps);
-    // Comprobación final con el analizador RFC 5545.
-    format!("DTSTART:20260101T000000Z\nRRULE:{normalized}")
+    // Comprobación final con el analizador RFC 5545. El inicio ficticio es muy
+    // antiguo para no rechazar series que terminaron (UNTIL) en el pasado.
+    format!("DTSTART:19000101T000000Z\nRRULE:{normalized}")
         .parse::<RRuleSet>()
         .map_err(|_| CoreError::Validation("regla de repetición no válida".into()))?;
     Ok(normalized)
@@ -272,6 +273,8 @@ mod tests {
             original_start_at: None,
             recurrence: None,
             reminders: vec![],
+            labels: vec![],
+            attendees: vec![],
             created_at: 0,
             updated_at: 0,
         }
@@ -389,5 +392,11 @@ mod tests {
                 ms(2027, 1, 1, 0, 0)
             ]
         );
+    }
+
+    #[test]
+    fn accepts_rules_that_ended_in_the_past() {
+        assert!(validate_rule("FREQ=WEEKLY;UNTIL=20190301T000000Z").is_ok());
+        assert!(validate_rule("FREQ=DAILY;UNTIL=19700106T085959Z").is_ok());
     }
 }

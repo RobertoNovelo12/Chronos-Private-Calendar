@@ -40,6 +40,8 @@ fn event(cal: &str, start: i64, minutes: i64, title: String, rule: Option<&str>)
         availability: None,
         recurrence: rule.map(String::from),
         reminders: vec![10],
+        labels: vec![],
+        attendees: vec![],
         ical_uid: None,
     }
 }

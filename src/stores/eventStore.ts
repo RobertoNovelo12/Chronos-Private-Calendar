@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { api } from "@/lib/ipc";
-import type { CalendarEvent, EditScope, EventPatch, NewEvent } from "@/types/domain";
+import type { CalendarEvent, EditScope, EventPatch, NewEvent, SeriesSnapshot } from "@/types/domain";
 
 /** Identificador del borrador (evento aún no guardado). */
 export const DRAFT_ID = "draft";
@@ -45,6 +45,29 @@ export const useEventStore = create<EventState>((set, get) => {
   };
   const record = (entry: HistoryEntry) =>
     set({ past: [...get().past.slice(-(MAX_HISTORY - 1)), entry], future: [] });
+
+  /**
+   * Cambio en una serie: se guarda la serie antes y después. Deshacer borra las
+   * raíces de ambos estados y repone el anterior; rehacer, el posterior.
+   */
+  const recordSeries = async (label: string, before: SeriesSnapshot | null, newRoot: string | null) => {
+    if (!before) return;
+    const roots = [...new Set([before.root.id, ...(newRoot ? [newRoot] : [])])];
+    let after: SeriesSnapshot[];
+    try {
+      after = await api.events.snapshots(roots);
+    } catch {
+      return;
+    }
+    const all = [...new Set([...roots, ...after.map((s) => s.root.id)])];
+    const apply = async (snaps: SeriesSnapshot[]) => {
+      await api.events.replaceSeries(all, snaps);
+      await get().reload();
+    };
+    record({ label, undo: () => apply([before]), redo: () => apply(after) });
+  };
+  /** Instantánea previa; si falla no se impide el cambio (solo no se podrá deshacer). */
+  const snapshotOf = (id: string) => api.events.snapshot(id).catch(() => null);
 
   // Operaciones sin registro en el historial (usadas también por deshacer/rehacer).
   const rawUpdate = async (id: string, patch: EventPatch) => {
@@ -122,8 +145,11 @@ export const useEventStore = create<EventState>((set, get) => {
       if (!prev) throw new Error("El evento no está cargado en la vista actual");
       if (prev.isRecurring || patch.recurrence) {
         // Las series se recalculan en el backend: se recarga el rango visible.
+        const before = await snapshotOf(id);
         const updated = await api.events.update(id, patch, scope ?? "this");
         await get().reload();
+        // «Este y los siguientes» crea una serie nueva: también es parte del cambio.
+        await recordSeries("editar evento repetido", before, updated.recurrenceMasterId ?? updated.id);
         return updated;
       }
       const inverse = inversePatch(prev, patch);
@@ -139,8 +165,10 @@ export const useEventStore = create<EventState>((set, get) => {
     remove: async (id, scope) => {
       const prev = get().events[id];
       if (prev?.isRecurring) {
+        const before = await snapshotOf(id);
         const removed = await api.events.remove(id, scope ?? "this");
         await get().reload();
+        await recordSeries("eliminar evento repetido", before, null);
         return removed;
       }
       const removed = await rawRemove(id);

@@ -1,5 +1,7 @@
 import { addDays } from "date-fns";
-import { ClipboardPaste, Plus } from "lucide-react";
+import { CircleCheck, ClipboardPaste, Plus } from "lucide-react";
+import { createTask } from "@/features/tasks/actions";
+import { localToAllDay } from "@/lib/dates";
 import { ContextMenuItem, ContextMenuShell } from "@/components/ui/context-menu";
 import { MINUTE_MS, snap } from "@/lib/dates";
 import { usePrefsStore } from "@/stores/prefsStore";
@@ -28,6 +30,14 @@ export function SlotContextMenu() {
     }
   }
 
+  /** Tarea que vence en ese hueco (día completo en la franja superior o en el Mes). */
+  function task() {
+    if (!menu) return;
+    close();
+    if (menu.allDay) void createTask({ dueAt: localToAllDay(new Date(menu.time)), isAllDay: true });
+    else void createTask({ dueAt: snap(new Date(menu.time), "floor").getTime(), isAllDay: false });
+  }
+
   function paste() {
     if (!menu || !copied) return;
     close();
@@ -35,8 +45,9 @@ export function SlotContextMenu() {
   }
 
   return (
-    <ContextMenuShell key={`${menu.x}-${menu.y}`} x={menu.x} y={menu.y} onClose={close} keys={{ c: create, "mod+v": paste }}>
+    <ContextMenuShell key={`${menu.x}-${menu.y}`} x={menu.x} y={menu.y} onClose={close} keys={{ c: create, "shift+c": task, "mod+v": paste }}>
       <ContextMenuItem icon={<Plus />} label="Crear evento" shortcut="C" onSelect={create} />
+      <ContextMenuItem icon={<CircleCheck />} label="Crear tarea" shortcut="⇧C" onSelect={task} />
       <ContextMenuItem
         icon={<ClipboardPaste />}
         label="Pegar evento"

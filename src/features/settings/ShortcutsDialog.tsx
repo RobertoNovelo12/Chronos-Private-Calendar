@@ -28,6 +28,7 @@ const GROUPS: { title: string; items: { label: string; keys: string[] }[] }[] = 
     title: "Eventos",
     items: [
       { label: "Nuevo evento", keys: ["C"] },
+      { label: "Nueva tarea (para hoy)", keys: ["Shift", "C"] },
       { label: "Copiar el seleccionado", keys: ["Ctrl C"] },
       { label: "Pegar bajo el puntero", keys: ["Ctrl V"] },
       { label: "Duplicar el seleccionado", keys: ["Ctrl D"] },

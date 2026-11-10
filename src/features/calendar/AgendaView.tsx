@@ -4,12 +4,15 @@ import { es } from "date-fns/locale";
 import { coversDay, formatEventTime } from "@/lib/dates";
 import { eventColor } from "@/lib/layout";
 import { cn } from "@/lib/utils";
-import { useCalendarMap, useNow, useVisibleEvents } from "@/hooks/useCalendarData";
+import { useCalendarMap, useCalendarTasks, useNow, useVisibleEvents } from "@/hooks/useCalendarData";
+import { CalendarTaskChip } from "@/features/tasks/CalendarTaskChip";
+import { taskOnDay } from "@/lib/tasks";
 import { useUiStore } from "@/stores/uiStore";
 
-/** Lista de los próximos días con eventos (los días vacíos se omiten). */
+/** Lista de los próximos días con eventos o tareas (los días vacíos se omiten). */
 export function AgendaView({ days }: { days: Date[] }) {
   const events = useVisibleEvents();
+  const tasks = useCalendarTasks();
   const calendars = useCalendarMap();
   const selectedId = useUiStore((s) => s.selectedEventId);
   const select = useUiStore((s) => s.select);
@@ -24,16 +27,19 @@ export function AgendaView({ days }: { days: Date[] }) {
           items: events
             .filter((e) => coversDay(e, day))
             .sort((a, b) => Number(b.isAllDay) - Number(a.isAllDay) || a.startAt - b.startAt),
+          dayTasks: tasks
+            .filter((t) => taskOnDay(t, day))
+            .sort((a, b) => Number(b.isAllDay) - Number(a.isAllDay) || (a.dueAt ?? 0) - (b.dueAt ?? 0)),
         }))
-        .filter((g) => g.items.length > 0),
-    [days, events],
+        .filter((g) => g.items.length > 0 || g.dayTasks.length > 0),
+    [days, events, tasks],
   );
 
   if (groups.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center text-center">
         <div>
-          <p className="text-[13px] font-medium">Sin eventos en los próximos {days.length} días</p>
+          <p className="text-[13px] font-medium">Sin eventos ni tareas en los próximos {days.length} días</p>
           <p className="mt-1 text-[12px] text-muted">Pulsa C o cambia a la vista Semana para crear uno.</p>
         </div>
       </div>
@@ -43,7 +49,7 @@ export function AgendaView({ days }: { days: Date[] }) {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="mx-auto max-w-3xl px-6 py-4">
-        {groups.map(({ day, items }) => {
+        {groups.map(({ day, items, dayTasks }) => {
           const today = isSameDay(day, now);
           return (
             <section key={day.getTime()} className="flex gap-6 border-b border-grid py-3 last:border-b-0">
@@ -78,6 +84,11 @@ export function AgendaView({ days }: { days: Date[] }) {
                     </li>
                   );
                 })}
+                {dayTasks.map((t) => (
+                  <li key={t.id}>
+                    <CalendarTaskChip task={t} agenda className="h-[30px] gap-3 rounded-md px-2 text-[13px] [&>span:last-child]:font-normal" />
+                  </li>
+                ))}
               </ul>
             </section>
           );

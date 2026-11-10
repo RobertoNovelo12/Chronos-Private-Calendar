@@ -4,7 +4,9 @@ import { es } from "date-fns/locale";
 import { eventStart, formatEventTime, formatTime } from "@/lib/dates";
 import { eventColor, layoutSpans } from "@/lib/layout";
 import { cn } from "@/lib/utils";
-import { useCalendarMap, useNow, useVisibleEvents } from "@/hooks/useCalendarData";
+import { CircleCheck } from "lucide-react";
+import { useCalendarMap, useCalendarTasks, useNow, useVisibleEvents } from "@/hooks/useCalendarData";
+import { taskOnDay } from "@/lib/tasks";
 import { createEventAt, eventBlockStyle, shiftedByDays, updateEvent } from "@/features/events/actions";
 import { setHoverSlot } from "@/features/events/clipboard";
 import { DRAFT_ID } from "@/stores/eventStore";
@@ -31,6 +33,7 @@ interface MoveDrag {
 
 export function MonthView({ days, anchor }: Props) {
   const events = useVisibleEvents();
+  const tasks = useCalendarTasks();
   const calendars = useCalendarMap();
   const selectedId = useUiStore((s) => s.selectedEventId);
   const select = useUiStore((s) => s.select);
@@ -164,6 +167,7 @@ export function MonthView({ days, anchor }: Props) {
                       >
                         {d.getDate() === 1 ? format(d, "d MMM", { locale: es }) : d.getDate()}
                       </button>
+                      <DayTasksBadge tasks={tasks} day={d} onOpen={() => openDay(d)} />
                     </div>
                   </div>
                 );
@@ -231,5 +235,24 @@ export function MonthView({ days, anchor }: Props) {
         })}
       </div>
     </div>
+  );
+}
+
+/** Tareas pendientes del día en el Mes (las tareas se ven en Día, Semana y Agenda). */
+function DayTasksBadge({ tasks, day, onOpen }: { tasks: ReturnType<typeof useCalendarTasks>; day: Date; onOpen: () => void }) {
+  const pending = tasks.filter((t) => t.completedAt === null && taskOnDay(t, day));
+  if (pending.length === 0) return null;
+  return (
+    <button
+      className="ml-auto flex h-5 items-center gap-1 rounded-[4px] px-1 text-[11px] font-medium text-muted hover:bg-surface-hover hover:text-strong"
+      onClick={(e) => {
+        e.stopPropagation();
+        onOpen();
+      }}
+      title={pending.length === 1 ? `1 tarea: ${pending[0]!.title}` : `${pending.length} tareas pendientes`}
+    >
+      <CircleCheck className="size-3" />
+      <span className="tabular-nums">{pending.length}</span>
+    </button>
   );
 }

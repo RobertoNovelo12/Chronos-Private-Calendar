@@ -8,9 +8,11 @@ import { DAY_MS, MINUTE_MS, SNAP_MINUTES, eventStart, formatEventTime, formatHou
 import { cityName, formatOffsetShort, offsetMinutes, wallTimeIn } from "@/lib/timezones";
 import { MIN_VISUAL_MINUTES, eventColor, layoutSpans, layoutTimedEvents } from "@/lib/layout";
 import { cn } from "@/lib/utils";
-import { useCalendarMap, useNow, useVisibleEvents } from "@/hooks/useCalendarData";
+import { useCalendarMap, useCalendarTasks, useNow, useVisibleEvents } from "@/hooks/useCalendarData";
 import { createEventAt, eventBlockStyle, shiftedByDays, updateEvent } from "@/features/events/actions";
 import { setHoverSlot } from "@/features/events/clipboard";
+import { CalendarTaskChip } from "@/features/tasks/CalendarTaskChip";
+import { taskOnDay } from "@/lib/tasks";
 import { MAX_CUSTOM_DAYS, usePrefsStore } from "@/stores/prefsStore";
 import { DRAFT_ID } from "@/stores/eventStore";
 import { useUiStore } from "@/stores/uiStore";
@@ -365,6 +367,9 @@ export function TimeGridView({ days }: Props) {
         </div>
       </div>
 
+      {/* Tareas con fecha en los días visibles */}
+      <TaskStrip days={days} gutterW={gutterW} scrollbarW={scrollbarW} />
+
       {/* Rejilla horaria */}
       <div ref={scrollRef} className="relative min-h-0 flex-1 overflow-y-auto">
         <div className="flex" style={{ height: 24 * HOUR_H }}>
@@ -653,3 +658,62 @@ function ghostRect(a: Date, b: Date, days: Date[]) {
   return { dayIndex, top, bottom, label: `${formatTime(start)} – ${formatTime(end)}` };
 }
 
+/** Máximo de tareas por día antes de «+N más». */
+const TASKS_MAX_ROWS = 3;
+
+/** Franja «Tareas» bajo la de día completo; solo aparece si hay tareas en los días visibles. */
+function TaskStrip({ days, gutterW, scrollbarW }: { days: Date[]; gutterW: number; scrollbarW: number }) {
+  const tasks = useCalendarTasks();
+  const [expanded, setExpanded] = useState(false);
+  const perDay = useMemo(
+    () =>
+      days.map((d) =>
+        tasks
+          .filter((t) => taskOnDay(t, d))
+          .sort(
+            (a, b) =>
+              Number(a.completedAt !== null) - Number(b.completedAt !== null) ||
+              Number(b.isAllDay) - Number(a.isAllDay) ||
+              (a.dueAt ?? 0) - (b.dueAt ?? 0) ||
+              b.priority - a.priority,
+          ),
+      ),
+    [tasks, days],
+  );
+  const most = perDay.reduce((m, l) => Math.max(m, l.length), 0);
+  if (most === 0) return null;
+  const rows = expanded ? most : Math.min(most, TASKS_MAX_ROWS);
+  const n = days.length;
+
+  return (
+    <div className="flex shrink-0 border-b border-grid" style={{ paddingRight: scrollbarW }}>
+      <div className="flex shrink-0 items-start justify-end whitespace-nowrap pr-2 pt-[5px] text-[10px] font-medium text-muted" style={{ width: gutterW }}>
+        {most > TASKS_MAX_ROWS ? (
+          <button className="hover:text-foreground" onClick={() => setExpanded((v) => !v)}>
+            {expanded ? "Menos" : "Tareas"}
+          </button>
+        ) : (
+          "Tareas"
+        )}
+      </div>
+      <div className="grid flex-1 py-0.5" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
+        {perDay.map((list, i) => {
+          const hidden = list.length - rows;
+          const shown = hidden > 0 ? list.slice(0, rows - 1) : list.slice(0, rows);
+          return (
+            <div key={days[i]!.getTime()} className="min-w-0 border-l border-grid px-0.5" style={{ minHeight: rows * 21 }}>
+              {shown.map((t) => (
+                <CalendarTaskChip key={t.id} task={t} showTime={n <= 7} />
+              ))}
+              {hidden > 0 && (
+                <button className="h-[20px] px-1.5 text-[11px] text-muted hover:text-foreground" onClick={() => setExpanded(true)}>
+                  +{hidden + 1} más
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

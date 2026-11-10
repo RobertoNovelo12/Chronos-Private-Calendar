@@ -2,6 +2,7 @@ import { PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EventPanel } from "@/features/events/EventPanel";
 import { SearchBox } from "@/features/search/SearchBox";
+import { TaskPanel } from "@/features/tasks/TaskPanel";
 import { useSelectedEvent } from "@/stores/eventStore";
 import { usePrefsStore } from "@/stores/prefsStore";
 import { useUiStore } from "@/stores/uiStore";
@@ -9,16 +10,18 @@ import { useUiStore } from "@/stores/uiStore";
 const SHORTCUTS: { label: string; keys: string[] }[] = [
   { label: "Buscar eventos", keys: ["Ctrl", "K"] },
   { label: "Nuevo evento", keys: ["C"] },
+  { label: "Nueva tarea", keys: ["Shift", "C"] },
   { label: "Ir a hoy", keys: ["T"] },
   { label: "Mostrar/ocultar barra lateral", keys: ["`"] },
   { label: "Deshacer", keys: ["Ctrl", "Z"] },
   { label: "Bloquear Chronos", keys: ["Ctrl", "L"] },
 ];
 
-/** Panel derecho: buscador + detalles del evento o atajos útiles. */
+/** Panel derecho: buscador + detalles del evento o de la tarea, o atajos útiles. */
 export function RightPanel() {
   const selectedId = useUiStore((s) => s.selectedEventId);
   const selected = useSelectedEvent(selectedId);
+  const selectedTaskId = useUiStore((s) => s.selectedTaskId);
   const setShortcutsOpen = useUiStore((s) => s.setShortcutsOpen);
   const setPrefs = usePrefsStore((s) => s.set);
 
@@ -34,6 +37,8 @@ export function RightPanel() {
       </div>
       {selectedId && selected ? (
         <EventPanel />
+      ) : selectedTaskId ? (
+        <TaskPanel />
       ) : (
         <div className="px-4 pt-6">
           <h2 className="pb-2 text-[13px] font-semibold text-strong">Atajos útiles</h2>

@@ -23,6 +23,8 @@ const base: CalendarEvent = {
   originalStartAt: null,
   recurrence: null,
   reminders: [],
+    labels: [],
+    attendees: [],
   createdAt: 0,
   updatedAt: 0,
 };

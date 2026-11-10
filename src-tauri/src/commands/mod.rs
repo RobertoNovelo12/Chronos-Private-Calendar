@@ -6,5 +6,7 @@ pub mod backup;
 pub mod calendars;
 pub mod data;
 pub mod events;
+pub mod labels;
 pub mod settings;
+pub mod tasks;
 pub mod vault;

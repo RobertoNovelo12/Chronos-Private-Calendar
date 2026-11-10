@@ -74,6 +74,17 @@ export type Visibility = "default" | "public" | "private" | "confidential";
 export type Availability = "busy" | "free" | "tentative" | "out_of_office";
 export type EventStatus = "confirmed" | "tentative" | "cancelled";
 
+export type AttendeeRole = "organizer" | "required" | "optional";
+export type AttendeeStatus = "needs_action" | "accepted" | "declined" | "tentative";
+
+/** Participante: nota local. Chronos no envía invitaciones. */
+export interface Attendee {
+  name: string;
+  email: string;
+  role: AttendeeRole;
+  status: AttendeeStatus;
+}
+
 export interface EventLink {
   label: string;
   url: string;
@@ -107,8 +118,19 @@ export interface CalendarEvent {
   recurrence: string | null;
   /** Recordatorios: minutos antes del inicio. */
   reminders: number[];
+  /** Ids de etiquetas (las ocurrencias heredan las de la serie). */
+  labels: string[];
+  attendees: Attendee[];
   createdAt: number;
   updatedAt: number;
+}
+
+/** Estado completo de una serie (o evento simple) para deshacer/rehacer. */
+export interface SeriesSnapshot {
+  root: CalendarEvent;
+  icalUid: string | null;
+  overrides: CalendarEvent[];
+  exceptions: { originalStartAt: number; overrideEventId: string | null }[];
 }
 
 /** Alcance de un cambio en un evento repetido. */
@@ -129,6 +151,8 @@ export interface NewEvent {
   availability?: Availability;
   recurrence?: string | null;
   reminders?: number[];
+  labels?: string[];
+  attendees?: Attendee[];
 }
 
 /** `color: ""` elimina el color propio. */
@@ -149,6 +173,68 @@ export interface EventPatch {
   /** `""` quita la repetición. */
   recurrence?: string;
   reminders?: number[];
+  /** Sustituye la lista completa. */
+  labels?: string[];
+  /** Sustituye la lista completa. */
+  attendees?: Attendee[];
+}
+
+export interface Task {
+  id: string;
+  /** null = sin calendario */
+  calendarId: string | null;
+  title: string;
+  notes: string;
+  /** ms UTC; en día completo, medianoche UTC de la fecha. null = sin fecha */
+  dueAt: number | null;
+  isAllDay: boolean;
+  /** 0 ninguna · 1 baja · 2 media · 3 alta */
+  priority: 0 | 1 | 2 | 3;
+  completedAt: number | null;
+  sortOrder: number;
+  reminders: number[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface NewTask {
+  title: string;
+  calendarId?: string | null;
+  notes?: string;
+  dueAt?: number | null;
+  isAllDay?: boolean;
+  priority?: number;
+  reminders?: number[];
+}
+
+/** `dueAt: null` quita la fecha; `calendarId: null` quita el calendario. */
+export interface TaskPatch {
+  calendarId?: string | null;
+  title?: string;
+  notes?: string;
+  dueAt?: number | null;
+  isAllDay?: boolean;
+  priority?: number;
+  reminders?: number[];
+  completed?: boolean;
+}
+
+export interface Label {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface NewLabel {
+  name: string;
+  color: string;
+}
+
+export interface LabelPatch {
+  name?: string;
+  color?: string;
 }
 
 // --- Importación / exportación (fase 5) ---
@@ -164,6 +250,7 @@ export interface ExportOptions {
 
 export interface ExportReport {
   events: number;
+  tasks: number;
   path: string;
 }
 
@@ -172,6 +259,7 @@ export interface ImportPreview {
   fileName: string;
   format: "ics" | "json" | "csv" | "backup";
   events: number;
+  tasks: number;
   calendars: string[];
   rulesDropped: number;
 }
@@ -184,6 +272,8 @@ export interface ImportReport {
   skipped: number;
   rulesDropped: number;
   calendarsCreated: number;
+  labelsCreated: number;
+  tasksImported: number;
 }
 
 export interface BackupSettings {

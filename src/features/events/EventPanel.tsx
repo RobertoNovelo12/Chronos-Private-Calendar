@@ -18,6 +18,8 @@ import { usePrefsStore } from "@/stores/prefsStore";
 import { useUiStore } from "@/stores/uiStore";
 import type { Availability, CalendarEvent, EventLink, EventPatch, Visibility } from "@/types/domain";
 import { duplicateEvent, updateEvent } from "./actions";
+import { LabelsEditor } from "@/features/labels/LabelsEditor";
+import { AttendeesEditor } from "./AttendeesEditor";
 import { RemindersEditor } from "./RemindersEditor";
 import { RepeatPicker } from "./RepeatPicker";
 
@@ -381,6 +383,7 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
         <Divider />
 
         <LinksEditor links={event.links} onChange={(links) => commit({ links })} />
+        <AttendeesEditor value={event.attendees} onChange={(attendees) => void commit({ attendees })} />
         <Divider />
 
         <section className="px-3 py-2">
@@ -423,6 +426,7 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
             </select>
           </Row>
           <RemindersEditor reminders={event.reminders} allDay={event.isAllDay} onChange={(reminders) => void commit({ reminders })} />
+          <LabelsEditor value={event.labels} onChange={(labels) => void commit({ labels })} />
           <Row icon={<Palette className="size-4" />}>
             <button
               ref={colorRef}

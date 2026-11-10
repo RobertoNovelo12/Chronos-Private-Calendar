@@ -6,15 +6,18 @@
 use crate::error::Result;
 use crate::models::event::{DAY_MS, MAX_REMINDER_MINUTES};
 use crate::recurrence;
-use crate::repositories::events;
+use crate::repositories::{events, tasks};
 use chrono::{Local, NaiveDate, TimeZone, Utc};
 use rusqlite::Connection;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DueReminder {
-    /// Clave única (evento/ocurrencia + adelanto) para no repetir avisos.
+    /// Clave única (evento/ocurrencia o tarea + adelanto) para no repetir avisos.
     pub key: String,
+    /// Id del evento o de la tarea.
     pub event_id: String,
+    /// Recordatorio de una tarea (vencimiento) en lugar de un evento (inicio).
+    pub is_task: bool,
     pub title: String,
     pub location: String,
     /// Inicio efectivo (ms UTC). En día completo: medianoche local de la fecha.
@@ -75,10 +78,39 @@ pub fn due_between_with(
                 out.push(DueReminder {
                     key: format!("{base}#{m}"),
                     event_id: e.id.clone(),
+                    is_task: false,
                     title: e.title.clone(),
                     location: e.location.clone(),
                     starts_at,
                     is_all_day: e.is_all_day,
+                    offset_minutes: m,
+                    fire_at,
+                });
+            }
+        }
+    }
+    // Tareas pendientes con vencimiento.
+    for t in tasks::pending_with_reminders(conn, from - DAY_MS, horizon)? {
+        let Some(due) = t.due_at else { continue };
+        let due_at = if t.is_all_day {
+            match Utc.timestamp_millis_opt(due).single() {
+                Some(d) => midnight(d.date_naive()),
+                None => continue,
+            }
+        } else {
+            due
+        };
+        for &m in &t.reminders {
+            let fire_at = due_at - m as i64 * 60_000;
+            if fire_at > from && fire_at <= to {
+                out.push(DueReminder {
+                    key: format!("task:{}@{due}#{m}", t.id),
+                    event_id: t.id.clone(),
+                    is_task: true,
+                    title: t.title.clone(),
+                    location: String::new(),
+                    starts_at: due_at,
+                    is_all_day: t.is_all_day,
                     offset_minutes: m,
                     fire_at,
                 });
@@ -156,6 +188,8 @@ mod tests {
             availability: None,
             recurrence: rule.map(String::from),
             reminders,
+            labels: vec![],
+            attendees: vec![],
             ical_uid: None,
         }
     }
@@ -218,5 +252,59 @@ mod tests {
         assert_eq!(describe_offset(90), "en 1 h 30 min");
         assert_eq!(describe_offset(1440), "mañana");
         assert_eq!(describe_offset(2880), "en 2 días");
+    }
+
+    #[test]
+    fn task_reminders_fire_until_completed() {
+        use crate::models::task::{NewTask, TaskPatch};
+        let (c, _) = setup();
+        let due = 20_000 * DAY_MS + 15 * H;
+        let t = tasks::create(
+            &c,
+            &NewTask {
+                title: "Pagar luz".into(),
+                due_at: Some(due),
+                reminders: vec![0, 30],
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let found = due_between(&c, due - 31 * M, due).unwrap();
+        assert_eq!(found.len(), 2);
+        assert!(found.iter().all(|d| d.is_task && d.title == "Pagar luz"));
+        assert_eq!(found[0].fire_at, due - 30 * M);
+
+        // Día completo: a medianoche local de la fecha (inyectada como UTC aquí).
+        tasks::create(
+            &c,
+            &NewTask {
+                title: "Cumple".into(),
+                due_at: Some(20_001 * DAY_MS),
+                is_all_day: true,
+                reminders: vec![0],
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let utc_midnight = |d: NaiveDate| {
+            Utc.from_utc_datetime(&d.and_hms_opt(0, 0, 0).unwrap())
+                .timestamp_millis()
+        };
+        let all_day =
+            due_between_with(&c, 20_001 * DAY_MS - M, 20_001 * DAY_MS, utc_midnight).unwrap();
+        assert_eq!(all_day.len(), 1);
+        assert!(all_day[0].is_all_day);
+
+        // Completada: ya no avisa.
+        tasks::update(
+            &c,
+            &t.id,
+            &TaskPatch {
+                completed: Some(true),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        assert!(due_between(&c, due - 31 * M, due).unwrap().is_empty());
     }
 }

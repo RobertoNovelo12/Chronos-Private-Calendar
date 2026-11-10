@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 function comboOf(e: KeyboardEvent): string {
   const key = e.key.toLowerCase();
   const name = key === "backspace" ? "delete" : key;
-  return e.ctrlKey || e.metaKey ? `mod+${name}` : name;
+  const shift = e.shiftKey && /^[a-z]$/.test(name) ? "shift+" : "";
+  return `${e.ctrlKey || e.metaKey ? "mod+" : ""}${shift}${name}`;
 }
 
 /**

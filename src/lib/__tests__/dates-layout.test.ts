@@ -34,6 +34,8 @@ function ev(id: string, start: Date | number, end: Date | number, isAllDay = fal
     originalStartAt: null,
     recurrence: null,
     reminders: [],
+    labels: [],
+    attendees: [],
     createdAt: 0,
     updatedAt: 0,
   };

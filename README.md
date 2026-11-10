@@ -3,7 +3,7 @@
 Calendario de escritorio **local, privado y cifrado**, escrito en Rust (Tauri 2) y React.
 Sin cuentas, sin servidores, sin telemetría: tus datos no salen de tu equipo.
 
-> **Versión 1.0.0 — las 7 fases completas.** Instaladores de Windows y Linux probados; macOS se genera con GitHub Actions (sin probar todavía en un Mac). Para usarlo, empieza por la [guía de uso](docs/USER_GUIDE.md); para el plan y los resultados, [docs/ROADMAP.md](docs/ROADMAP.md).
+> **Versión 1.1.0** — las 7 fases de la 1.0 más tareas, etiquetas, participantes, deshacer en series y la sección «Acerca de». Instaladores de Windows y Linux probados; macOS se genera con GitHub Actions (sin probar todavía en un Mac). Para usarlo, empieza por la [guía de uso](docs/USER_GUIDE.md); para el plan y los resultados, [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Qué hay implementado
 
@@ -19,6 +19,9 @@ Sin cuentas, sin servidores, sin telemetría: tus datos no salen de tu equipo.
 * **Borradores**: un clic crea un evento provisional que solo se guarda si escribes un título o cambias algo
 * Menú contextual en eventos y en huecos vacíos (**crear / pegar evento**), copiar y pegar (`Ctrl+C` / `Ctrl+V`), duplicar, eliminar con confirmación, **deshacer/rehacer** (`Ctrl+Z` / `Ctrl+Shift+Z`)
 * Búsqueda local (`/` o `Ctrl+K`) y atajos de teclado (lista completa en Configuración)
+* **Tareas** con fecha opcional, prioridad, notas y recordatorios: lista en la barra lateral (vencidas, hoy, próximas, sin fecha, completadas) y en el calendario (Día, Semana, Agenda y recuento en Mes)
+* **Participantes** como nota local (nombre, correo, papel y respuesta); Chronos no envía invitaciones
+* **Etiquetas** de color en los eventos (varias por evento), con creación rápida y filtro desde la barra lateral
 * Calendarios: crear, renombrar y recolorear (doble clic), mostrar/ocultar, reordenar, predeterminado, eliminar con confirmación
 * Copias de seguridad cifradas `.chronosbak`: **automáticas** (diarias/semanales, con retención y carpeta elegible), manuales, antes de restaurar y antes de actualizar; historial, verificar y restaurar desde la interfaz
 * **Importar** `.ics` y `.json` sin duplicados; **exportar** ICS, JSON, CSV o copia cifrada, por calendario, por fechas o un solo evento
@@ -88,8 +91,8 @@ npm run tauri build      # instaladores de producción en target/release/bundle/
 **Con GitHub Actions** (los tres sistemas a la vez): sube una etiqueta de versión y el flujo `.github/workflows/release.yml` crea un borrador de *Release* con todos los instaladores:
 
 ```powershell
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.1.0
+git push origin v1.1.0
 ```
 
 Además, `.github/workflows/ci.yml` compila y ejecuta todas las pruebas en Windows, Linux y macOS en cada `push`.
@@ -97,9 +100,11 @@ Además, `.github/workflows/ci.yml` compila y ejecuta todas las pruebas en Windo
 ## Pruebas
 
 ```powershell
-cargo test -p chronos-core      # 54 pruebas: cifrado, migraciones, eventos, recurrencias, recordatorios,
-                                # copias, importar/exportar, rendimiento con 20 000 eventos, errores sin datos
-npm.cmd test                    # 25 pruebas: fechas, disposición, repetición, pegar, rendimiento y garantías de privacidad
+cargo test -p chronos-core      # 69 pruebas: cifrado, migraciones, eventos, recurrencias, recordatorios, tareas,
+                                # etiquetas, participantes, deshacer en series, copias, importar/exportar,
+                                # rendimiento con 20 000 eventos, errores sin datos
+npm.cmd test                    # 33 pruebas: fechas, disposición, repetición, pegar, tareas, etiquetas,
+                                # rendimiento y garantías de privacidad
 npm.cmd run test:tz             # las pruebas del frontend en 7 zonas horarias
 npm.cmd run typecheck
 ```

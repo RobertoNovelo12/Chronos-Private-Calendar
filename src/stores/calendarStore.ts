@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { api } from "@/lib/ipc";
 import { useEventStore } from "./eventStore";
+import { useLabelStore } from "./labelStore";
+import { useTaskStore } from "./taskStore";
 import type { Calendar, CalendarPatch, NewCalendar } from "@/types/domain";
 
 interface CalendarState {
@@ -20,7 +22,12 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
   calendars: [],
   loaded: false,
   load: async () => {
-    const calendars = await api.calendars.list();
+    // Etiquetas y tareas se cargan y se vacían junto con los calendarios.
+    const [calendars] = await Promise.all([
+      api.calendars.list(),
+      useLabelStore.getState().load(),
+      useTaskStore.getState().load(),
+    ]);
     set({ calendars, loaded: true });
   },
   create: async (input) => {
@@ -44,7 +51,8 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
   },
   remove: async (id) => {
     await api.calendars.remove(id);
-    // El backend puede reasignar el predeterminado y borra en cascada los eventos.
+    // El backend puede reasignar el predeterminado, borra en cascada los eventos
+    // y deja sin calendario sus tareas.
     await get().load();
     await useEventStore.getState().reload();
   },
@@ -56,5 +64,9 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
     const calendars = await api.calendars.reorder(ids);
     set({ calendars });
   },
-  clear: () => set({ calendars: [], loaded: false }),
+  clear: () => {
+    useLabelStore.getState().clear();
+    useTaskStore.getState().clear();
+    set({ calendars: [], loaded: false });
+  },
 }));

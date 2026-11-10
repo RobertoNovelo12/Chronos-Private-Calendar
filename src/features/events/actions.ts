@@ -52,6 +52,8 @@ export async function createEventAt(start: Date, end: Date, allDay: boolean): Pr
     originalStartAt: null,
     recurrence: null,
     reminders: [],
+    labels: [],
+    attendees: [],
     createdAt: now,
     updatedAt: now,
     ...times,
@@ -82,6 +84,8 @@ async function saveDraft(patch: EventPatch): Promise<string | null> {
     availability: merged.availability,
     recurrence: merged.recurrence,
     reminders: merged.reminders,
+    labels: merged.labels,
+    attendees: merged.attendees,
   });
   useEventStore.getState().setDraft(null);
   useUiStore.getState().promoteDraft(created.id);
@@ -175,14 +179,14 @@ export async function duplicateEvent(id: string): Promise<void> {
   }
 }
 
-/** Elimina tras la confirmación del usuario; en eventos simples ofrece deshacer. */
+/** Elimina tras la confirmación del usuario y ofrece deshacer (también en series). */
 export async function deleteEventConfirmed(id: string, scope?: EditScope): Promise<void> {
   try {
     const recurring = useEventStore.getState().events[id]?.isRecurring ?? false;
     await useEventStore.getState().remove(id, scope);
     if (useUiStore.getState().selectedEventId === id) useUiStore.getState().select(null);
-    if (recurring) toast.info(scope === "this" ? "Evento eliminado" : "Eventos eliminados");
-    else toast.info("Evento eliminado", { label: "Deshacer", run: () => void undo() });
+    const message = recurring && scope !== "this" ? "Eventos eliminados" : "Evento eliminado";
+    toast.info(message, { label: "Deshacer", run: () => void undo() });
   } catch (e) {
     toast.error(errorMessage(e));
   }

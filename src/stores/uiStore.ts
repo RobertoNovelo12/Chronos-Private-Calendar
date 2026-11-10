@@ -34,6 +34,10 @@ interface UiState {
   /** Fecha de referencia de la vista. */
   anchor: Date;
   selectedEventId: string | null;
+  /** Tarea abierta en el panel derecho (excluye un evento seleccionado). */
+  selectedTaskId: string | null;
+  /** El panel de la tarea debe enfocar y seleccionar el título (tarea nueva). */
+  focusTaskTitle: boolean;
   /**
    * Clave del panel de detalles. Se mantiene cuando un borrador pasa a ser un
    * evento guardado, para no perder el foco mientras se escribe.
@@ -53,6 +57,7 @@ interface UiState {
   today: () => void;
   step: (dir: 1 | -1) => void;
   select: (id: string | null, focusTitle?: boolean) => void;
+  selectTask: (id: string | null, focusTitle?: boolean) => void;
   /** El borrador se guardó con este id: se selecciona sin reiniciar el panel. */
   promoteDraft: (id: string) => void;
   setSettingsOpen: (open: boolean) => void;
@@ -70,6 +75,8 @@ export const useUiStore = create<UiState>((set, get) => ({
   view: usePrefsStore.getState().lastView,
   anchor: startOfDay(new Date()),
   selectedEventId: null,
+  selectedTaskId: null,
+  focusTaskTitle: false,
   panelKey: null,
   focusTitle: false,
   settingsOpen: false,
@@ -89,7 +96,11 @@ export const useUiStore = create<UiState>((set, get) => ({
   select: (id, focusTitle = false) => {
     // Un borrador sin cambios se descarta al dejar de estar seleccionado.
     if (get().selectedEventId === DRAFT_ID && id !== DRAFT_ID) useEventStore.getState().setDraft(null);
-    set({ selectedEventId: id, panelKey: id, focusTitle });
+    set({ selectedEventId: id, panelKey: id, focusTitle, ...(id ? { selectedTaskId: null } : {}) });
+  },
+  selectTask: (id, focusTaskTitle = false) => {
+    if (id && get().selectedEventId) get().select(null);
+    set({ selectedTaskId: id, focusTaskTitle });
   },
   promoteDraft: (id) => {
     if (get().selectedEventId === DRAFT_ID) set({ selectedEventId: id });
@@ -124,6 +135,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     get().scopeRequest?.resolve(null);
     set({
       selectedEventId: null,
+      selectedTaskId: null,
       panelKey: null,
       confirmDeleteId: null,
       contextMenu: null,

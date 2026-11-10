@@ -7,7 +7,7 @@ use super::ExportItem;
 use crate::models::event::{Availability, Visibility, DAY_MS};
 use chrono::{TimeZone, Utc};
 
-const HEADER: [&str; 11] = [
+const HEADER: [&str; 12] = [
     "Título",
     "Inicio",
     "Fin",
@@ -19,6 +19,7 @@ const HEADER: [&str; 11] = [
     "Repetición",
     "Disponibilidad",
     "Privacidad",
+    "Etiquetas",
 ];
 
 pub(crate) fn cell(value: &str) -> String {
@@ -95,6 +96,7 @@ pub fn write(items: &[ExportItem]) -> String {
                 Visibility::Confidential => "Confidencial",
             }
             .to_string(),
+            it.labels.join(", "),
         ];
         out.push_str(&row.iter().map(|v| cell(v)).collect::<Vec<_>>().join(","));
         out.push_str("\r\n");

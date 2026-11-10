@@ -92,6 +92,8 @@ export async function pasteEvent(slot?: Slot): Promise<void> {
       availability: src.availability,
       recurrence: null,
       reminders: src.reminders,
+      labels: src.labels,
+      attendees: src.attendees,
       ...pastedTimes(src, target),
     });
     useUiStore.getState().select(created.id);

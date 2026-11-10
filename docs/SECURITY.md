@@ -82,11 +82,13 @@ Tauri usa Microsoft Edge WebView2. El *runtime* de WebView2 lo actualiza Windows
 * **Con la aplicación desbloqueada** la notificación muestra título, hora y lugar, salvo que en Configuración se elija «Ocultar detalles».
 * **Con la aplicación bloqueada** Chronos solo conserva en memoria las horas de los avisos de las próximas 24 h (sin títulos ni ubicaciones) y muestra un texto genérico («Tienes un evento en 10 min»).
 * **Limitación:** el centro de notificaciones del sistema (Windows, macOS, Linux) puede guardar el historial de notificaciones fuera de la base cifrada. Si eso es un problema, elige «Ocultar detalles».
+* Las tareas usan el mismo mecanismo: con la app bloqueada el aviso dice solo «Tienes una tarea en 10 min».
 * Con la aplicación cerrada no hay avisos: no se instala ningún servicio en segundo plano.
 
 ## Exportaciones e importaciones
 
 * **ICS, JSON y CSV no van cifrados**: son formatos para otras aplicaciones o para leerlos. La interfaz lo indica. La única exportación cifrada es la copia `.chronosbak`.
+* **Participantes:** se guardan cifrados como el resto del evento y nunca se contacta con ellos. Al exportar a ICS o JSON sus nombres y correos quedan en el archivo sin cifrar; al importar ese ICS en otra aplicación, esa aplicación podría ofrecer enviar invitaciones.
 * **CSV:** los valores que empiezan por `=`, `+`, `-`, `@`, tabulador o retorno de carro se prefijan con `'` para que una hoja de cálculo no los ejecute como fórmulas.
 * **Importación:** se validan todos los datos con las mismas reglas que la interfaz (longitudes, enlaces solo `https`/`http`/`mailto`, zonas horarias, reglas de repetición acotadas). Lo que no cumple se descarta y se informa del recuento; la importación completa es atómica (todo o nada ante un error inesperado).
 * **Copiar y pegar eventos** usa memoria interna de la aplicación, no el portapapeles del sistema, y se borra al bloquear.

@@ -3,6 +3,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MiniCalendar } from "@/features/calendar/MiniCalendar";
 import { CalendarList } from "@/features/calendars/CalendarList";
+import { LabelList } from "@/features/labels/LabelList";
+import { TaskList } from "@/features/tasks/TaskList";
 import { createEventNow } from "@/features/events/actions";
 import { api, errorMessage } from "@/lib/ipc";
 import type { VisibleRange } from "@/lib/dates";
@@ -12,7 +14,7 @@ import { usePrefsStore } from "@/stores/prefsStore";
 import { toast } from "@/stores/toastStore";
 import { useUiStore } from "@/stores/uiStore";
 
-/** Barra lateral izquierda: acciones rápidas, mini calendario y calendarios. */
+/** Barra lateral izquierda: acciones rápidas, mini calendario, calendarios, tareas y etiquetas. */
 export function Sidebar({ range, onLock }: { range: VisibleRange; onLock: () => void }) {
   const loaded = useCalendarStore((s) => s.loaded);
   const setPrefs = usePrefsStore((s) => s.set);
@@ -59,6 +61,8 @@ export function Sidebar({ range, onLock }: { range: VisibleRange; onLock: () => 
       <div className="min-h-0 flex-1 overflow-y-auto pt-3">
         <MiniCalendar range={range} />
         {loaded && <CalendarList onError={(m) => toast.error(m)} />}
+        {loaded && <TaskList />}
+        {loaded && <LabelList onError={(m) => toast.error(m)} />}
       </div>
 
       <div className="flex h-11 shrink-0 items-center justify-between px-2.5">

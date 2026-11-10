@@ -96,6 +96,7 @@ function ImportSection() {
             </div>
             <div className="text-[12px] text-muted">
               {plural(preview.events, "evento", "eventos")}
+              {preview.tasks > 0 && ` · ${plural(preview.tasks, "tarea", "tareas")}`}
               {preview.calendars.length > 0 && ` · ${plural(preview.calendars.length, "calendario", "calendarios")}`}
               {preview.rulesDropped > 0 &&
                 ` · ${plural(preview.rulesDropped, "regla de repetición no compatible", "reglas de repetición no compatibles")} (se importarán como eventos únicos)`}
@@ -118,19 +119,25 @@ function ImportSection() {
             <Button variant="secondary" size="sm" onClick={() => setPreview(null)} disabled={busy}>
               Cancelar
             </Button>
-            <Button size="sm" onClick={() => void apply()} disabled={busy || preview.events === 0}>
-              {busy ? "Importando…" : `Importar ${plural(preview.events, "evento", "eventos")}`}
+            <Button size="sm" onClick={() => void apply()} disabled={busy || preview.events + preview.tasks === 0}>
+              {busy
+                ? "Importando…"
+                : preview.events === 0
+                  ? `Importar ${plural(preview.tasks, "tarea", "tareas")}`
+                  : `Importar ${plural(preview.events, "evento", "eventos")}${preview.tasks > 0 ? ` y ${plural(preview.tasks, "tarea", "tareas")}` : ""}`}
             </Button>
           </div>
         </div>
       )}
       {report && (
         <p className="rounded-md bg-control px-3 py-2 text-[12px] leading-relaxed">
-          Importación completada: {plural(report.imported, "elemento importado", "elementos importados")}
+          Importación completada: {plural(report.imported, "evento importado", "eventos importados")}
+          {report.tasksImported > 0 && `, ${plural(report.tasksImported, "tarea importada", "tareas importadas")}`}
           {report.duplicates > 0 && `, ${plural(report.duplicates, "ya existía", "ya existían")}`}
           {report.skipped > 0 && `, ${plural(report.skipped, "descartado (cancelado o no válido)", "descartados (cancelados o no válidos)")}`}
           {report.rulesDropped > 0 && `, ${plural(report.rulesDropped, "repetición no compatible", "repeticiones no compatibles")}`}
-          {report.calendarsCreated > 0 && `. ${plural(report.calendarsCreated, "calendario nuevo", "calendarios nuevos")}`}.
+          {report.calendarsCreated > 0 && `. ${plural(report.calendarsCreated, "calendario nuevo", "calendarios nuevos")}`}
+          {report.labelsCreated > 0 && `. ${plural(report.labelsCreated, "etiqueta nueva", "etiquetas nuevas")}`}.
         </p>
       )}
       {restorePath && (
@@ -176,7 +183,10 @@ function ExportSection() {
       const cal = calendars.find((c) => c.id === calendarId);
       const name = `chronos-${cal ? cal.name : "calendarios"}`;
       const r = await api.data.export(format, options, name);
-      if (r) toast.info(`${plural(r.events, "elemento exportado", "elementos exportados")}`);
+      if (r)
+        toast.info(
+          `${plural(r.events, "evento exportado", "eventos exportados")}${r.tasks > 0 ? ` y ${plural(r.tasks, "tarea", "tareas")}` : ""}`,
+        );
     } catch (e) {
       toast.error(errorMessage(e));
     } finally {

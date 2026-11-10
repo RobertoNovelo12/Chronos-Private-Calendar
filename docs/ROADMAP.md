@@ -100,7 +100,7 @@ Plan acordado tras la 1.0. Cada versión se entrega igual que las anteriores: c�
 
 Leyenda: ⬜ pendiente · 🔄 en curso · ✅ hecho
 
-## Versión 1.1 — Completar el enunciado + donaciones
+## Versión 1.1 — Completar el enunciado + donaciones ✅
 
 ### 1.1.1 Apoyar el proyecto (donaciones por PayPal)
 Principio: la aplicación **no se conecta a PayPal**. Solo abre el enlace en el navegador cuando el usuario pulsa el botón; sin ventanas emergentes, sin recordatorios insistentes, sin rastreo.
@@ -114,35 +114,36 @@ Principio: la aplicación **no se conecta a PayPal**. Solo abre el enlace en el 
 8. ✅ SECURITY.md: es la única acción que abre un sitio externo y la inicia el usuario.
 
 ### 1.1.2 Etiquetas
-1. ⬜ Repositorio `labels` en Rust: crear, renombrar, recolorear, eliminar (tablas `labels` y `event_labels` ya existen).
-2. ⬜ Asignar etiquetas a eventos y a series (las ocurrencias heredan las de la serie).
-3. ⬜ Comandos Tauri + tipos en `ipc.ts`.
-4. ⬜ Panel del evento: fila «Etiquetas» con selector y creación rápida.
-5. ⬜ Barra lateral: sección «Etiquetas» con filtro (mostrar solo eventos con una etiqueta).
-6. ⬜ Incluir etiquetas en exportar/importar (ICS `CATEGORIES`, JSON) y en las copias.
-7. ⬜ Pruebas: CRUD, filtro por rango, ida y vuelta ICS/JSON, borrado en cascada.
+1. ✅ Repositorio `labels` en Rust: crear, renombrar, recolorear, eliminar (nombre único sin distinguir mayúsculas, máx. 500).
+2. ✅ Asignar etiquetas a eventos y a series (las ocurrencias heredan las de la serie; una excepción puede tener las suyas). Máx. 20 por evento.
+3. ✅ Comandos Tauri (`labels_list/create/update/delete`) + tipos en `ipc.ts`.
+4. ✅ Panel del evento: fila «Etiquetas» con chips, buscador y creación rápida (`Enter`).
+5. ✅ Barra lateral: sección «Etiquetas» con filtro (solo eventos con esa etiqueta) y menú de opciones.
+6. ✅ Exportar/importar: ICS `CATEGORIES` (antes llevaba el nombre del calendario), JSON con colores, CSV columna «Etiquetas»; las copias ya incluían las tablas.
+7. ✅ Pruebas: CRUD y validación, herencia en series y excepciones, borrado sin perder eventos, límite por evento, ida y vuelta ICS/JSON/CSV.
 
 ### 1.1.3 Tareas
-1. ⬜ Repositorio `tasks`: crear, editar, completar, reabrir, ordenar, eliminar (tabla `tasks` ya existe).
-2. ⬜ Recordatorios para tareas (la tabla `event_reminders` ya admite `task_id`) en el programador de notificaciones.
-3. ⬜ Panel «Tareas» en la barra lateral: pendientes, de hoy, vencidas y completadas.
-4. ⬜ Tareas con fecha en el calendario (franja «Todo el día» o a su hora), con casilla para completarlas.
-5. ⬜ Atajo para crear tarea (p. ej. `Shift+C`) y opción en el menú de clic derecho.
-6. ⬜ Exportar/importar tareas (ICS `VTODO`, JSON, CSV) y en las copias.
-7. ⬜ Pruebas: CRUD, recordatorios de tareas, vencidas según zona horaria, exportación.
+1. ✅ Repositorio `tasks`: crear, editar, completar, reabrir, eliminar (con deshacer), eliminar completadas. Migración 3: UID de iCalendar para no duplicar al reimportar.
+2. ✅ Recordatorios de tareas en el programador de notificaciones (dejan de avisar al completarlas; texto genérico con la app bloqueada).
+3. ✅ Barra lateral «Tareas»: vencidas, hoy, próximas, sin fecha y completadas; añadir rápido; panel derecho con todos los detalles.
+4. ✅ En el calendario: franja «Tareas» en Día/Semana, filas en la Agenda y recuento por día en el Mes, con casilla para completarlas.
+5. ✅ `Shift+C` y «Crear tarea» en el menú de clic derecho (vence en ese hueco).
+6. ✅ Exportar/importar en ICS (`VTODO`, prioridad, estado, avisos `RELATED=END`) y JSON; las copias ya incluían la tabla. CSV: solo eventos (es una tabla de eventos).
+7. ✅ Pruebas: CRUD, validación, `null` frente a campo ausente, recordatorios (también de día completo y al completar), agrupación y textos de vencimiento, ida y vuelta ICS/JSON, VTODO de otras aplicaciones.
 
 ### 1.1.4 Participantes (solo como nota local)
-1. ⬜ Repositorio `event_attendees` (tabla ya existe): nombre, correo, rol, estado.
-2. ⬜ Panel del evento: fila «Participantes» con añadir/quitar y estado (pendiente, acepta, rechaza, quizá).
-3. ⬜ Texto claro: **Chronos no envía invitaciones**.
-4. ⬜ Exportar/importar `ATTENDEE`/`ORGANIZER` en ICS y en JSON.
-5. ⬜ Pruebas de ida y vuelta.
+1. ✅ Participantes en `event_attendees`: nombre, correo, papel (organizador, obligatorio, opcional) y respuesta (pendiente, acepta, quizá, rechaza). Validación: nombre o correo, correo con formato, sin repetidos, un solo organizador, máx. 100.
+2. ✅ Panel del evento: sección «Participantes» con resumen de respuestas, añadir/quitar, cambiar respuesta y papel. Las ocurrencias heredan los de la serie; «solo este evento» puede cambiarlos.
+3. ✅ Texto visible: **Chronos no envía invitaciones ni correos**.
+4. ✅ ICS `ORGANIZER`/`ATTENDEE` (`CN`, `ROLE`, `PARTSTAT`) y JSON. De paso se corrigió la lectura de parámetros ICS entre comillas con `;` (p. ej. `CN="Pérez; Ana"`).
+5. ✅ Pruebas: validación, herencia y excepción, ida y vuelta ICS/JSON, ICS al estilo de Google Calendar.
 
 ### 1.1.5 Deshacer/rehacer en eventos repetidos
-1. ⬜ Guardar en memoria una instantánea de la serie (maestra, regla, excepciones) antes de cada cambio.
-2. ⬜ Comando `events_restore_series` que la reponga en una transacción.
-3. ⬜ Integrarlo en la pila de `Ctrl+Z` / `Ctrl+Shift+Z` (se sigue borrando al bloquear).
-4. ⬜ Pruebas: deshacer «este», «este y los siguientes» y «todos».
+1. ✅ Antes de cada cambio en una serie se toma una instantánea completa (maestra, regla, excepciones, recordatorios, etiquetas, participantes y UID).
+2. ✅ Comandos `events_snapshot(s)` y `events_replace_series`: borran las raíces afectadas y reponen la instantánea en una transacción.
+3. ✅ Integrado en `Ctrl+Z` / `Ctrl+Shift+Z` y en el botón «Deshacer» del aviso al eliminar (el historial se borra al bloquear).
+4. ✅ Pruebas: deshacer, rehacer y volver a deshacer «editar todos», «editar siguientes», «quitar repetición», «eliminar siguientes», «eliminar todos» y convertir un evento simple en serie.
+5. ✅ Corrección encontrada por estas pruebas: las reglas con fin (`UNTIL`) anterior a 2026 se rechazaban; ahora se aceptan (afectaba a la importación de series antiguas de Google/Outlook).
 
 ### 1.1.6 Correcciones
 1. ✅ La lista de copias se actualiza sola (cada 20 s) cuando se crea una copia automática con la pestaña abierta.

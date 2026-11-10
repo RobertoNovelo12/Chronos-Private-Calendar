@@ -63,6 +63,95 @@ sql_enum!(Visibility { Default => "default", Public => "public", Private => "pri
 sql_enum!(Availability { Busy => "busy", Free => "free", Tentative => "tentative", OutOfOffice => "out_of_office" });
 sql_enum!(EventStatus { Confirmed => "confirmed", Tentative => "tentative", Cancelled => "cancelled" });
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AttendeeRole {
+    Organizer,
+    #[default]
+    Required,
+    Optional,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AttendeeStatus {
+    #[default]
+    NeedsAction,
+    Accepted,
+    Declined,
+    Tentative,
+}
+
+sql_enum!(AttendeeRole { Organizer => "organizer", Required => "required", Optional => "optional" });
+sql_enum!(AttendeeStatus { NeedsAction => "needs_action", Accepted => "accepted", Declined => "declined", Tentative => "tentative" });
+
+/// Participante: solo una nota local. Chronos no envía invitaciones.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Attendee {
+    #[serde(default)]
+    pub name: String,
+    #[serde(default)]
+    pub email: String,
+    #[serde(default)]
+    pub role: AttendeeRole,
+    #[serde(default)]
+    pub status: AttendeeStatus,
+}
+
+pub const MAX_ATTENDEES: usize = 100;
+pub const MAX_ATTENDEE_NAME_CHARS: usize = 200;
+pub const MAX_EMAIL_CHARS: usize = 320;
+
+/// Valida y normaliza: nombre o correo obligatorio, correo con formato
+/// básico, como mucho un organizador y sin correos repetidos.
+pub fn normalize_attendees(list: &[Attendee]) -> Result<Vec<Attendee>> {
+    if list.len() > MAX_ATTENDEES {
+        return Err(CoreError::Validation(format!(
+            "máximo {MAX_ATTENDEES} participantes"
+        )));
+    }
+    let mut out: Vec<Attendee> = Vec::with_capacity(list.len());
+    for a in list {
+        let name = a.name.trim().to_string();
+        let email = a.email.trim().to_ascii_lowercase();
+        if name.is_empty() && email.is_empty() {
+            continue;
+        }
+        check_len(&name, MAX_ATTENDEE_NAME_CHARS, "nombre del participante")?;
+        if !email.is_empty() {
+            let valid = email.len() <= MAX_EMAIL_CHARS
+                && !email.chars().any(|c| c.is_whitespace() || c.is_control())
+                && email
+                    .split_once('@')
+                    .is_some_and(|(u, d)| !u.is_empty() && d.contains('.') && !d.contains('@'));
+            if !valid {
+                return Err(CoreError::Validation("correo no válido".into()));
+            }
+            if out.iter().any(|o| o.email == email) {
+                continue;
+            }
+        }
+        out.push(Attendee {
+            name,
+            email,
+            role: a.role,
+            status: a.status,
+        });
+    }
+    if out
+        .iter()
+        .filter(|a| a.role == AttendeeRole::Organizer)
+        .count()
+        > 1
+    {
+        return Err(CoreError::Validation(
+            "solo puede haber un organizador".into(),
+        ));
+    }
+    Ok(out)
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EventLink {
     #[serde(default)]
@@ -102,6 +191,12 @@ pub struct Event {
     pub recurrence: Option<String>,
     /// Recordatorios: minutos antes del inicio.
     pub reminders: Vec<i32>,
+    /// Ids de las etiquetas asignadas (las ocurrencias heredan las de la serie).
+    #[serde(default)]
+    pub labels: Vec<String>,
+    /// Participantes (nota local; no se envían invitaciones).
+    #[serde(default)]
+    pub attendees: Vec<Attendee>,
     pub created_at: i64,
     pub updated_at: i64,
 }
@@ -147,6 +242,11 @@ pub struct NewEvent {
     pub recurrence: Option<String>,
     #[serde(default)]
     pub reminders: Vec<i32>,
+    /// Ids de etiquetas.
+    #[serde(default)]
+    pub labels: Vec<String>,
+    #[serde(default)]
+    pub attendees: Vec<Attendee>,
     /// UID de iCalendar (solo importación; el frontend no lo envía).
     #[serde(skip)]
     pub ical_uid: Option<String>,
@@ -172,6 +272,10 @@ pub struct EventPatch {
     /// `Some("")` quita la repetición.
     pub recurrence: Option<String>,
     pub reminders: Option<Vec<i32>>,
+    /// Sustituye la lista completa de etiquetas.
+    pub labels: Option<Vec<String>>,
+    /// Sustituye la lista completa de participantes.
+    pub attendees: Option<Vec<Attendee>>,
 }
 
 impl EventPatch {
