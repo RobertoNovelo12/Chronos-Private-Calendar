@@ -86,7 +86,7 @@ describe("privacidad: actualizaciones (única conexión de red)", () => {
 
   it("verifica la firma con la clave pública del autor (fijada)", () => {
     const decoded = Buffer.from(updater.pubkey, "base64").toString("utf8");
-    expect(decoded).toMatch(/^untrusted comment: minisign public key: 0020B85FAC59BFE2\n/);
+    expect(decoded).toMatch(/^untrusted comment: minisign public key: EC17C81746F15627\n/);
     expect(decoded).not.toMatch(/secret key/i);
   });
 

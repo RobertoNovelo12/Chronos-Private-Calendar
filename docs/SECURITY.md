@@ -67,7 +67,7 @@ SQLCipher: PRAGMA key = "x'<DEK en hex>'"   (clave en bruto: sin PBKDF2 adiciona
   * Solo cuando el usuario pulsa **Buscar actualizaciones**, o una vez al día si activa la casilla correspondiente (**desactivada por defecto**).
   * Solo consulta `https://github.com/RobertoNovelo12/Chronos-Private-Calendar/releases/latest/download/latest.json` (fijo en `tauri.conf.json`) y solo descarga desde `…/releases/download/` del mismo repositorio; cualquier otra dirección se rechaza.
   * Es una petición anónima: no se envía ningún dato del calendario, identificador ni estadística. GitHub ve la dirección IP y la versión del sistema (como en cualquier descarga).
-  * El paquete se verifica con **minisign** contra la clave pública incluida en la app (ID `0020B85FAC59BFE2`) **antes** de instalarlo; si la firma no coincide, se descarta. La clave privada no está en el repositorio: solo en el equipo del autor y como secreto cifrado de GitHub Actions.
+  * El paquete se verifica con **minisign** contra la clave pública incluida en la app (ID `EC17C81746F15627`) **antes** de instalarlo; si la firma no coincide, se descarta. La clave privada no está en el repositorio: solo en el equipo del autor y como secreto cifrado de GitHub Actions.
   * Antes de instalar se crea una copia cifrada `pre_update` (si la app está desbloqueada); sin copia no se instala.
   * El frontend no tiene permisos `updater:*`: solo puede llamar a `update_check` y `update_install`, que no aceptan direcciones ni parámetros.
   * `privacy.test.ts` falla si cambia la dirección, la clave pública, los permisos, el valor por defecto de la comprobación automática o si otro código usa el actualizador.
