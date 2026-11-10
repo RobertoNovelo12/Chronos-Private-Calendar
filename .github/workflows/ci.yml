@@ -1,0 +1,69 @@
+# Comprobaciones automáticas en cada push y pull request, en los tres sistemas.
+# No publica nada: solo compila y ejecuta las pruebas.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Pruebas (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-22.04, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dependencias de Linux (WebKitGTK)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev librsvg2-dev
+
+      - name: NASM (OpenSSL de SQLCipher en Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/setup-nasm@v1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - uses: Swatinem/rust-cache@v2
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - name: Pruebas en varias zonas horarias
+        if: runner.os == 'Linux'
+        run: npm run test:tz
+
+      - name: Formato de Rust
+        if: runner.os == 'Linux'
+        run: cargo fmt --all --check
+
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test -p chronos-core --release
+
+      - name: Sin clientes de red en las dependencias
+        shell: bash
+        run: |
+          if cargo tree -p chronos-desktop -e normal --prefix none | sed 's/ (.*//' | sort -u \
+             | grep -Ei '^(reqwest|hyper|ureq|surf|isahc|curl|h2|rustls|native-tls) '; then
+            echo "Se encontró un cliente de red en las dependencias"; exit 1
+          fi

@@ -1,0 +1,84 @@
+# Instaladores para Windows, Linux y macOS. Se ejecuta al subir una etiqueta
+# de versión (p. ej. `git tag v1.0.0 && git push origin v1.0.0`) o a mano desde
+# la pestaña Actions. Crea un borrador de "Release" en GitHub con los archivos;
+# nada se publica hasta que lo revises y pulses "Publish".
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Instalador (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            args: ""
+          - name: Linux
+            os: ubuntu-22.04
+            args: ""
+          - name: macOS (Apple Silicon)
+            os: macos-latest
+            args: "--target aarch64-apple-darwin"
+          - name: macOS (Intel)
+            os: macos-latest
+            args: "--target x86_64-apple-darwin"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dependencias de Linux (WebKitGTK)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev librsvg2-dev
+
+      - name: NASM (OpenSSL de SQLCipher en Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/setup-nasm@v1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - uses: Swatinem/rust-cache@v2
+
+      - run: npm ci
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          releaseName: "Chronos Private Calendar ${{ github.ref_name }}"
+          releaseBody: |
+            Calendario local, privado y cifrado. Sin cuentas, sin servidores, sin telemetría.
+            Consulta docs/USER_GUIDE.md para instalarlo. Los instaladores no están firmados:
+            Windows y macOS mostrarán un aviso la primera vez.
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+
+      # Ejecución manual (sin etiqueta): los instaladores quedan como archivos
+      # descargables en la propia ejecución de Actions.
+      - uses: actions/upload-artifact@v4
+        if: github.ref_type != 'tag'
+        with:
+          name: chronos-${{ matrix.name }}
+          path: |
+            target/release/bundle/**
+            target/*/release/bundle/**
+          if-no-files-found: error
