@@ -9,6 +9,7 @@
 
 use crate::backup::{self, BackupKind, BackupRecord, RestoreReport};
 use crate::crypto::kdf::KdfParams;
+use crate::crypto::{SecretKey, KEY_LEN};
 use crate::database::open_encrypted;
 use crate::error::{CoreError, Result};
 use crate::models::NewCalendar;
@@ -18,6 +19,7 @@ use rusqlite::Connection;
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
+use zeroize::Zeroizing;
 
 pub const DB_FILE: &str = "chronos.db";
 pub const KEYSTORE_FILE: &str = "keystore.json";
@@ -65,7 +67,15 @@ pub struct VaultStatus {
 pub struct Session {
     conn: Connection,
     backup_key: BackupKey,
+    /// Clave de la base de datos (DEK). Solo se usa para «recordar el
+    /// desbloqueo»; SQLCipher ya la mantiene en memoria mientras está abierta.
+    database_key: SecretKey,
 }
+
+/// Versión del formato de la clave recordada (`remembered_secret`).
+const REMEMBERED_VERSION: u8 = 1;
+/// Longitud: versión + DEK + clave de copias.
+pub const REMEMBERED_LEN: usize = 1 + 2 * KEY_LEN;
 
 impl Session {
     pub fn conn(&self) -> &Connection {
@@ -144,6 +154,7 @@ impl Vault {
                 self.session = Some(Session {
                     conn,
                     backup_key: keys.backup,
+                    database_key: keys.database_key,
                 });
                 self.failed_attempts = 0;
                 tracing::info!("bóveda creada");
@@ -198,10 +209,68 @@ impl Vault {
         self.session = Some(Session {
             conn,
             backup_key: keys.backup,
+            database_key: keys.database_key,
         });
         self.failed_attempts = 0;
         tracing::info!("bóveda desbloqueada");
         // Un fallo aquí no debe impedir abrir los datos; queda registrado.
+        if let Err(e) = self.pre_update_backup_if_needed() {
+            tracing::warn!(error = %e.code(), "no se pudo crear la copia previa a la actualización");
+        }
+        Ok(())
+    }
+
+    /// Claves para «recordar el desbloqueo en este equipo» (versión, DEK y clave
+    /// de copias). Quien las tenga puede abrir los datos sin contraseña: la capa
+    /// de escritorio solo las guarda en el almacén de credenciales del sistema,
+    /// y solo si el usuario lo activa confirmando su contraseña.
+    pub fn remembered_secret(&self) -> Result<Zeroizing<Vec<u8>>> {
+        let s = self.session()?;
+        let mut out = Zeroizing::new(Vec::with_capacity(REMEMBERED_LEN));
+        out.push(REMEMBERED_VERSION);
+        out.extend_from_slice(s.database_key.as_ref());
+        out.extend_from_slice(s.backup_key.key.as_ref());
+        Ok(out)
+    }
+
+    /// Comprueba la contraseña sin cambiar el estado (para confirmar acciones sensibles).
+    pub fn verify_password(&self, password: &str) -> Result<()> {
+        KeystoreFile::load(&self.paths.keystore())?
+            .unlock(password)
+            .map(|_| ())
+    }
+
+    /// Desbloquea con las claves recordadas. Si no corresponden a estos datos
+    /// (otra instalación, datos borrados), devuelve `InvalidPassword` y la
+    /// capa de escritorio olvida las claves.
+    pub fn unlock_with_remembered(&mut self, secret: &[u8]) -> Result<()> {
+        if self.session.is_some() {
+            return Ok(());
+        }
+        let ks_path = self.paths.keystore();
+        if !ks_path.exists() {
+            return Err(CoreError::NotInitialized);
+        }
+        if secret.len() != REMEMBERED_LEN || secret[0] != REMEMBERED_VERSION {
+            return Err(CoreError::InvalidPassword);
+        }
+        let keystore = KeystoreFile::load(&ks_path)?;
+        keystore.validate()?;
+        let mut dek: SecretKey = Zeroizing::new([0u8; KEY_LEN]);
+        dek.copy_from_slice(&secret[1..1 + KEY_LEN]);
+        let mut backup: SecretKey = Zeroizing::new([0u8; KEY_LEN]);
+        backup.copy_from_slice(&secret[1 + KEY_LEN..]);
+        // Una DEK que no corresponde a la base de datos se detecta al abrirla.
+        let conn = open_encrypted(&self.paths.database(), &dek)?;
+        self.session = Some(Session {
+            conn,
+            backup_key: BackupKey {
+                key: backup,
+                kdf: keystore.kdf.clone(),
+            },
+            database_key: dek,
+        });
+        tracing::info!("bóveda desbloqueada con las claves recordadas");
         if let Err(e) = self.pre_update_backup_if_needed() {
             tracing::warn!(error = %e.code(), "no se pudo crear la copia previa a la actualización");
         }

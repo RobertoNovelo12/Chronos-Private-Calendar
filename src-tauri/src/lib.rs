@@ -3,15 +3,18 @@
 
 mod backups;
 mod commands;
+mod desktop;
 mod errors;
 mod i18n;
 mod notifier;
+mod remember;
 mod state;
 
 use chronos_core::crypto::kdf::KdfParams;
 use chronos_core::{Vault, VaultPaths};
+use desktop::{DesktopSettings, DesktopState};
 use state::AppState;
-use tauri::Manager;
+use tauri::{Manager, WindowEvent};
 use tracing_subscriber::EnvFilter;
 
 fn init_logging() {
@@ -30,6 +33,16 @@ pub fn run() {
     init_logging();
 
     let result = tauri::Builder::default()
+        // Una sola instancia: abrir Chronos otra vez muestra la ventana existente
+        // (dos procesos con la misma base de datos no deben convivir).
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            desktop::show_main(app);
+        }))
+        // Inicio con el sistema (lo activa el usuario); se abre con `--minimized`.
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec![desktop::MINIMIZED_ARG]),
+        ))
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_dialog::init())
         // Solo para abrir la página de donaciones desde Rust (URL fija); el
@@ -44,12 +57,52 @@ pub fn run() {
             // sincroniza con perfiles móviles del dominio.
             let data_dir = app.path().app_local_data_dir()?;
             tracing::info!("carpeta de datos lista");
-            let vault = Vault::new(VaultPaths::new(data_dir), KdfParams::RECOMMENDED);
+            let desktop_path = data_dir.join(desktop::SETTINGS_FILE);
+            let settings = DesktopSettings::load(&desktop_path);
+            let mut vault = Vault::new(VaultPaths::new(data_dir), KdfParams::RECOMMENDED);
+
+            // Desbloqueo recordado (opcional): solo al arrancar. Si las claves ya
+            // no sirven (datos borrados u otra instalación), se olvidan.
+            if let Some(secret) = remember::load() {
+                if let Err(e) = vault.unlock_with_remembered(&secret) {
+                    tracing::warn!(error = %e.code(), "desbloqueo recordado no válido; se olvida");
+                    remember::forget();
+                }
+            }
+
             let state = AppState::new(vault);
             notifier::spawn(app.handle().clone(), state.clone());
             backups::spawn(state.clone());
             app.manage(state);
+            app.manage(DesktopState {
+                path: desktop_path,
+                settings: std::sync::Mutex::new(settings),
+            });
+
+            if let Err(e) = desktop::create_tray(app.handle()) {
+                // Sin bandeja (p. ej. un escritorio Linux sin soporte) no se oculta al cerrar.
+                tracing::warn!(error = %e, "no se pudo crear el icono de la bandeja");
+            }
+            let args: Vec<String> = std::env::args().collect();
+            if !desktop::start_hidden(&args, settings) {
+                desktop::show_main(app.handle());
+            }
             Ok(())
+        })
+        .on_window_event(|window, event| {
+            // Cerrar la ventana la oculta en la bandeja (si está activado y hay bandeja).
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                let app = window.app_handle();
+                let to_tray = app
+                    .try_state::<DesktopState>()
+                    .map(|d| d.get().close_to_tray)
+                    .unwrap_or(false)
+                    && app.tray_by_id(desktop::TRAY_ID).is_some();
+                if to_tray {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
         })
         .invoke_handler(tauri::generate_handler![
             commands::vault::vault_status,
@@ -102,6 +155,10 @@ pub fn run() {
             commands::about::app_about,
             commands::about::open_donation_link,
             commands::about::app_set_language,
+            commands::desktop::desktop_settings_get,
+            commands::desktop::desktop_settings_set,
+            commands::desktop::remember_unlock_enable,
+            commands::desktop::remember_unlock_disable,
             commands::update::update_check,
             commands::update::update_install,
         ])

@@ -29,9 +29,12 @@ pub enum Key {
     SaveBackupIn,
     ChooseBackup,
     ChronosBackup,
+    TrayOpen,
+    TrayLock,
+    TrayQuit,
 }
 
-const N: usize = 23;
+const N: usize = 26;
 type Table = [&'static str; N];
 
 /// Orden: el de `Key`. `{0}`, `{1}` son los valores.
@@ -59,6 +62,9 @@ const ES: Table = [
     "Guardar copia cifrada en…",
     "Elegir copia de seguridad",
     "Copia de Chronos",
+    "Abrir Chronos",
+    "Bloquear",
+    "Salir",
 ];
 const EN: Table = [
     "Untitled",
@@ -84,6 +90,9 @@ const EN: Table = [
     "Save encrypted backup to…",
     "Choose a backup",
     "Chronos backup",
+    "Open Chronos",
+    "Lock",
+    "Quit",
 ];
 const ZH: Table = [
     "无标题",
@@ -109,6 +118,9 @@ const ZH: Table = [
     "将加密备份保存到…",
     "选择备份",
     "Chronos 备份",
+    "打开 Chronos",
+    "锁定",
+    "退出",
 ];
 const PT: Table = [
     "Sem título",
@@ -134,6 +146,9 @@ const PT: Table = [
     "Salvar backup criptografado em…",
     "Escolher backup",
     "Backup do Chronos",
+    "Abrir o Chronos",
+    "Bloquear",
+    "Sair",
 ];
 const FR: Table = [
     "Sans titre",
@@ -159,6 +174,9 @@ const FR: Table = [
     "Enregistrer la sauvegarde chiffrée dans…",
     "Choisir une sauvegarde",
     "Sauvegarde Chronos",
+    "Ouvrir Chronos",
+    "Verrouiller",
+    "Quitter",
 ];
 const DE: Table = [
     "Ohne Titel",
@@ -184,6 +202,9 @@ const DE: Table = [
     "Verschlüsselte Sicherung speichern unter…",
     "Sicherung auswählen",
     "Chronos-Sicherung",
+    "Chronos öffnen",
+    "Sperren",
+    "Beenden",
 ];
 const JA: Table = [
     "無題",
@@ -209,6 +230,9 @@ const JA: Table = [
     "暗号化バックアップの保存先…",
     "バックアップを選択",
     "Chronos バックアップ",
+    "Chronos を開く",
+    "ロック",
+    "終了",
 ];
 const KO: Table = [
     "제목 없음",
@@ -234,6 +258,9 @@ const KO: Table = [
     "암호화된 백업 저장 위치…",
     "백업 선택",
     "Chronos 백업",
+    "Chronos 열기",
+    "잠그기",
+    "종료",
 ];
 const RU: Table = [
     "Без названия",
@@ -259,6 +286,9 @@ const RU: Table = [
     "Сохранить зашифрованную копию в…",
     "Выбрать резервную копию",
     "Резервная копия Chronos",
+    "Открыть Chronos",
+    "Заблокировать",
+    "Выйти",
 ];
 
 const LANGS: [(&str, &Table); 9] = [

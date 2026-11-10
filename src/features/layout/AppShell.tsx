@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from "react";
+import { listen } from "@tauri-apps/api/event";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Toaster } from "@/components/ui/toaster";
 import { CalendarView, useVisibleRange } from "@/features/calendar/CalendarView";
@@ -59,6 +60,17 @@ export function AppShell() {
       toast.error(errorMessage(e));
     }
   }, [lock, clearCalendars, clearEvents]);
+
+  // «Bloquear» desde el menú de la bandeja: Rust ya bloqueó; aquí se limpia la interfaz.
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    let cancelled = false;
+    void listen("chronos://locked", () => void onLock()).then((u) => (cancelled ? u() : (unlisten = u)));
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, [onLock]);
 
   useShortcuts(onLock);
   useAutoLock(autoLockMinutes, onLock);

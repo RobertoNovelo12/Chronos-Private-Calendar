@@ -14,6 +14,7 @@ import { useThemeStore, type ThemePreference } from "@/stores/themeStore";
 import { useUiStore, type SettingsTab } from "@/stores/uiStore";
 import { msg, t, t as tr } from "@/i18n";
 import { LanguageSelect } from "@/i18n/LanguageSelect";
+import { DesktopSection } from "./DesktopSettings";
 
 const TABS: { id: SettingsTab; label: string; icon: typeof X }[] = [
   { id: "general", label: msg("General"), icon: Settings2 },
@@ -190,6 +191,7 @@ function GeneralTab() {
           <option value="hide">{t("Ocultar detalles")}</option>
         </select>
       </Row>
+      <DesktopSection />
       <Row label={t("Zona horaria")}>
         <span className="text-muted">{t("{zone} (del sistema)", { zone: systemTimeZone() })}</span>
       </Row>

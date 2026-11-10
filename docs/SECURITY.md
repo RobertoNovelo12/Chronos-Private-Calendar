@@ -16,6 +16,7 @@
 
 * **Malware con privilegios en el equipo mientras la app está desbloqueada.** Puede leer la memoria del proceso, capturar el teclado o la pantalla. Ninguna aplicación de escritorio puede impedirlo.
 * **Memoria no siempre borrada.** Las claves (`SecretKey`) y las contraseñas recibidas por los comandos se borran con `zeroize`. Pero las cadenas de texto que viajan por el WebView (JavaScript no permite borrar memoria), las páginas en caché de SQLite mientras está abierta y la instantánea JSON intermedia al crear copias pueden permanecer en memoria hasta que el sistema la reutilice. El sistema operativo podría escribirlas en el archivo de paginación/hibernación.
+* **«Recordar el desbloqueo en este equipo» (opcional, 1.3).** Si se activa, la protección de los datos al arrancar pasa a ser la de **tu cuenta del sistema**, no la contraseña de Chronos. Ver «Desbloqueo recordado y bandeja» abajo.
 * **Contraseña olvidada = datos irrecuperables.** No hay servidor ni "puerta trasera". La única vía es una copia de seguridad cuya contraseña se recuerde.
 * **Metadatos del sistema de archivos.** Tamaño y fechas de modificación de los archivos son visibles.
 * **Contraseña débil.** Argon2id encarece cada intento, pero no compensa una contraseña trivial. Se exige un mínimo de 8 caracteres; se recomienda una frase larga.
@@ -83,6 +84,19 @@ SQLCipher: PRAGMA key = "x'<DEK en hex>'"   (clave en bruto: sin PBKDF2 adiciona
 ### WebView en Windows
 
 Tauri usa Microsoft Edge WebView2. El *runtime* de WebView2 lo actualiza Windows/Edge, no Chronos. Chronos no carga contenido remoto y la CSP lo impide; aun así, el comportamiento de servicios del propio WebView2 depende de Microsoft. Si se desea máximo aislamiento, puede bloquearse la aplicación en el cortafuegos de Windows sin pérdida de funcionalidad.
+
+## Desbloqueo recordado y bandeja (1.3)
+
+* **Bandeja del sistema.** Con «mantener en la bandeja», cerrar la ventana solo la oculta: la app **sigue desbloqueada** (como si estuviera minimizada) y los recordatorios siguen funcionando. «Salir» en el icono de la bandeja termina el proceso y borra las claves de la memoria; «Bloquear» bloquea sin salir. El bloqueo automático por inactividad sigue funcionando aunque la ventana esté oculta.
+* **Una sola instancia** (`tauri-plugin-single-instance`): abrir Chronos de nuevo muestra la ventana existente; nunca hay dos procesos con la misma base de datos.
+* **Iniciar con el sistema** (`tauri-plugin-autostart`, desactivado por defecto): en Windows, entrada en `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` con el argumento `--minimized`; en macOS, un *LaunchAgent*. Los ajustes de ventana se guardan sin cifrar en `desktop.json` (no contienen datos del calendario).
+* **Desbloqueo recordado** (desactivado por defecto; Windows y macOS):
+  * Activarlo exige la app desbloqueada **y** confirmar la contraseña.
+  * Se guarda en el almacén de credenciales del sistema (Windows: Administrador de credenciales, cifrado con DPAPI y ligado a la cuenta de Windows; macOS: Llavero) un secreto de 65 bytes: versión, DEK y clave de copias. Nunca se guarda la contraseña.
+  * Solo se usa **al arrancar** la aplicación. Bloquear a mano, desde la bandeja o por inactividad sigue pidiendo la contraseña.
+  * **Límite:** cualquier programa que se ejecute con la misma cuenta de usuario podría leer esa credencial, y alguien que inicie sesión con tu cuenta abriría Chronos sin contraseña. Recomendado solo en equipos de uso personal con contraseña de sesión.
+  * Si la credencial no corresponde a los datos (otra instalación, datos borrados), se descarta. Cambiar la contraseña la actualiza; desactivar la opción o «Eliminar todos mis datos» la borra. Las copias de seguridad siguen cifradas con la clave derivada de la contraseña.
+  * Solo `remember.rs` accede al almacén de credenciales, y solo `remember_unlock_enable` escribe en él (`privacy.test.ts` lo comprueba).
 
 ## Recordatorios y notificaciones
 

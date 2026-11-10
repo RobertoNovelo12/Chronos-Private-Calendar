@@ -3,12 +3,13 @@
 Calendario de escritorio **local, privado y cifrado**, escrito en Rust (Tauri 2) y React.
 Sin cuentas, sin servidores, sin telemetría: tus datos no salen de tu equipo.
 
-> **Versión 1.2.0** — las 7 fases de la 1.0; tareas, etiquetas, participantes y deshacer en series (1.1); 9 idiomas; menú de comandos, crear eventos escribiendo, ir a una fecha, navegación con teclado y horario laboral por día (1.2). Instaladores de Windows y Linux probados; macOS se genera con GitHub Actions (sin probar todavía en un Mac). Para usarlo, empieza por la [guía de uso](docs/USER_GUIDE.md); para el plan y los resultados, [docs/ROADMAP.md](docs/ROADMAP.md).
+> **Versión 1.3.0** — las 7 fases de la 1.0; tareas, etiquetas, participantes y deshacer en series (1.1); 9 idiomas; menú de comandos, crear eventos escribiendo, ir a una fecha, navegación con teclado y horario laboral por día y actualizaciones firmadas (1.2); bandeja del sistema, inicio con el equipo y desbloqueo recordado opcional (1.3). Instaladores de Windows y Linux probados; macOS se genera con GitHub Actions (sin probar todavía en un Mac). Para usarlo, empieza por la [guía de uso](docs/USER_GUIDE.md); para el plan y los resultados, [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Qué hay implementado
 
 * Base de datos SQLite **cifrada con SQLCipher**; clave derivada con Argon2id y envuelta con XChaCha20-Poly1305
 * Pantallas de primera configuración y de desbloqueo; bloqueo manual (botón o `Ctrl+L`) y automático por inactividad
+* **Bandeja del sistema** (cerrar la ventana la oculta y la app sigue avisando), **inicio con el equipo** (opcionalmente minimizado), una sola instancia y **«Recordar el desbloqueo en este equipo»** opcional (Windows y macOS)
 * Vistas **Día, Semana, Mes, Agenda y número de días a elegir** (2–21), mini calendario con números de semana, indicador de hora actual, formato 12/24 h
 * Diseño minimalista de tres columnas con panel derecho (buscador, atajos útiles o detalles del evento) o tarjeta flotante junto al evento
 * Segunda zona horaria en la rejilla, zona horaria por evento y control «±» del número de días
@@ -98,8 +99,8 @@ npm run tauri build      # instaladores de producción en target/release/bundle/
 **Con GitHub Actions** (los tres sistemas a la vez): sube una etiqueta de versión y el flujo `.github/workflows/release.yml` crea un borrador de *Release* con todos los instaladores:
 
 ```powershell
-git tag v1.2.0
-git push origin v1.2.0
+git tag v1.3.0
+git push origin v1.3.0
 ```
 
 ### Firmar las actualizaciones
@@ -117,10 +118,10 @@ Además, `.github/workflows/ci.yml` compila y ejecuta todas las pruebas en Windo
 ## Pruebas
 
 ```powershell
-cargo test -p chronos-core      # 70 pruebas: cifrado, migraciones, eventos, recurrencias, recordatorios, tareas,
+cargo test -p chronos-core      # 71 pruebas: cifrado, migraciones, eventos, recurrencias, recordatorios, tareas,
                                 # etiquetas, participantes, deshacer en series, copias, importar/exportar,
                                 # rendimiento con 20 000 eventos, errores sin datos
-npm.cmd test                    # 166 pruebas: fechas, disposición, repetición, pegar, tareas, etiquetas, intérprete
+npm.cmd test                    # 170 pruebas: fechas, disposición, repetición, pegar, tareas, etiquetas, intérprete
                                 # de fechas y eventos escritos, menú de comandos, navegación con teclado, horario
                                 # laboral, rendimiento, garantías de privacidad y traducciones completas
 node scripts/i18n-check.mjs     # textos sin traducir o con marcadores rotos en cada idioma

@@ -5,6 +5,7 @@ pub mod about;
 pub mod backup;
 pub mod calendars;
 pub mod data;
+pub mod desktop;
 pub mod events;
 pub mod labels;
 pub mod settings;

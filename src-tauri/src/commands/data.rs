@@ -401,7 +401,9 @@ pub async fn vault_destroy(
             message: "escribe ELIMINAR para confirmar".into(),
         });
     }
-    state
+    let report = state
         .with_vault(move |v| v.destroy(&password, remove_backups))
-        .await
+        .await?;
+    crate::remember::forget();
+    Ok(report)
 }

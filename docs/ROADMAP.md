@@ -193,7 +193,14 @@ Principio: la aplicación **no se conecta a PayPal**. Solo abre el enlace en el 
 
 ## Versión 1.3 — Privacidad y comodidad
 
-### 1.3.1 Desbloqueo con Windows Hello (opcional)
+### 1.3.0 Comodidad en el escritorio ✅
+1. ✅ Bandeja del sistema con menú Abrir · Bloquear · Salir (traducido); cerrar la ventana la oculta (configurable; por defecto en Windows y macOS).
+2. ✅ Una sola instancia: abrir Chronos de nuevo muestra la ventana existente.
+3. ✅ Iniciar al iniciar sesión (desactivado por defecto), opcionalmente minimizado en la bandeja.
+4. ✅ «Recordar el desbloqueo en este equipo» (opcional; Windows y macOS): claves en el almacén de credenciales del sistema, solo al arrancar, activación con contraseña; documentado en SECURITY.md con sus límites.
+5. ✅ Pruebas: desbloqueo recordado en el núcleo (datos ajenos, claves alteradas, cambio de contraseña), ajustes de escritorio, permisos y accesos al almacén de credenciales; prueba manual en Linux de arranque normal, oculto, segunda instancia y reapertura.
+
+### 1.3.1 Desbloqueo con Windows Hello (opcional, complementa al desbloqueo recordado)
 1. ⬜ Investigar y documentar el modelo: la clave se protege con el almacén del sistema (Windows Hello / Llavero de macOS) **además** de la contraseña, nunca en su lugar.
 2. ⬜ Desactivado por defecto; activarlo exige la contraseña.
 3. ⬜ La contraseña sigue siendo necesaria tras reiniciar y para restaurar copias.

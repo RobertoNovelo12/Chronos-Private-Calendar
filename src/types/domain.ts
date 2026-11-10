@@ -306,3 +306,19 @@ export interface UpdateInfo {
   /** Falso si esta instalación no puede actualizarse sola (p. ej. un .deb). */
   canInstall: boolean;
 }
+
+// --- Escritorio (1.3) ---
+
+export interface DesktopInfo {
+  closeToTray: boolean;
+  startMinimized: boolean;
+  autostart: boolean;
+  rememberSupported: boolean;
+  rememberEnabled: boolean;
+}
+
+export interface DesktopPatch {
+  closeToTray?: boolean;
+  startMinimized?: boolean;
+  autostart?: boolean;
+}

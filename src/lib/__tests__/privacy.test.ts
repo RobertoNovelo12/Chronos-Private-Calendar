@@ -159,3 +159,40 @@ describe("privacidad: enlace de donaciones", () => {
     expect(openers.map((f) => f.replace(/\\/g, "/").split("/src-tauri/")[1])).toEqual(["src/commands/about.rs"]);
   });
 });
+
+describe("privacidad: escritorio y desbloqueo recordado", () => {
+  const rustFiles = (dir: string): string[] =>
+    readdirSync(dir).flatMap((name) => {
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) return rustFiles(p);
+      return name.endsWith(".rs") ? [p] : [];
+    });
+  const rel = (f: string) => f.replace(/\\/g, "/").split("/src-tauri/")[1];
+
+  it("el frontend no recibe permisos de inicio automático ni de bandeja", () => {
+    const cap = read("src-tauri/capabilities/default.json");
+    expect(cap).not.toMatch(/autostart|tray|single-instance/);
+    expect(read("package.json")).not.toMatch(/plugin-(autostart|single-instance)/);
+  });
+
+  it("solo remember.rs accede al almacén de credenciales del sistema", () => {
+    const users = rustFiles(join(root, "src-tauri", "src")).filter((f) => /keyring::|Entry::new/.test(readFileSync(f, "utf8")));
+    expect(users.map(rel)).toEqual(["src/remember.rs"]);
+  });
+
+  it("recordar el desbloqueo exige la contraseña y no se activa solo", () => {
+    const cmd = read("src-tauri/src/commands/desktop.rs");
+    expect(cmd).toMatch(/verify_password\(&password\)\?/);
+    const lib = read("src-tauri/src/lib.rs");
+    // Al arrancar solo se lee; guardarlo solo ocurre desde el comando explícito.
+    expect(lib).not.toMatch(/remember::store/);
+    const stores = rustFiles(join(root, "src-tauri", "src")).filter((f) => /remember::store\(/.test(readFileSync(f, "utf8")));
+    expect(stores.map(rel)).toEqual(["src/commands/desktop.rs"]);
+  });
+
+  it("la ventana empieza oculta y Rust decide cuándo mostrarla", () => {
+    const conf = JSON.parse(read("src-tauri/tauri.conf.json"));
+    expect(conf.app.windows[0].visible).toBe(false);
+    expect(read("src-tauri/src/lib.rs")).toMatch(/if !desktop::start_hidden\(&args, settings\)/);
+  });
+});

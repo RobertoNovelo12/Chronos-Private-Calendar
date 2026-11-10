@@ -53,5 +53,8 @@ pub async fn vault_change_password(
 ) -> CommandResult<()> {
     state
         .with_vault(move |v| v.change_password(&current, &new_password))
-        .await
+        .await?;
+    // Si el desbloqueo está recordado, se guarda la clave de copias nueva.
+    super::desktop::refresh_remembered(&state).await;
+    Ok(())
 }

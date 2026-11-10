@@ -11,6 +11,8 @@ import type {
   SeriesSnapshot,
   Task,
   UpdateInfo,
+  DesktopInfo,
+  DesktopPatch,
   TaskPatch,
   BackupInfo,
   BackupRecord,
@@ -140,6 +142,13 @@ export const api = {
     /** Abre la página de donaciones (URL fija en Rust) en el navegador. */
     openDonation: () => call<void>("open_donation_link"),
   },
+  /** Bandeja, inicio con el sistema y desbloqueo recordado. */
+  desktop: {
+    get: () => call<DesktopInfo>("desktop_settings_get"),
+    set: (patch: DesktopPatch) => call<DesktopInfo>("desktop_settings_set", { patch }),
+    rememberEnable: (password: string) => call<void>("remember_unlock_enable", { password }),
+    rememberDisable: () => call<void>("remember_unlock_disable"),
+  },
   /** Única conexión de red: solo cuando el usuario lo pide (o lo activa). */
   updates: {
     check: () => call<UpdateInfo | null>("update_check"),
@@ -172,6 +181,9 @@ const CODE_MESSAGES: Record<string, string> = {
   update_signature: msg("La actualización no tiene una firma válida y no se ha instalado"),
   update_unsupported: msg("No hay una actualización automática para este sistema"),
   update_failed: msg("No se pudo completar la actualización"),
+  autostart_failed: msg("No se pudo cambiar el inicio con el sistema"),
+  remember_unsupported: msg("Este sistema no permite recordar el desbloqueo"),
+  remember_failed: msg("No se pudo guardar en el almacén de credenciales del sistema"),
 };
 
 /** Prefijos con los que Rust envuelve el detalle («datos no válidos: …»). */

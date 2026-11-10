@@ -11,6 +11,7 @@ import { useVaultStore } from "@/stores/vaultStore";
 import { PasswordInput, Section, SubDialog } from "./shared";
 import { t, tp } from "@/i18n";
 import { Rich } from "@/i18n/Rich";
+import { RememberUnlockSection } from "@/features/settings/DesktopSettings";
 
 const MIN = 8;
 
@@ -29,6 +30,7 @@ export function PrivacyTab() {
       >
         {null}
       </Section>
+      <RememberUnlockSection />
       <ChangePassword />
       <DeleteEverything />
     </div>

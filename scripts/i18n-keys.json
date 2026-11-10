@@ -597,7 +597,7 @@
   "Cómo se protegen tus datos": {
     "plural": false
   },
-  "La base de datos de este equipo está cifrada por completo con SQLCipher. La clave se deriva de tu contraseña con Argon2id y nunca se guarda en claro. Chronos no se conecta a internet ni envía estadísticas. Las exportaciones ICS, JSON y CSV <b>no</b> van cifradas: guárdalas en un lugar seguro.": {
+  "La base de datos de este equipo está cifrada por completo con SQLCipher. La clave se deriva de tu contraseña con Argon2id y nunca se guarda en claro. Chronos no envía estadísticas ni tus datos a ningún sitio, y solo se conecta a internet si buscas actualizaciones. Las exportaciones ICS, JSON y CSV <b>no</b> van cifradas: guárdalas en un lugar seguro.": {
     "plural": false
   },
   "Contraseña cambiada": {
@@ -1199,7 +1199,7 @@
   "Desbloquear": {
     "plural": false
   },
-  "Sin cuenta · Sin conexión · Tus datos no salen de este equipo": {
+  "Sin cuenta · Sin servidores · Tus datos no salen de este equipo": {
     "plural": false
   },
   "Enlace copiado": {
@@ -1266,6 +1266,51 @@
     "plural": false
   },
   "Buscar actualizaciones automáticamente una vez al día al abrir Chronos (desactivado por defecto).": {
+    "plural": false
+  },
+  "Ventana y sistema": {
+    "plural": false
+  },
+  "Al cerrar la ventana, mantener Chronos en la bandeja del sistema": {
+    "plural": false
+  },
+  "Sigue abierto junto al reloj, sin ocupar la barra de tareas, y los recordatorios siguen avisando. Para salir del todo, usa «Salir» en el icono de la bandeja.": {
+    "plural": false
+  },
+  "Abrir Chronos al iniciar sesión en el equipo": {
+    "plural": false
+  },
+  "Al iniciar con el equipo, empezar minimizado en la bandeja": {
+    "plural": false
+  },
+  "Chronos se abrirá sin pedir la contraseña en este equipo": {
+    "plural": false
+  },
+  "Se volverá a pedir la contraseña al abrir Chronos": {
+    "plural": false
+  },
+  "Recordar el desbloqueo en este equipo": {
+    "plural": false
+  },
+  "Chronos se abre sin pedir la contraseña: la clave se guarda en el almacén de credenciales del sistema (Administrador de credenciales de Windows o Llavero de macOS), protegido por tu cuenta del equipo. Bloquear a mano o por inactividad seguirá pidiendo la contraseña. Actívalo solo si nadie más usa tu cuenta del equipo: cualquier programa que se ejecute con tu usuario podría leer esa credencial.": {
+    "plural": false
+  },
+  "Activado en este equipo.": {
+    "plural": false
+  },
+  "Desactivar": {
+    "plural": false
+  },
+  "Tu contraseña, para confirmar": {
+    "plural": false
+  },
+  "Comprobando…": {
+    "plural": false
+  },
+  "Activar": {
+    "plural": false
+  },
+  "Activar…": {
     "plural": false
   },
   "General": {
@@ -1708,6 +1753,15 @@
     "plural": false
   },
   "No se pudo completar la actualización": {
+    "plural": false
+  },
+  "No se pudo cambiar el inicio con el sistema": {
+    "plural": false
+  },
+  "Este sistema no permite recordar el desbloqueo": {
+    "plural": false
+  },
+  "No se pudo guardar en el almacén de credenciales del sistema": {
     "plural": false
   },
   "Error inesperado": {

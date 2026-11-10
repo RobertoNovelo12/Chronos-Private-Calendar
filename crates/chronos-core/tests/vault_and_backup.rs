@@ -388,3 +388,47 @@ fn destroy_removes_everything() {
     // Se puede empezar de cero.
     v.setup(PW).unwrap();
 }
+
+#[test]
+fn remembered_unlock_opens_the_same_data_only() {
+    let tmp = tempfile::tempdir().unwrap();
+    let mut v = new_vault(tmp.path());
+    v.setup(PW).unwrap();
+    add_calendar(&v, "Trabajo");
+    assert!(matches!(
+        v.verify_password("otra"),
+        Err(CoreError::InvalidPassword)
+    ));
+    v.verify_password(PW).unwrap();
+    let secret = v.remembered_secret().unwrap();
+    assert_eq!(secret.len(), chronos_core::vault::REMEMBERED_LEN);
+    v.lock();
+    assert!(matches!(v.remembered_secret(), Err(CoreError::Locked)));
+
+    // Las claves recordadas abren los datos sin contraseña…
+    v.unlock_with_remembered(&secret).unwrap();
+    assert_eq!(calendar_names(&v), vec!["Personal", "Trabajo"]);
+    // …y las copias siguen usando la clave de la contraseña.
+    let rec = v.create_backup(None, BackupKind::Manual).unwrap();
+    backup::verify_backup(Path::new(&rec.file_path), PW).unwrap();
+    v.lock();
+
+    // Datos ajenos o claves alteradas: se rechazan.
+    let tmp2 = tempfile::tempdir().unwrap();
+    let mut other = new_vault(tmp2.path());
+    other.setup(PW).unwrap();
+    other.lock();
+    assert!(other.unlock_with_remembered(&secret).is_err());
+    let mut bad = secret.to_vec();
+    bad[5] ^= 1;
+    assert!(v.unlock_with_remembered(&bad).is_err());
+    assert!(v.unlock_with_remembered(&secret[..10]).is_err());
+    assert!(!v.status().unlocked);
+
+    // Tras cambiar la contraseña, la DEK es la misma pero la clave de copias cambia.
+    v.unlock(PW).unwrap();
+    v.change_password(PW, "nueva clave 123").unwrap();
+    let after = v.remembered_secret().unwrap();
+    assert_eq!(secret[1..33], after[1..33]);
+    assert_ne!(secret[33..], after[33..]);
+}

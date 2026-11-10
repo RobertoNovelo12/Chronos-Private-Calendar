@@ -22,6 +22,9 @@ Al abrirlo por primera vez, elige una contraseña (mínimo 8 caracteres). Con el
 
 - **Bloquear:** botón del candado (abajo a la izquierda) o `Ctrl+L`.
 - **Bloqueo automático:** Configuración → General → Bloqueo automático.
+- **Bandeja del sistema:** al cerrar la ventana, Chronos sigue abierto junto al reloj (sin ocupar la barra de tareas) y los recordatorios siguen avisando. Haz clic en su icono para volver a abrirlo; el menú del icono tiene **Bloquear** y **Salir**. Se cambia en Configuración → General → Ventana y sistema (activado por defecto en Windows y macOS).
+- **Iniciar con el equipo:** Configuración → General → Ventana y sistema → «Abrir Chronos al iniciar sesión en el equipo», y si quieres, que empiece minimizado en la bandeja.
+- **No pedir la contraseña al abrir:** Configuración → Privacidad y seguridad → «Recordar el desbloqueo en este equipo» (Windows y macOS). La clave queda protegida por tu cuenta del equipo; actívalo solo si nadie más usa tu cuenta. Bloquear a mano o por inactividad seguirá pidiendo la contraseña.
 - **Cambiar la contraseña:** Configuración → Privacidad y seguridad.
 - **Idioma:** Chronos usa el idioma del sistema si está disponible (si no, inglés). Cámbialo con el selector de la pantalla de desbloqueo o en Configuración → General → Idioma: español, English, 简体中文, Português (Brasil), Français, Deutsch, 日本語, 한국어 y Русский.
 

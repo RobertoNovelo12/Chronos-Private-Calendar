@@ -17,11 +17,18 @@ tauri-build = { version = "2", features = [] }
 chronos-core = { path = "../crates/chronos-core" }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["tray-icon"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-notification = "2"
 tauri-plugin-opener = "2"
 tauri-plugin-updater = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-single-instance = "2"
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt"] }
 zeroize = { version = "1.8.2", features = ["serde"] }
+
+# «Recordar el desbloqueo»: almacén de credenciales del sistema (Windows:
+# Administrador de credenciales/DPAPI; macOS: Llavero). En Linux no se ofrece.
+[target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies]
+keyring = { version = "3", features = ["windows-native", "apple-native"] }
