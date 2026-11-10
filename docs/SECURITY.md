@@ -63,7 +63,7 @@ SQLCipher: PRAGMA key = "x'<DEK en hex>'"   (clave en bruto: sin PBKDF2 adiciona
 
 ## Privacidad: garantías de funcionamiento
 
-* **Sin red en el núcleo:** `chronos-core` (datos, cifrado, copias) no depende de ningún cliente HTTP ni de Tauri. Verificable con `cargo tree -p chronos-core | grep -Ei "reqwest|hyper|ureq|surf"` (sin resultados).
+* **Sin red en el núcleo:** `chronos-core` (datos, cifrado, copias) no depende de ningún cliente HTTP ni de Tauri. Verificable con `cargo tree -p chronos-core | grep -Ei "reqwest|hyper|ureq|surf"` (sin resultados). La integración continua (`ci.yml`, paso «Sin clientes de red salvo el actualizador») lo comprueba en Windows, macOS y Linux, y además que en la app de escritorio el único camino hacia un cliente HTTP sea `tauri-plugin-updater`.
 * **Única conexión de red: actualizaciones (desde 1.2)**, en `src-tauri/src/commands/update.rs` con `tauri-plugin-updater`:
   * Solo cuando el usuario pulsa **Buscar actualizaciones**, o una vez al día si activa la casilla correspondiente (**desactivada por defecto**).
   * Solo consulta `https://github.com/RobertoNovelo12/Chronos-Private-Calendar/releases/latest/download/latest.json` (fijo en `tauri.conf.json`) y solo descarga desde `…/releases/download/` del mismo repositorio; cualquier otra dirección se rechaza.

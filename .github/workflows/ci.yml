@@ -60,10 +60,23 @@ jobs:
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test -p chronos-core --release
 
-      - name: Sin clientes de red en las dependencias
+      # Privacidad: la única conexión de red permitida es la de las actualizaciones
+      # (tauri-plugin-updater, solo cuando el usuario la pide; ver docs/SECURITY.md).
+      - name: Sin clientes de red salvo el actualizador
         shell: bash
         run: |
-          if cargo tree -p chronos-desktop -e normal --prefix none | sed 's/ (.*//' | sort -u \
-             | grep -Ei '^(reqwest|hyper|ureq|surf|isahc|curl|h2|rustls|native-tls) '; then
-            echo "Se encontró un cliente de red en las dependencias"; exit 1
+          NET='^(reqwest|hyper|ureq|surf|isahc|curl|h2|rustls|native-tls) '
+          # 1. El núcleo (datos, cifrado, copias) no tiene ningún cliente de red.
+          if cargo tree -p chronos-core -e normal --prefix none | sed 's/ (.*//' | sort -u | grep -Ei "$NET"; then
+            echo "::error::chronos-core no puede depender de un cliente de red"; exit 1
           fi
+          # 2. Sin contar el actualizador, la app de escritorio tampoco.
+          if cargo tree -p chronos-desktop -e normal --prefix none --prune tauri-plugin-updater | sed 's/ (.*//' | sort -u | grep -Ei "$NET"; then
+            echo "::error::Un cliente de red entra por una dependencia distinta del actualizador"; exit 1
+          fi
+          # 3. Y el cliente HTTP solo lo usa el actualizador.
+          USERS=$(cargo tree -p chronos-desktop -e normal -i reqwest --depth 1 --prefix none | sed 's/ (.*//' | sort -u | grep -v '^reqwest ')
+          if echo "$USERS" | grep -qv '^tauri-plugin-updater '; then
+            echo "::error::reqwest lo usa algo más que el actualizador: $USERS"; exit 1
+          fi
+          echo "OK: la única vía de red es tauri-plugin-updater"
