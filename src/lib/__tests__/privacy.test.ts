@@ -196,3 +196,23 @@ describe("privacidad: escritorio y desbloqueo recordado", () => {
     expect(read("src-tauri/src/lib.rs")).toMatch(/if !desktop::start_hidden\(&args, settings\)/);
   });
 });
+
+describe("instalador de Windows", () => {
+  it("al actualizar se instala encima sin ofrecer desinstalar (protege los datos)", () => {
+    const conf = JSON.parse(read("src-tauri/tauri.conf.json"));
+    expect(conf.bundle.windows.nsis.template).toBe("windows/installer.nsi");
+    const nsi = read("src-tauri/windows/installer.nsi");
+    expect(nsi).toMatch(/\$\{ElseIf\} \$R0 = 1\s+;[^\n]*\[Chronos\][\s\S]*?\$\{If\} \$WixMode = 0\s+Abort/);
+  });
+
+  it("el instalador está en los idiomas de la app", () => {
+    const conf = JSON.parse(read("src-tauri/tauri.conf.json"));
+    expect(conf.bundle.windows.nsis.languages).toEqual(
+      expect.arrayContaining(["English", "Spanish", "SimpChinese", "PortugueseBR", "French", "German", "Japanese", "Korean", "Russian"]),
+    );
+  });
+
+  it("los campos de contraseña no muestran el botón nativo de WebView2 además del propio", () => {
+    expect(read("src/styles/globals.css")).toMatch(/input::-ms-reveal/);
+  });
+});

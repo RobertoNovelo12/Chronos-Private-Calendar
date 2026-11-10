@@ -68,6 +68,21 @@
       "webviewInstallMode": {
         "type": "embedBootstrapper",
         "silent": true
+      },
+      "nsis": {
+        "template": "windows/installer.nsi",
+        "languages": [
+          "English",
+          "Spanish",
+          "SimpChinese",
+          "PortugueseBR",
+          "French",
+          "German",
+          "Japanese",
+          "Korean",
+          "Russian"
+        ],
+        "displayLanguageSelector": false
       }
     }
   },

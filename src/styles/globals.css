@@ -77,6 +77,12 @@
   * {
     border-color: var(--border);
   }
+  /* WebView2 (Edge) añade su propio botón de «mostrar contraseña» y de borrar;
+     la app ya tiene el suyo, así que se ocultan los nativos. */
+  input::-ms-reveal,
+  input::-ms-clear {
+    display: none;
+  }
   html,
   body,
   #root {
