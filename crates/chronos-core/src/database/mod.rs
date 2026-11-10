@@ -99,7 +99,11 @@ impl<'c> Atomic<'c> {
         let n = SAVEPOINT_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let name = format!("chronos_sp_{n}");
         conn.execute_batch(&format!("SAVEPOINT {name}"))?;
-        Ok(Atomic { conn, name, done: false })
+        Ok(Atomic {
+            conn,
+            name,
+            done: false,
+        })
     }
 
     pub fn commit(mut self) -> Result<()> {
@@ -119,7 +123,9 @@ impl std::ops::Deref for Atomic<'_> {
 impl Drop for Atomic<'_> {
     fn drop(&mut self) {
         if !self.done {
-            let _ = self.conn.execute_batch(&format!("ROLLBACK TO {0}; RELEASE {0}", self.name));
+            let _ = self
+                .conn
+                .execute_batch(&format!("ROLLBACK TO {0}; RELEASE {0}", self.name));
         }
     }
 }

@@ -87,6 +87,49 @@ mod tests {
         assert_eq!(fk_errors, 0);
     }
 
+    /// Una base creada por una versión anterior (esquema 1, con datos) se
+    /// actualiza sin perder nada: es lo que ocurre al instalar una versión nueva.
+    #[test]
+    fn upgrades_v1_database_preserving_data() {
+        let mut conn = Connection::open_in_memory().unwrap();
+        conn.pragma_update(None, "foreign_keys", "ON").unwrap();
+        conn.execute_batch(MIGRATIONS[0].sql).unwrap();
+        conn.pragma_update(None, "user_version", 1).unwrap();
+        conn.execute_batch(
+            "INSERT INTO calendars (id,name,color,created_at,updated_at) VALUES ('c','Trabajo','#112233',0,0);
+             INSERT INTO events (id,calendar_id,title,start_at,end_at,created_at,updated_at)
+               VALUES ('e','c','Reunión anual',1000,2000,0,0);
+             INSERT INTO event_reminders (id,event_id,offset_minutes,created_at) VALUES ('r','e',10,0);",
+        )
+        .unwrap();
+
+        migrate(&mut conn).unwrap();
+
+        assert_eq!(schema_version(&conn).unwrap(), CURRENT_SCHEMA_VERSION);
+        let (title, uid): (String, Option<String>) = conn
+            .query_row(
+                "SELECT title, ical_uid FROM events WHERE id = 'e'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(title, "Reunión anual");
+        assert_eq!(
+            uid, None,
+            "la columna nueva queda vacía en los eventos existentes"
+        );
+        let reminders: i64 = conn
+            .query_row("SELECT count(*) FROM event_reminders", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(reminders, 1);
+        let fk: i64 = conn
+            .query_row("SELECT count(*) FROM pragma_foreign_key_check", [], |r| {
+                r.get(0)
+            })
+            .unwrap();
+        assert_eq!(fk, 0);
+    }
+
     #[test]
     fn refuses_newer_schema() {
         let mut conn = Connection::open_in_memory().unwrap();

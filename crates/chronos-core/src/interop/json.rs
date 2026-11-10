@@ -84,7 +84,11 @@ pub fn write(items: &[ExportItem], calendars: &[Calendar]) -> Result<String> {
         app_version: crate::APP_VERSION.into(),
         calendars: calendars
             .iter()
-            .map(|c| CalDoc { name: c.name.clone(), color: Some(c.color.clone()), description: c.description.clone() })
+            .map(|c| CalDoc {
+                name: c.name.clone(),
+                color: Some(c.color.clone()),
+                description: c.description.clone(),
+            })
             .collect(),
         events: items
             .iter()
@@ -113,33 +117,54 @@ pub fn write(items: &[ExportItem], calendars: &[Calendar]) -> Result<String> {
             })
             .collect(),
     };
-    serde_json::to_string_pretty(&doc).map_err(|e| CoreError::Validation(format!("no se pudo generar el JSON: {e}")))
+    serde_json::to_string_pretty(&doc)
+        .map_err(|e| CoreError::Validation(format!("no se pudo generar el JSON: {e}")))
 }
 
 pub fn parse(text: &str) -> Result<Vec<ImportBatch>> {
-    let doc: Doc = serde_json::from_str(text)
-        .map_err(|_| CoreError::Validation("el archivo JSON no tiene el formato de exportación de Chronos".into()))?;
+    let doc: Doc = serde_json::from_str(text).map_err(|_| {
+        CoreError::Validation(
+            "el archivo JSON no tiene el formato de exportación de Chronos".into(),
+        )
+    })?;
     if doc.format != FORMAT_TAG {
-        return Err(CoreError::Validation("el archivo JSON no es una exportación de Chronos".into()));
+        return Err(CoreError::Validation(
+            "el archivo JSON no es una exportación de Chronos".into(),
+        ));
     }
     if doc.version > FORMAT_VERSION {
-        return Err(CoreError::Validation("la exportación es de una versión más nueva de Chronos".into()));
+        return Err(CoreError::Validation(
+            "la exportación es de una versión más nueva de Chronos".into(),
+        ));
     }
     if doc.events.len() > super::MAX_IMPORT_EVENTS {
-        return Err(CoreError::Validation("el archivo tiene demasiados eventos".into()));
+        return Err(CoreError::Validation(
+            "el archivo tiene demasiados eventos".into(),
+        ));
     }
     // Un lote por calendario, en el orden en que aparecen.
     let mut batches: Vec<ImportBatch> = doc
         .calendars
         .iter()
-        .map(|c| ImportBatch { calendar_name: Some(c.name.clone()), calendar_color: c.color.clone(), ..Default::default() })
+        .map(|c| ImportBatch {
+            calendar_name: Some(c.name.clone()),
+            calendar_color: c.color.clone(),
+            ..Default::default()
+        })
         .collect();
     for e in doc.events {
-        let idx = match batches.iter().position(|b| b.calendar_name.as_deref() == Some(e.calendar.as_str())) {
+        let idx = match batches
+            .iter()
+            .position(|b| b.calendar_name.as_deref() == Some(e.calendar.as_str()))
+        {
             Some(i) => i,
             None => {
                 batches.push(ImportBatch {
-                    calendar_name: Some(if e.calendar.is_empty() { "Importado".into() } else { e.calendar.clone() }),
+                    calendar_name: Some(if e.calendar.is_empty() {
+                        "Importado".into()
+                    } else {
+                        e.calendar.clone()
+                    }),
                     ..Default::default()
                 });
                 batches.len() - 1

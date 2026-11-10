@@ -1,0 +1,100 @@
+# Guía de uso — Chronos Private Calendar
+
+Chronos es un calendario de escritorio que guarda todo **en tu equipo, cifrado con tu contraseña**. No necesitas cuenta ni conexión a internet, y ningún dato sale de tu computadora.
+
+## 1. Instalar
+
+| Sistema | Archivo | Notas |
+|---|---|---|
+| Windows 10/11 | `Chronos Private Calendar_x.y.z_x64-setup.exe` (recomendado) o `.msi` | El instalador no está firmado: Windows SmartScreen mostrará «Windows protegió su PC». Pulsa **Más información → Ejecutar de todas formas**. |
+| Linux | `.AppImage` (cualquier distribución) o `.deb` (Debian/Ubuntu) | AppImage: dale permiso de ejecución (`chmod +x`) y ábrelo. |
+| macOS | `.dmg` | Sin firma de Apple: la primera vez, clic derecho sobre la app → **Abrir**. |
+
+Windows 10 y 11 ya incluyen WebView2, el componente que dibuja la interfaz. Solo en un Windows sin WebView2 el instalador lo descargaría de Microsoft durante la instalación; Chronos en sí nunca se conecta a internet.
+
+Al actualizar a una versión nueva, Chronos crea automáticamente una **copia de seguridad previa a la actualización** la primera vez que lo desbloqueas.
+
+## 2. Primer uso: tu contraseña
+
+Al abrirlo por primera vez, elige una contraseña (mínimo 8 caracteres). Con ella se cifra la base de datos.
+
+> **Importante:** no existe forma de recuperar una contraseña olvidada. No hay servidor ni «puerta trasera». Si la olvidas, solo podrás recuperar tus datos desde una copia de seguridad cuya contraseña recuerdes. Usa una frase larga que puedas recordar, o guárdala en tu gestor de contraseñas.
+
+- **Bloquear:** botón del candado (abajo a la izquierda) o `Ctrl+L`.
+- **Bloqueo automático:** Configuración → General → Bloqueo automático.
+- **Cambiar la contraseña:** Configuración → Privacidad y seguridad.
+
+## 3. Calendario
+
+- **Vistas:** botón de vista arriba a la derecha (Día `1`/`D`, Semana `0`/`W`, Mes `M`, Agenda `A`) o «Número de días» (`2`…`9`). El botón **±** al final de los días ajusta cuántos se ven.
+- **Navegar:** **Hoy** (`T`), flechas (`J`/`K` o `←`/`→`), o un día del mini calendario.
+- **Segunda zona horaria:** botón **+** junto a la zona (arriba a la izquierda de la rejilla).
+- **Configuración de la vista:** formato 12/24 h, inicio de semana, números de semana.
+- **Paneles:** `` ` `` muestra u oculta la barra izquierda; el icono de panel (arriba a la derecha) oculta el panel derecho. Con el panel oculto, los detalles se abren en una tarjeta flotante junto al evento.
+
+## 4. Eventos
+
+- **Crear:** clic en un hueco (evento de la duración predeterminada), arrastrar para elegir la duración, clic en la franja «Todo el día» o en un día del Mes, o la tecla `C`.
+  Lo que creas empieza como **borrador**: se guarda cuando escribes un título o cambias algún dato. Si cierras sin cambiar nada, desaparece.
+- **Clic derecho en un hueco:** Crear evento (`C`) o Pegar evento (`Ctrl+V`) justo en ese lugar.
+- **Clic derecho en un evento:** abrir, Copiar (`Ctrl+C`), Duplicar (`Ctrl+D`), exportar como `.ics`, moverlo a otro calendario o eliminarlo (`Supr`).
+- **Mover / cambiar duración:** arrastra el evento; arrastra su borde inferior para alargarlo.
+- **Detalles** (panel derecho): título, horas con duración, fecha, todo el día, zona horaria, repetición, ubicación, enlaces, descripción, calendario, disponibilidad, visibilidad, recordatorios y color. Todo se guarda solo.
+- **Deshacer / rehacer:** `Ctrl+Z` / `Ctrl+Shift+Z` (eventos simples, mientras la app esté desbloqueada).
+- **Buscar:** `Ctrl+K` o `/`.
+
+### Eventos que se repiten
+En los detalles, **Repetir**: cada día, cada semana, días laborables, cada mes, cada año o **Personalizar…** (cada N días/semanas/meses/años, qué días, y si termina nunca, en una fecha o tras N veces).
+Al cambiar o borrar uno, Chronos pregunta: **Este evento · Este y los siguientes · Todos los eventos**.
+
+### Recordatorios
+En los detalles, **Recordatorios**: desde «al empezar» hasta «1 semana antes» (hasta 10 por evento). Las notificaciones las muestra tu sistema operativo **solo mientras Chronos está abierto** (bloqueado o no).
+Si no quieres que el título aparezca en las notificaciones: Configuración → General → Notificaciones de recordatorios → **Ocultar detalles**.
+
+## 5. Calendarios
+
+En la barra izquierda: casilla de color para mostrar u ocultar; doble clic para renombrar; **⋯** para cambiar color, hacerlo predeterminado, ordenarlo o eliminarlo (borra también sus eventos); **Añadir calendario** abajo.
+
+## 6. Copias de seguridad (Configuración → Copias de seguridad)
+
+- **Copias automáticas:** frecuencia (diaria o semanal), cuántas conservar y carpeta. Recomendado: elegir una carpeta en **otro disco o una memoria USB**, porque si se daña o se formatea el equipo, la carpeta predeterminada se pierde con él.
+- **Crear copia ahora**, **Verificar** (comprueba que el archivo está íntegro y que la contraseña es correcta) y **Restaurar**.
+- **Restaurar desde archivo…** para traer una copia de otra carpeta o de otro equipo.
+- Antes de restaurar, Chronos guarda automáticamente una copia «Antes de restaurar» del estado actual.
+- Cada copia se abre con **la contraseña que tenía la app cuando se creó** (o con la que elegiste si usaste «otra contraseña»).
+
+## 7. Importar y exportar (Configuración → Importar y exportar)
+
+- **Importar:** archivos `.ics` (Google Calendar, Outlook, Apple Calendar…), `.json` exportados por Chronos o copias `.chronosbak`. Si importas dos veces el mismo archivo, no se duplica nada.
+  En Google Calendar: Configuración → Importar y exportar → Exportar (descarga un `.zip`; descomprímelo e importa el `.ics` de cada calendario).
+- **Exportar:** ICS (para otras apps), JSON (todo, para Chronos), CSV (hojas de cálculo) o copia cifrada. Puedes elegir calendarios y un rango de fechas.
+
+> Los archivos ICS, JSON y CSV **no van cifrados**: guárdalos en un lugar seguro y bórralos cuando ya no los necesites. Solo la copia cifrada `.chronosbak` está protegida con contraseña.
+
+## 8. Privacidad
+
+- La base de datos completa está cifrada (SQLCipher, AES-256); la clave se deriva de tu contraseña con Argon2id.
+- Chronos no tiene código de red: no hay cuentas, sincronización, estadísticas, anuncios ni informes de errores.
+- **Eliminar todos mis datos** (Configuración → Privacidad y seguridad): pide escribir ELIMINAR y tu contraseña. Puedes conservar o borrar también las copias.
+
+Detalles técnicos y limitaciones: [SECURITY.md](SECURITY.md).
+
+## 9. Dónde están tus datos
+
+| Sistema | Carpeta |
+|---|---|
+| Windows | `%LOCALAPPDATA%\io.github.robertonovelo12.chronos\` |
+| Linux | `~/.local/share/io.github.robertonovelo12.chronos/` |
+| macOS | `~/Library/Application Support/io.github.robertonovelo12.chronos/` |
+
+Contiene `chronos.db` (cifrada), `keystore.json` (tu clave envuelta, sin secretos en claro) y `backups/`.
+
+## 10. Problemas frecuentes
+
+| Problema | Solución |
+|---|---|
+| «Contraseña incorrecta» y no la recuerdas | No se puede recuperar. Si tienes una copia `.chronosbak` cuya contraseña recuerdes: usa **Eliminar todos mis datos** (con la contraseña actual) o borra la carpeta de datos, crea una contraseña nueva y restaura la copia. |
+| Tras varios intentos fallidos tarda en responder | Es intencionado: cada intento fallido añade una espera (hasta 30 s) para frenar ataques. |
+| No llegan los recordatorios | Chronos debe estar abierto. En Windows, revisa Configuración → Sistema → Notificaciones; en macOS, permite las notificaciones de Chronos. |
+| La importación omite un evento | Algunos eventos traen reglas o datos que Chronos no admite; el resumen de la importación indica cuántos se omitieron o se importaron sin repetición. |
+| Windows SmartScreen bloquea el instalador | El instalador no está firmado. **Más información → Ejecutar de todas formas.** |

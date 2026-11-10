@@ -232,7 +232,10 @@ fn write_row(
 }
 
 fn set_ical_uid(conn: &Connection, event_id: &str, uid: &str) -> Result<()> {
-    conn.execute("UPDATE events SET ical_uid = ?2 WHERE id = ?1", params![event_id, uid])?;
+    conn.execute(
+        "UPDATE events SET ical_uid = ?2 WHERE id = ?1",
+        params![event_id, uid],
+    )?;
     Ok(())
 }
 
@@ -374,7 +377,12 @@ pub fn create(conn: &Connection, input: &NewEvent) -> Result<Event> {
     if let Some(r) = &rule {
         set_rule(&tx, &event.id, r)?;
     }
-    if let Some(uid) = input.ical_uid.as_deref().map(str::trim).filter(|u| !u.is_empty()) {
+    if let Some(uid) = input
+        .ical_uid
+        .as_deref()
+        .map(str::trim)
+        .filter(|u| !u.is_empty())
+    {
         set_ical_uid(&tx, &event.id, &uid.chars().take(500).collect::<String>())?;
     }
     tx.commit()?;
@@ -860,16 +868,30 @@ pub(crate) fn export_rows(
     );
     let mut rows: Vec<ExportRow> = {
         let mut stmt = conn.prepare(&sql)?;
-        let it = stmt.query_map(params![cals, from, to], |r| Ok(ExportRow { event: from_row(r)?, uid: r.get(20)? }))?;
+        let it = stmt.query_map(params![cals, from, to], |r| {
+            Ok(ExportRow {
+                event: from_row(r)?,
+                uid: r.get(20)?,
+            })
+        })?;
         it.collect::<rusqlite::Result<Vec<_>>>()?
     };
     // Excepciones modificadas de las series incluidas.
-    let masters: Vec<String> = rows.iter().filter(|r| kind(&r.event) == RowKind::Master).map(|r| r.event.id.clone()).collect();
+    let masters: Vec<String> = rows
+        .iter()
+        .filter(|r| kind(&r.event) == RowKind::Master)
+        .map(|r| r.event.id.clone())
+        .collect();
     if !masters.is_empty() {
         let mut stmt = conn.prepare(&format!(
             "{SELECT_WITH_UID} WHERE e.recurrence_master_id IN (SELECT value FROM json_each(?1)) ORDER BY e.start_at"
         ))?;
-        let it = stmt.query_map([serde_json::to_string(&masters)?], |r| Ok(ExportRow { event: from_row(r)?, uid: r.get(20)? }))?;
+        let it = stmt.query_map([serde_json::to_string(&masters)?], |r| {
+            Ok(ExportRow {
+                event: from_row(r)?,
+                uid: r.get(20)?,
+            })
+        })?;
         for row in it {
             rows.push(row?);
         }
@@ -897,17 +919,28 @@ pub(crate) fn cancelled_exceptions(conn: &Connection, master_id: &str) -> Result
 }
 
 /// UID de iCalendar → id del evento, en un calendario.
-pub(crate) fn uids_in_calendar(conn: &Connection, calendar_id: &str) -> Result<HashMap<String, String>> {
-    let mut stmt = conn.prepare_cached("SELECT ical_uid, id FROM events WHERE calendar_id = ?1 AND ical_uid IS NOT NULL")?;
-    let rows = stmt.query_map([calendar_id], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))?;
+pub(crate) fn uids_in_calendar(
+    conn: &Connection,
+    calendar_id: &str,
+) -> Result<HashMap<String, String>> {
+    let mut stmt = conn.prepare_cached(
+        "SELECT ical_uid, id FROM events WHERE calendar_id = ?1 AND ical_uid IS NOT NULL",
+    )?;
+    let rows = stmt.query_map([calendar_id], |r| {
+        Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?))
+    })?;
     Ok(rows.collect::<rusqlite::Result<HashMap<_, _>>>()?)
 }
 
 /// Cancela una ocurrencia (EXDATE). Devuelve `false` si no es una ocurrencia válida.
 pub(crate) fn add_cancelled_exception(conn: &Connection, master_id: &str, t: i64) -> Result<bool> {
     let master = get_row(conn, master_id)?;
-    let Some(rule) = master.recurrence.clone() else { return Ok(false) };
-    if !recurrence::is_occurrence(&master, &rule, t)? || exceptions_of(conn, master_id)?.contains(&t) {
+    let Some(rule) = master.recurrence.clone() else {
+        return Ok(false);
+    };
+    if !recurrence::is_occurrence(&master, &rule, t)?
+        || exceptions_of(conn, master_id)?.contains(&t)
+    {
         return Ok(false);
     }
     conn.execute(
@@ -921,8 +954,11 @@ pub(crate) fn add_cancelled_exception(conn: &Connection, master_id: &str, t: i64
 /// ¿Es `t` una ocurrencia libre (ni cancelada ni modificada) de la serie?
 pub(crate) fn is_free_occurrence(conn: &Connection, master_id: &str, t: i64) -> Result<bool> {
     let master = get_row(conn, master_id)?;
-    let Some(rule) = master.recurrence.clone() else { return Ok(false) };
-    Ok(recurrence::is_occurrence(&master, &rule, t)? && !exceptions_of(conn, master_id)?.contains(&t))
+    let Some(rule) = master.recurrence.clone() else {
+        return Ok(false);
+    };
+    Ok(recurrence::is_occurrence(&master, &rule, t)?
+        && !exceptions_of(conn, master_id)?.contains(&t))
 }
 
 #[cfg(test)]

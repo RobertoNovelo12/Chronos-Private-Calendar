@@ -47,11 +47,17 @@ fn fold(line: &str, out: &mut String) {
 }
 
 fn utc_stamp(ms: i64) -> String {
-    Utc.timestamp_millis_opt(ms).single().map(|d| d.format("%Y%m%dT%H%M%SZ").to_string()).unwrap_or_default()
+    Utc.timestamp_millis_opt(ms)
+        .single()
+        .map(|d| d.format("%Y%m%dT%H%M%SZ").to_string())
+        .unwrap_or_default()
 }
 
 fn date_value(ms: i64) -> String {
-    Utc.timestamp_millis_opt(ms).single().map(|d| d.format("%Y%m%d").to_string()).unwrap_or_default()
+    Utc.timestamp_millis_opt(ms)
+        .single()
+        .map(|d| d.format("%Y%m%d").to_string())
+        .unwrap_or_default()
 }
 
 /// `;TZID=...:local`, `:...Z` o `;VALUE=DATE:...` según el caso.
@@ -95,7 +101,12 @@ fn trigger(minutes: i32) -> String {
 pub fn write(items: &[ExportItem], calendar_name: Option<&str>) -> String {
     let mut out = String::new();
     let stamp = utc_stamp(Utc::now().timestamp_millis());
-    for l in ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Chronos Private Calendar//ES", "CALSCALE:GREGORIAN"] {
+    for l in [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Chronos Private Calendar//ES",
+        "CALSCALE:GREGORIAN",
+    ] {
         fold(l, &mut out);
     }
     if let Some(n) = calendar_name {
@@ -111,14 +122,23 @@ pub fn write(items: &[ExportItem], calendar_name: Option<&str>) -> String {
         if let Some((t, tz, all_day)) = &it.recurrence_id {
             fold(&dt_prop("RECURRENCE-ID", *t, tz, *all_day, true), &mut out);
         }
-        fold(&dt_prop("DTSTART", e.start_at, &e.timezone, e.is_all_day, local), &mut out);
-        fold(&dt_prop("DTEND", e.end_at, &e.timezone, e.is_all_day, local), &mut out);
+        fold(
+            &dt_prop("DTSTART", e.start_at, &e.timezone, e.is_all_day, local),
+            &mut out,
+        );
+        fold(
+            &dt_prop("DTEND", e.end_at, &e.timezone, e.is_all_day, local),
+            &mut out,
+        );
         if series {
             if let Some(rule) = &e.recurrence {
                 fold(&format!("RRULE:{rule}"), &mut out);
             }
             for x in &it.exdates {
-                fold(&dt_prop("EXDATE", *x, &e.timezone, e.is_all_day, true), &mut out);
+                fold(
+                    &dt_prop("EXDATE", *x, &e.timezone, e.is_all_day, true),
+                    &mut out,
+                );
             }
         }
         fold(&format!("SUMMARY:{}", escape(&e.title)), &mut out);
@@ -132,9 +152,19 @@ pub fn write(items: &[ExportItem], calendar_name: Option<&str>) -> String {
             fold(&format!("URL:{}", link.url), &mut out);
         }
         if !it.calendar_name.is_empty() {
-            fold(&format!("CATEGORIES:{}", escape(&it.calendar_name)), &mut out);
+            fold(
+                &format!("CATEGORIES:{}", escape(&it.calendar_name)),
+                &mut out,
+            );
         }
-        fold(if e.availability == Availability::Free { "TRANSP:TRANSPARENT" } else { "TRANSP:OPAQUE" }, &mut out);
+        fold(
+            if e.availability == Availability::Free {
+                "TRANSP:TRANSPARENT"
+            } else {
+                "TRANSP:OPAQUE"
+            },
+            &mut out,
+        );
         match e.visibility {
             Visibility::Public => fold("CLASS:PUBLIC", &mut out),
             Visibility::Private => fold("CLASS:PRIVATE", &mut out),
@@ -172,7 +202,10 @@ struct Prop {
 
 impl Prop {
     fn param(&self, key: &str) -> Option<&str> {
-        self.params.iter().find(|(k, _)| k.eq_ignore_ascii_case(key)).map(|(_, v)| v.as_str())
+        self.params
+            .iter()
+            .find(|(k, _)| k.eq_ignore_ascii_case(key))
+            .map(|(_, v)| v.as_str())
     }
 }
 
@@ -214,10 +247,17 @@ fn parse_prop(line: &str) -> Option<Prop> {
     let params = parts
         .filter_map(|p| {
             let (k, v) = p.split_once('=')?;
-            Some((k.trim().to_ascii_uppercase(), v.trim().trim_matches('"').to_string()))
+            Some((
+                k.trim().to_ascii_uppercase(),
+                v.trim().trim_matches('"').to_string(),
+            ))
         })
         .collect();
-    Some(Prop { name, params, value: value.to_string() })
+    Some(Prop {
+        name,
+        params,
+        value: value.to_string(),
+    })
 }
 
 fn unescape(v: &str) -> String {
@@ -287,11 +327,20 @@ fn resolve_tz(tzid: &str) -> Option<String> {
 }
 
 /// Valor de fecha/hora → (ms UTC, día completo, zona).
-fn parse_dt_value(value: &str, tzid: Option<&str>, value_type: Option<&str>, default_tz: &str) -> Option<(i64, bool, String)> {
+fn parse_dt_value(
+    value: &str,
+    tzid: Option<&str>,
+    value_type: Option<&str>,
+    default_tz: &str,
+) -> Option<(i64, bool, String)> {
     let v = value.trim();
-    if value_type.is_some_and(|t| t.eq_ignore_ascii_case("DATE")) || (v.len() == 8 && v.chars().all(|c| c.is_ascii_digit())) {
+    if value_type.is_some_and(|t| t.eq_ignore_ascii_case("DATE"))
+        || (v.len() == 8 && v.chars().all(|c| c.is_ascii_digit()))
+    {
         let d = NaiveDate::parse_from_str(&v[..8.min(v.len())], "%Y%m%d").ok()?;
-        let ms = Utc.from_utc_datetime(&d.and_hms_opt(0, 0, 0)?).timestamp_millis();
+        let ms = Utc
+            .from_utc_datetime(&d.and_hms_opt(0, 0, 0)?)
+            .timestamp_millis();
         return Some((ms, true, default_tz.to_string()));
     }
     let (body, utc) = match v.strip_suffix('Z').or_else(|| v.strip_suffix('z')) {
@@ -300,9 +349,15 @@ fn parse_dt_value(value: &str, tzid: Option<&str>, value_type: Option<&str>, def
     };
     let naive = NaiveDateTime::parse_from_str(body, "%Y%m%dT%H%M%S").ok()?;
     if utc {
-        return Some((Utc.from_utc_datetime(&naive).timestamp_millis(), false, default_tz.to_string()));
+        return Some((
+            Utc.from_utc_datetime(&naive).timestamp_millis(),
+            false,
+            default_tz.to_string(),
+        ));
     }
-    let tz_name = tzid.and_then(resolve_tz).unwrap_or_else(|| default_tz.to_string());
+    let tz_name = tzid
+        .and_then(resolve_tz)
+        .unwrap_or_else(|| default_tz.to_string());
     let ms = if tz_name == "UTC" {
         Utc.from_utc_datetime(&naive).timestamp_millis()
     } else {
@@ -363,8 +418,12 @@ fn parse_duration(s: &str) -> Option<i64> {
 fn normalize_rule(rule: &str, all_day: bool) -> String {
     rule.split(';')
         .map(|part| match part.split_once('=') {
-            Some((k, v)) if k.eq_ignore_ascii_case("UNTIL") && v.len() == 8 && !all_day => format!("UNTIL={v}T235959Z"),
-            Some((k, v)) if k.eq_ignore_ascii_case("UNTIL") && v.len() == 8 => format!("UNTIL={v}T000000Z"),
+            Some((k, v)) if k.eq_ignore_ascii_case("UNTIL") && v.len() == 8 && !all_day => {
+                format!("UNTIL={v}T235959Z")
+            }
+            Some((k, v)) if k.eq_ignore_ascii_case("UNTIL") && v.len() == 8 => {
+                format!("UNTIL={v}T000000Z")
+            }
             _ => part.to_string(),
         })
         .collect::<Vec<_>>()
@@ -373,8 +432,13 @@ fn normalize_rule(rule: &str, all_day: bool) -> String {
 
 pub fn parse(text: &str, default_tz: &str) -> Result<ImportBatch> {
     let lines = unfold(text);
-    if !lines.iter().any(|l| l.eq_ignore_ascii_case("BEGIN:VCALENDAR")) {
-        return Err(CoreError::Validation("el archivo no es un calendario iCalendar (.ics)".into()));
+    if !lines
+        .iter()
+        .any(|l| l.eq_ignore_ascii_case("BEGIN:VCALENDAR"))
+    {
+        return Err(CoreError::Validation(
+            "el archivo no es un calendario iCalendar (.ics)".into(),
+        ));
     }
     let mut batch = ImportBatch::default();
     let mut current: Option<Vec<Prop>> = None;
@@ -397,8 +461,12 @@ pub fn parse(text: &str, default_tz: &str) -> Result<ImportBatch> {
             ("END", "VALARM") if in_alarm => {
                 in_alarm = false;
                 if let Some(t) = alarm_trigger.take() {
-                    let related_end = t.param("RELATED").is_some_and(|r| r.eq_ignore_ascii_case("END"));
-                    let absolute = t.param("VALUE").is_some_and(|v| v.eq_ignore_ascii_case("DATE-TIME"));
+                    let related_end = t
+                        .param("RELATED")
+                        .is_some_and(|r| r.eq_ignore_ascii_case("END"));
+                    let absolute = t
+                        .param("VALUE")
+                        .is_some_and(|v| v.eq_ignore_ascii_case("DATE-TIME"));
                     if !related_end && !absolute {
                         if let Some(ms) = parse_duration(&t.value) {
                             if ms <= 0 {
@@ -410,7 +478,12 @@ pub fn parse(text: &str, default_tz: &str) -> Result<ImportBatch> {
             }
             ("END", "VEVENT") => {
                 if let Some(props) = current.take() {
-                    if let Some(ev) = build_event(&props, std::mem::take(&mut alarms), default_tz, &mut batch.rules_dropped) {
+                    if let Some(ev) = build_event(
+                        &props,
+                        std::mem::take(&mut alarms),
+                        default_tz,
+                        &mut batch.rules_dropped,
+                    ) {
                         batch.events.push(ev);
                     }
                 }
@@ -432,13 +505,20 @@ pub fn parse(text: &str, default_tz: &str) -> Result<ImportBatch> {
             }
         }
         if batch.events.len() > super::MAX_IMPORT_EVENTS {
-            return Err(CoreError::Validation("el archivo tiene demasiados eventos".into()));
+            return Err(CoreError::Validation(
+                "el archivo tiene demasiados eventos".into(),
+            ));
         }
     }
     Ok(batch)
 }
 
-fn build_event(props: &[Prop], alarms: Vec<i32>, default_tz: &str, rules_dropped: &mut usize) -> Option<ImportEvent> {
+fn build_event(
+    props: &[Prop],
+    alarms: Vec<i32>,
+    default_tz: &str,
+    rules_dropped: &mut usize,
+) -> Option<ImportEvent> {
     let get = |n: &str| props.iter().find(|p| p.name == n);
     let start_prop = get("DTSTART")?;
     let (start_at, is_all_day, timezone) = parse_dt(start_prop, default_tz)?;
@@ -451,7 +531,11 @@ fn build_event(props: &[Prop], alarms: Vec<i32>, default_tz: &str, rules_dropped
     } else {
         start_at
     };
-    let end_at = if is_all_day && end_at <= start_at { start_at + DAY_MS } else { end_at.max(start_at) };
+    let end_at = if is_all_day && end_at <= start_at {
+        start_at + DAY_MS
+    } else {
+        end_at.max(start_at)
+    };
 
     let recurrence = get("RRULE").and_then(|p| {
         let rule = normalize_rule(&p.value, is_all_day);
@@ -466,21 +550,32 @@ fn build_event(props: &[Prop], alarms: Vec<i32>, default_tz: &str, rules_dropped
     let mut exdates = Vec::new();
     for p in props.iter().filter(|p| p.name == "EXDATE") {
         for v in p.value.split(',') {
-            if let Some((ms, _, _)) = parse_dt_value(v, p.param("TZID"), p.param("VALUE"), &timezone) {
+            if let Some((ms, _, _)) =
+                parse_dt_value(v, p.param("TZID"), p.param("VALUE"), &timezone)
+            {
                 exdates.push(ms);
             }
         }
     }
-    let recurrence_id = get("RECURRENCE-ID").and_then(|p| parse_dt(p, &timezone)).map(|(ms, _, _)| ms);
+    let recurrence_id = get("RECURRENCE-ID")
+        .and_then(|p| parse_dt(p, &timezone))
+        .map(|(ms, _, _)| ms);
     let text = |n: &str| get(n).map(|p| unescape(&p.value)).unwrap_or_default();
     let links = get("URL")
         .map(|p| p.value.trim().to_string())
         .filter(|u| u.starts_with("https://") || u.starts_with("http://"))
-        .map(|url| vec![EventLink { label: String::new(), url }])
+        .map(|url| {
+            vec![EventLink {
+                label: String::new(),
+                url,
+            }]
+        })
         .unwrap_or_default();
 
     Some(ImportEvent {
-        uid: get("UID").map(|p| unescape(&p.value)).filter(|u| !u.trim().is_empty()),
+        uid: get("UID")
+            .map(|p| unescape(&p.value))
+            .filter(|u| !u.trim().is_empty()),
         title: text("SUMMARY"),
         description: text("DESCRIPTION"),
         location: text("LOCATION"),
@@ -489,7 +584,11 @@ fn build_event(props: &[Prop], alarms: Vec<i32>, default_tz: &str, rules_dropped
         end_at,
         timezone,
         is_all_day,
-        availability: get("TRANSP").and_then(|p| p.value.eq_ignore_ascii_case("TRANSPARENT").then_some(Availability::Free)),
+        availability: get("TRANSP").and_then(|p| {
+            p.value
+                .eq_ignore_ascii_case("TRANSPARENT")
+                .then_some(Availability::Free)
+        }),
         visibility: get("CLASS").and_then(|p| match p.value.to_ascii_uppercase().as_str() {
             "PUBLIC" => Some(Visibility::Public),
             "PRIVATE" => Some(Visibility::Private),
@@ -517,7 +616,10 @@ mod tests {
     fn folding_and_escaping() {
         let mut out = String::new();
         fold(&format!("SUMMARY:{}", "á".repeat(60)), &mut out);
-        assert!(out.lines().all(|l| l.len() <= 75), "ninguna línea supera 75 octetos");
+        assert!(
+            out.lines().all(|l| l.len() <= 75),
+            "ninguna línea supera 75 octetos"
+        );
         assert_eq!(escape("a;b,c\\d\ne"), "a\\;b\\,c\\\\d\\ne");
         assert_eq!(unescape("a\\;b\\,c\\\\d\\ne"), "a;b,c\\d\ne");
         let lines = unfold("SUMMARY:Hola\r\n  mundo\r\nEND:X");
@@ -534,12 +636,30 @@ mod tests {
         let (ms, all_day, _) = parse_dt_value("20261109", None, None, "UTC").unwrap();
         assert!(all_day);
         assert_eq!(ms % DAY_MS, 0);
-        let (ms, _, tz) = parse_dt_value("20261109T093000", Some("America/New_York"), None, "UTC").unwrap();
+        let (ms, _, tz) =
+            parse_dt_value("20261109T093000", Some("America/New_York"), None, "UTC").unwrap();
         assert_eq!(tz, "America/New_York");
-        assert_eq!(ms, Utc.with_ymd_and_hms(2026, 11, 9, 14, 30, 0).unwrap().timestamp_millis());
-        let (_, _, tz) = parse_dt_value("20261109T093000", Some("Central Standard Time (Mexico)"), None, "UTC").unwrap();
+        assert_eq!(
+            ms,
+            Utc.with_ymd_and_hms(2026, 11, 9, 14, 30, 0)
+                .unwrap()
+                .timestamp_millis()
+        );
+        let (_, _, tz) = parse_dt_value(
+            "20261109T093000",
+            Some("Central Standard Time (Mexico)"),
+            None,
+            "UTC",
+        )
+        .unwrap();
         assert_eq!(tz, "America/Mexico_City");
-        let (_, _, tz) = parse_dt_value("20261109T093000", Some("/mozilla.org/20050126_1/Europe/Madrid"), None, "UTC").unwrap();
+        let (_, _, tz) = parse_dt_value(
+            "20261109T093000",
+            Some("/mozilla.org/20050126_1/Europe/Madrid"),
+            None,
+            "UTC",
+        )
+        .unwrap();
         assert_eq!(tz, "Europe/Madrid");
         assert_eq!(trigger(0), "PT0S");
         assert_eq!(trigger(90), "-PT1H30M");
@@ -562,7 +682,10 @@ BEGIN:VEVENT\r\nUID:bad\r\nDTSTART:20261201T100000Z\r\nRRULE:FREQ=SECONDLY\r\nSU
         assert_eq!(b.events.len(), 4);
         let s = &b.events[0];
         assert_eq!(s.title, "Reunión, semanal");
-        assert_eq!(s.recurrence.as_deref(), Some("FREQ=WEEKLY;BYDAY=MO;UNTIL=20261231T235959Z"));
+        assert_eq!(
+            s.recurrence.as_deref(),
+            Some("FREQ=WEEKLY;BYDAY=MO;UNTIL=20261231T235959Z")
+        );
         assert_eq!(s.exdates.len(), 1);
         assert_eq!(s.reminders, vec![10]);
         assert_eq!(s.availability, Some(Availability::Free));

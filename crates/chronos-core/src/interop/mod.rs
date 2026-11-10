@@ -8,7 +8,9 @@ pub mod json;
 use crate::database::Atomic;
 use crate::error::{CoreError, Result};
 use crate::fs_util::write_atomic;
-use crate::models::event::{Availability, EditScope, Event, EventLink, EventPatch, EventStatus, NewEvent, Visibility};
+use crate::models::event::{
+    Availability, EditScope, Event, EventLink, EventPatch, EventStatus, NewEvent, Visibility,
+};
 use crate::models::{Calendar, NewCalendar};
 use crate::recurrence::instance_id;
 use crate::repositories::{calendars, events};
@@ -64,9 +66,15 @@ fn default_uid(id: &str) -> String {
 }
 
 /// Reúne lo que se va a exportar.
-pub fn collect(conn: &rusqlite::Connection, opts: &ExportOptions) -> Result<(Vec<ExportItem>, Vec<Calendar>)> {
+pub fn collect(
+    conn: &rusqlite::Connection,
+    opts: &ExportOptions,
+) -> Result<(Vec<ExportItem>, Vec<Calendar>)> {
     let all_cals = calendars::list(conn)?;
-    let names: HashMap<String, String> = all_cals.iter().map(|c| (c.id.clone(), c.name.clone())).collect();
+    let names: HashMap<String, String> = all_cals
+        .iter()
+        .map(|c| (c.id.clone(), c.name.clone()))
+        .collect();
     let mut items = Vec::new();
 
     if let Some(ids) = &opts.event_ids {
@@ -89,7 +97,10 @@ pub fn collect(conn: &rusqlite::Connection, opts: &ExportOptions) -> Result<(Vec
                 recurrence_id: None,
             });
         }
-        let used: Vec<Calendar> = all_cals.into_iter().filter(|c| items.iter().any(|i| i.event.calendar_id == c.id)).collect();
+        let used: Vec<Calendar> = all_cals
+            .into_iter()
+            .filter(|c| items.iter().any(|i| i.event.calendar_id == c.id))
+            .collect();
         return Ok((items, used));
     }
 
@@ -99,38 +110,73 @@ pub fn collect(conn: &rusqlite::Connection, opts: &ExportOptions) -> Result<(Vec
         .filter(|r| r.event.is_recurring && r.event.recurrence_master_id.is_none())
         .map(|r| {
             let uid = r.uid.clone().unwrap_or_else(|| default_uid(&r.event.id));
-            (r.event.id.clone(), (uid, r.event.timezone.clone(), r.event.is_all_day))
+            (
+                r.event.id.clone(),
+                (uid, r.event.timezone.clone(), r.event.is_all_day),
+            )
         })
         .collect();
     for r in rows {
         let calendar_name = names.get(&r.event.calendar_id).cloned().unwrap_or_default();
-        let (uid, exdates, recurrence_id) = match (&r.event.recurrence_master_id, r.event.original_start_at) {
-            (Some(m), Some(t)) => match master_info.get(m) {
-                Some((muid, tz, all_day)) => (muid.clone(), vec![], Some((t, tz.clone(), *all_day))),
-                None => (r.uid.clone().unwrap_or_else(|| default_uid(&r.event.id)), vec![], None),
-            },
-            _ if r.event.is_recurring => (
-                master_info.get(&r.event.id).map(|m| m.0.clone()).unwrap_or_else(|| default_uid(&r.event.id)),
-                events::cancelled_exceptions(conn, &r.event.id)?,
-                None,
-            ),
-            _ => (r.uid.clone().unwrap_or_else(|| default_uid(&r.event.id)), vec![], None),
-        };
-        items.push(ExportItem { uid, event: r.event, calendar_name, exdates, recurrence_id });
+        let (uid, exdates, recurrence_id) =
+            match (&r.event.recurrence_master_id, r.event.original_start_at) {
+                (Some(m), Some(t)) => match master_info.get(m) {
+                    Some((muid, tz, all_day)) => {
+                        (muid.clone(), vec![], Some((t, tz.clone(), *all_day)))
+                    }
+                    None => (
+                        r.uid.clone().unwrap_or_else(|| default_uid(&r.event.id)),
+                        vec![],
+                        None,
+                    ),
+                },
+                _ if r.event.is_recurring => (
+                    master_info
+                        .get(&r.event.id)
+                        .map(|m| m.0.clone())
+                        .unwrap_or_else(|| default_uid(&r.event.id)),
+                    events::cancelled_exceptions(conn, &r.event.id)?,
+                    None,
+                ),
+                _ => (
+                    r.uid.clone().unwrap_or_else(|| default_uid(&r.event.id)),
+                    vec![],
+                    None,
+                ),
+            };
+        items.push(ExportItem {
+            uid,
+            event: r.event,
+            calendar_name,
+            exdates,
+            recurrence_id,
+        });
     }
     let used: Vec<Calendar> = match &opts.calendar_ids {
-        Some(ids) => all_cals.into_iter().filter(|c| ids.contains(&c.id)).collect(),
+        Some(ids) => all_cals
+            .into_iter()
+            .filter(|c| ids.contains(&c.id))
+            .collect(),
         None => all_cals,
     };
     Ok((items, used))
 }
 
 /// Exporta a un archivo (escritura atómica).
-pub fn export_to_file(conn: &rusqlite::Connection, format: Format, opts: &ExportOptions, path: &Path) -> Result<ExportReport> {
+pub fn export_to_file(
+    conn: &rusqlite::Connection,
+    format: Format,
+    opts: &ExportOptions,
+    path: &Path,
+) -> Result<ExportReport> {
     let (items, cals) = collect(conn, opts)?;
     let content = match format {
         Format::Ics => {
-            let name = if cals.len() == 1 { Some(cals[0].name.as_str()) } else { None };
+            let name = if cals.len() == 1 {
+                Some(cals[0].name.as_str())
+            } else {
+                None
+            };
             ics::write(&items, name)
         }
         Format::Json => json::write(&items, &cals)?,
@@ -138,7 +184,10 @@ pub fn export_to_file(conn: &rusqlite::Connection, format: Format, opts: &Export
     };
     write_atomic(path, content.as_bytes())?;
     tracing::info!(events = items.len(), "exportación completada");
-    Ok(ExportReport { events: items.len(), path: path.to_string_lossy().into_owned() })
+    Ok(ExportReport {
+        events: items.len(),
+        path: path.to_string_lossy().into_owned(),
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -179,7 +228,11 @@ pub struct ImportBatch {
 
 /// Dónde se importan los eventos.
 #[derive(Clone, Debug, Deserialize)]
-#[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+#[serde(
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase",
+    tag = "kind"
+)]
 pub enum ImportTarget {
     /// Todo en un calendario existente.
     Existing { calendar_id: String },
@@ -203,27 +256,57 @@ fn truncate(s: &str, max: usize) -> String {
     s.chars().take(max).collect()
 }
 
-const IMPORT_COLORS: &[&str] = &["#27ae60", "#9b51e0", "#f2994a", "#2d9cdb", "#e84393", "#0f766e"];
+const IMPORT_COLORS: &[&str] = &[
+    "#27ae60", "#9b51e0", "#f2994a", "#2d9cdb", "#e84393", "#0f766e",
+];
 
-fn resolve_calendar(conn: &rusqlite::Connection, name: &str, color: Option<&str>, report: &mut ImportReport) -> Result<String> {
+fn resolve_calendar(
+    conn: &rusqlite::Connection,
+    name: &str,
+    color: Option<&str>,
+    report: &mut ImportReport,
+) -> Result<String> {
     let name = truncate(name.trim(), 200);
-    let name = if name.is_empty() { "Importado".to_string() } else { name };
-    if let Some(existing) = calendars::list(conn)?.into_iter().find(|c| c.name.eq_ignore_ascii_case(&name)) {
+    let name = if name.is_empty() {
+        "Importado".to_string()
+    } else {
+        name
+    };
+    if let Some(existing) = calendars::list(conn)?
+        .into_iter()
+        .find(|c| c.name.eq_ignore_ascii_case(&name))
+    {
         return Ok(existing.id);
     }
     let color = color
         .and_then(|c| crate::models::calendar::normalize_color(c).ok())
-        .unwrap_or_else(|| IMPORT_COLORS[report.calendars_created % IMPORT_COLORS.len()].to_string());
-    let cal = calendars::create(conn, &NewCalendar { name, color, description: None })?;
+        .unwrap_or_else(|| {
+            IMPORT_COLORS[report.calendars_created % IMPORT_COLORS.len()].to_string()
+        });
+    let cal = calendars::create(
+        conn,
+        &NewCalendar {
+            name,
+            color,
+            description: None,
+        },
+    )?;
     report.calendars_created += 1;
     Ok(cal.id)
 }
 
 /// Aplica la importación en una única operación atómica.
-pub fn apply(conn: &rusqlite::Connection, batches: Vec<ImportBatch>, target: &ImportTarget, file_name: &str) -> Result<ImportReport> {
+pub fn apply(
+    conn: &rusqlite::Connection,
+    batches: Vec<ImportBatch>,
+    target: &ImportTarget,
+    file_name: &str,
+) -> Result<ImportReport> {
     let total: usize = batches.iter().map(|b| b.events.len()).sum();
     if total > MAX_IMPORT_EVENTS {
-        return Err(CoreError::Validation(format!("el archivo tiene más de {MAX_IMPORT_EVENTS} eventos")));
+        return Err(CoreError::Validation(format!(
+            "el archivo tiene más de {MAX_IMPORT_EVENTS} eventos"
+        )));
     }
     let tx = Atomic::begin(conn)?;
     let mut report = ImportReport::default();
@@ -232,20 +315,33 @@ pub fn apply(conn: &rusqlite::Connection, batches: Vec<ImportBatch>, target: &Im
         let calendar_id = match target {
             ImportTarget::Existing { calendar_id } => calendars::get(&tx, calendar_id)?.id,
             ImportTarget::New { name } => {
-                let n = name.clone().or(batch.calendar_name.clone()).unwrap_or_else(|| file_name.to_string());
+                let n = name
+                    .clone()
+                    .or(batch.calendar_name.clone())
+                    .unwrap_or_else(|| file_name.to_string());
                 resolve_calendar(&tx, &n, batch.calendar_color.as_deref(), &mut report)?
             }
         };
         import_batch(&tx, &calendar_id, batch.events, &mut report)?;
     }
     tx.commit()?;
-    tracing::info!(imported = report.imported, duplicates = report.duplicates, "importación completada");
+    tracing::info!(
+        imported = report.imported,
+        duplicates = report.duplicates,
+        "importación completada"
+    );
     Ok(report)
 }
 
-fn import_batch(conn: &rusqlite::Connection, calendar_id: &str, list: Vec<ImportEvent>, report: &mut ImportReport) -> Result<()> {
+fn import_batch(
+    conn: &rusqlite::Connection,
+    calendar_id: &str,
+    list: Vec<ImportEvent>,
+    report: &mut ImportReport,
+) -> Result<()> {
     let mut by_uid = events::uids_in_calendar(conn, calendar_id)?;
-    let (masters, overrides): (Vec<_>, Vec<_>) = list.into_iter().partition(|e| e.recurrence_id.is_none());
+    let (masters, overrides): (Vec<_>, Vec<_>) =
+        list.into_iter().partition(|e| e.recurrence_id.is_none());
 
     for e in masters {
         if e.status == Some(EventStatus::Cancelled) {
@@ -272,7 +368,12 @@ fn import_batch(conn: &rusqlite::Connection, calendar_id: &str, list: Vec<Import
             visibility: e.visibility,
             availability: e.availability,
             recurrence: e.recurrence.clone(),
-            reminders: e.reminders.into_iter().filter(|m| (0..=40_320).contains(m)).take(10).collect(),
+            reminders: e
+                .reminders
+                .into_iter()
+                .filter(|m| (0..=40_320).contains(m))
+                .take(10)
+                .collect(),
             ical_uid: e.uid.clone(),
         };
         let created = match events::create(conn, &input) {
@@ -280,7 +381,13 @@ fn import_batch(conn: &rusqlite::Connection, calendar_id: &str, list: Vec<Import
             Err(CoreError::Validation(_)) => {
                 // Regla incompatible u otro dato no válido: se intenta sin repetición.
                 if input.recurrence.is_some() {
-                    match events::create(conn, &NewEvent { recurrence: None, ..input.clone() }) {
+                    match events::create(
+                        conn,
+                        &NewEvent {
+                            recurrence: None,
+                            ..input.clone()
+                        },
+                    ) {
                         Ok(c) => {
                             report.rules_dropped += 1;
                             c
@@ -297,7 +404,10 @@ fn import_batch(conn: &rusqlite::Connection, calendar_id: &str, list: Vec<Import
             }
             Err(other) => return Err(other),
         };
-        let real_id = created.recurrence_master_id.clone().unwrap_or(created.id.clone());
+        let real_id = created
+            .recurrence_master_id
+            .clone()
+            .unwrap_or(created.id.clone());
         if created.is_recurring {
             for t in e.exdates {
                 events::add_cancelled_exception(conn, &real_id, t)?;
@@ -321,7 +431,14 @@ fn import_batch(conn: &rusqlite::Connection, calendar_id: &str, list: Vec<Import
             is_all_day: Some(e.is_all_day),
             availability: e.availability,
             visibility: e.visibility,
-            reminders: Some(e.reminders.iter().copied().filter(|m| (0..=40_320).contains(m)).take(10).collect()),
+            reminders: Some(
+                e.reminders
+                    .iter()
+                    .copied()
+                    .filter(|m| (0..=40_320).contains(m))
+                    .take(10)
+                    .collect(),
+            ),
             ..Default::default()
         };
         let applied = match &master {
@@ -376,17 +493,25 @@ fn import_batch(conn: &rusqlite::Connection, calendar_id: &str, list: Vec<Import
 pub fn read_file(path: &Path, default_tz: &str) -> Result<(Format, Vec<ImportBatch>)> {
     let meta = std::fs::metadata(path)?;
     if !meta.is_file() || meta.len() > MAX_IMPORT_BYTES {
-        return Err(CoreError::Validation("el archivo no existe o es demasiado grande (máx. 20 MB)".into()));
+        return Err(CoreError::Validation(
+            "el archivo no existe o es demasiado grande (máx. 20 MB)".into(),
+        ));
     }
-    let ext = path.extension().map(|e| e.to_string_lossy().to_ascii_lowercase()).unwrap_or_default();
+    let ext = path
+        .extension()
+        .map(|e| e.to_string_lossy().to_ascii_lowercase())
+        .unwrap_or_default();
     let bytes = std::fs::read(path)?;
     let text = String::from_utf8_lossy(&bytes);
     let text = text.trim_start_matches('\u{feff}');
-    let default_tz = crate::models::event::normalize_timezone(default_tz).unwrap_or_else(|_| "UTC".into());
+    let default_tz =
+        crate::models::event::normalize_timezone(default_tz).unwrap_or_else(|_| "UTC".into());
     match ext.as_str() {
         "ics" | "ical" | "ifb" => Ok((Format::Ics, vec![ics::parse(text, &default_tz)?])),
         "json" => Ok((Format::Json, json::parse(text)?)),
-        _ => Err(CoreError::Validation("formato no compatible: usa un archivo .ics o .json".into())),
+        _ => Err(CoreError::Validation(
+            "formato no compatible: usa un archivo .ics o .json".into(),
+        )),
     }
 }
 
@@ -403,32 +528,46 @@ mod tests {
         let mut c = Connection::open_in_memory().unwrap();
         c.pragma_update(None, "foreign_keys", "ON").unwrap();
         migrate(&mut c).unwrap();
-        let cal = calendars::create(&c, &NewCalendar { name: "Trabajo".into(), color: "#112233".into(), description: None }).unwrap();
+        let cal = calendars::create(
+            &c,
+            &NewCalendar {
+                name: "Trabajo".into(),
+                color: "#112233".into(),
+                description: None,
+            },
+        )
+        .unwrap();
         (c, cal.id)
     }
 
     fn seed(c: &Connection, cal: &str) -> String {
         let base = 20_000 * DAY_MS + 15 * H;
-        events::create(c, &NewEvent {
-            calendar_id: cal.into(),
-            title: "Café, con \"amigos\"".into(),
-            description: "línea 1\nlínea 2".into(),
-            start_at: base,
-            end_at: base + H,
-            timezone: "UTC".into(),
-            reminders: vec![10],
-            ..Default::default()
-        })
+        events::create(
+            c,
+            &NewEvent {
+                calendar_id: cal.into(),
+                title: "Café, con \"amigos\"".into(),
+                description: "línea 1\nlínea 2".into(),
+                start_at: base,
+                end_at: base + H,
+                timezone: "UTC".into(),
+                reminders: vec![10],
+                ..Default::default()
+            },
+        )
         .unwrap();
-        let s = events::create(c, &NewEvent {
-            calendar_id: cal.into(),
-            title: "Diario".into(),
-            start_at: base,
-            end_at: base + H,
-            timezone: "America/Mexico_City".into(),
-            recurrence: Some("FREQ=DAILY;COUNT=5".into()),
-            ..Default::default()
-        })
+        let s = events::create(
+            c,
+            &NewEvent {
+                calendar_id: cal.into(),
+                title: "Diario".into(),
+                start_at: base,
+                end_at: base + H,
+                timezone: "America/Mexico_City".into(),
+                recurrence: Some("FREQ=DAILY;COUNT=5".into()),
+                ..Default::default()
+            },
+        )
         .unwrap();
         let master = s.recurrence_master_id.clone().unwrap_or(s.id.clone());
         // Se cancela el segundo día y se mueve el tercero.
@@ -436,25 +575,37 @@ mod tests {
         events::update(
             c,
             &instance_id(&master, base + 2 * DAY_MS),
-            &EventPatch { title: Some("Movido".into()), start_at: Some(base + 2 * DAY_MS + 2 * H), end_at: Some(base + 2 * DAY_MS + 3 * H), ..Default::default() },
+            &EventPatch {
+                title: Some("Movido".into()),
+                start_at: Some(base + 2 * DAY_MS + 2 * H),
+                end_at: Some(base + 2 * DAY_MS + 3 * H),
+                ..Default::default()
+            },
             EditScope::This,
         )
         .unwrap();
-        events::create(c, &NewEvent {
-            calendar_id: cal.into(),
-            title: "Vacaciones".into(),
-            start_at: 20_010 * DAY_MS,
-            end_at: 20_012 * DAY_MS,
-            timezone: "UTC".into(),
-            is_all_day: true,
-            ..Default::default()
-        })
+        events::create(
+            c,
+            &NewEvent {
+                calendar_id: cal.into(),
+                title: "Vacaciones".into(),
+                start_at: 20_010 * DAY_MS,
+                end_at: 20_012 * DAY_MS,
+                timezone: "UTC".into(),
+                is_all_day: true,
+                ..Default::default()
+            },
+        )
         .unwrap();
         master
     }
 
     fn titles(c: &Connection) -> Vec<String> {
-        let mut v: Vec<String> = events::list_range(c, 19_990 * DAY_MS, 20_030 * DAY_MS).unwrap().into_iter().map(|e| e.title).collect();
+        let mut v: Vec<String> = events::list_range(c, 19_990 * DAY_MS, 20_030 * DAY_MS)
+            .unwrap()
+            .into_iter()
+            .map(|e| e.title)
+            .collect();
         v.sort();
         v
     }
@@ -474,7 +625,13 @@ mod tests {
 
         let (c2, _) = db();
         let batch = ics::parse(&text, "UTC").unwrap();
-        let r = apply(&c2, vec![batch.clone()], &ImportTarget::New { name: None }, "x").unwrap();
+        let r = apply(
+            &c2,
+            vec![batch.clone()],
+            &ImportTarget::New { name: None },
+            "x",
+        )
+        .unwrap();
         assert_eq!(r.imported, 4, "{r:?}"); // café, serie, excepción, vacaciones
         assert_eq!(r.calendars_created, 0, "reutiliza 'Trabajo'");
         assert_eq!(titles(&c2), before);
@@ -483,7 +640,11 @@ mod tests {
         assert_eq!(r.imported, 0);
         assert_eq!(r.duplicates, 4);
         assert_eq!(titles(&c2), before);
-        let cafe = events::list_range(&c2, 19_990 * DAY_MS, 20_030 * DAY_MS).unwrap().into_iter().find(|e| e.title.starts_with("Café")).unwrap();
+        let cafe = events::list_range(&c2, 19_990 * DAY_MS, 20_030 * DAY_MS)
+            .unwrap()
+            .into_iter()
+            .find(|e| e.title.starts_with("Café"))
+            .unwrap();
         assert_eq!(cafe.description, "línea 1\nlínea 2");
         assert_eq!(cafe.reminders, vec![10]);
     }
@@ -498,7 +659,15 @@ mod tests {
         let (c2, _) = db();
         let batches = json::parse(&text).unwrap();
         assert_eq!(batches.len(), 1);
-        apply(&c2, batches, &ImportTarget::New { name: Some("Copia".into()) }, "x").unwrap();
+        apply(
+            &c2,
+            batches,
+            &ImportTarget::New {
+                name: Some("Copia".into()),
+            },
+            "x",
+        )
+        .unwrap();
         assert_eq!(titles(&c2), before);
         assert!(json::parse("{\"format\":\"otro\",\"version\":1}").is_err());
 
@@ -513,16 +682,52 @@ mod tests {
     fn export_filters() {
         let (c, cal) = db();
         seed(&c, &cal);
-        let other = calendars::create(&c, &NewCalendar { name: "Otro".into(), color: "#445566".into(), description: None }).unwrap();
-        let (items, _) = collect(&c, &ExportOptions { calendar_ids: Some(vec![other.id]), ..Default::default() }).unwrap();
+        let other = calendars::create(
+            &c,
+            &NewCalendar {
+                name: "Otro".into(),
+                color: "#445566".into(),
+                description: None,
+            },
+        )
+        .unwrap();
+        let (items, _) = collect(
+            &c,
+            &ExportOptions {
+                calendar_ids: Some(vec![other.id]),
+                ..Default::default()
+            },
+        )
+        .unwrap();
         assert!(items.is_empty());
         // Solo las vacaciones caen en este rango.
-        let (items, _) = collect(&c, &ExportOptions { from: Some(20_009 * DAY_MS), to: Some(20_013 * DAY_MS), ..Default::default() }).unwrap();
-        assert_eq!(items.iter().map(|i| i.event.title.as_str()).collect::<Vec<_>>(), vec!["Vacaciones"]);
+        let (items, _) = collect(
+            &c,
+            &ExportOptions {
+                from: Some(20_009 * DAY_MS),
+                to: Some(20_013 * DAY_MS),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        assert_eq!(
+            items
+                .iter()
+                .map(|i| i.event.title.as_str())
+                .collect::<Vec<_>>(),
+            vec!["Vacaciones"]
+        );
         // Una ocurrencia seleccionada se exporta sola, sin regla.
         let all = events::list_range(&c, 19_990 * DAY_MS, 20_030 * DAY_MS).unwrap();
         let occ = all.iter().find(|e| e.title == "Diario").unwrap();
-        let (items, _) = collect(&c, &ExportOptions { event_ids: Some(vec![occ.id.clone()]), ..Default::default() }).unwrap();
+        let (items, _) = collect(
+            &c,
+            &ExportOptions {
+                event_ids: Some(vec![occ.id.clone()]),
+                ..Default::default()
+            },
+        )
+        .unwrap();
         assert_eq!(items.len(), 1);
         assert!(items[0].event.recurrence.is_none());
     }
@@ -534,7 +739,8 @@ mod serde_tests {
 
     #[test]
     fn import_target_uses_camel_case() {
-        let t: ImportTarget = serde_json::from_str(r#"{"kind":"existing","calendarId":"abc"}"#).unwrap();
+        let t: ImportTarget =
+            serde_json::from_str(r#"{"kind":"existing","calendarId":"abc"}"#).unwrap();
         assert!(matches!(t, ImportTarget::Existing { calendar_id } if calendar_id == "abc"));
         let t: ImportTarget = serde_json::from_str(r#"{"kind":"new","name":null}"#).unwrap();
         assert!(matches!(t, ImportTarget::New { name: None }));

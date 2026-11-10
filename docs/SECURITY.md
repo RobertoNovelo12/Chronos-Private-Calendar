@@ -97,3 +97,10 @@ Exige escribir `ELIMINAR` y la contraseña. Orden: se verifica la contraseña, s
 * Sin `keystore.json` la DEK no puede recuperarse, así que restos de `chronos.db` en el disco quedan ilegibles (borrado criptográfico). **Límite honesto:** en SSD y sistemas de archivos con *journaling* no puede garantizarse la sobrescritura física de bloques; alguien con acceso al disco **y** a la contraseña podría, en teoría, recuperar bloques antiguos de `keystore.json`.
 * Si no se marcan las copias, siguen en disco y se pueden restaurar después con la contraseña con la que se crearon.
 * Las carpetas de caché propias de WebKit/WebView2 (que no contienen datos del calendario) no se eliminan.
+
+## Distribución (versión 1.0)
+
+* **Instaladores sin firma.** Windows SmartScreen y macOS Gatekeeper muestran un aviso la primera vez. Comprueba que descargas el instalador desde la página *Releases* del repositorio oficial.
+* **WebView2 en Windows.** El instalador incluye el *bootstrapper* de Microsoft: solo si el equipo no tiene WebView2 (Windows 10/11 ya lo traen) lo descarga de Microsoft **durante la instalación**. La aplicación instalada no se conecta a internet.
+* **Revisión de dependencias** (noviembre de 2026): `npm audit` y `cargo audit` sin vulnerabilidades. `cargo audit` señala 5 avisos de mantenimiento (`proc-macro-error`, `zbus_names`, `zvariant`, `zvariant_derive`, `glib`), todos en dependencias de Tauri exclusivas de Linux (GTK/D-Bus), sin uso en la versión de Windows.
+* **Prueba sin red** (Fase 7): la aplicación instalada se ejecutó en un espacio de red aislado (solo `lo`, apagada) y funcionaron desbloqueo, creación de eventos, copias automáticas y manuales, y restauración.

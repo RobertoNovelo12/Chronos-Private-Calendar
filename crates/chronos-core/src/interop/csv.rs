@@ -35,11 +35,21 @@ pub(crate) fn cell(value: &str) -> String {
 
 fn local(ms: i64, tz: &str, all_day: bool) -> String {
     if all_day {
-        return Utc.timestamp_millis_opt(ms).single().map(|d| d.format("%Y-%m-%d").to_string()).unwrap_or_default();
+        return Utc
+            .timestamp_millis_opt(ms)
+            .single()
+            .map(|d| d.format("%Y-%m-%d").to_string())
+            .unwrap_or_default();
     }
     match tz.parse::<chrono_tz::Tz>() {
-        Ok(zone) => zone.timestamp_millis_opt(ms).single().map(|d| d.format("%Y-%m-%d %H:%M").to_string()),
-        Err(_) => Utc.timestamp_millis_opt(ms).single().map(|d| d.format("%Y-%m-%d %H:%M").to_string()),
+        Ok(zone) => zone
+            .timestamp_millis_opt(ms)
+            .single()
+            .map(|d| d.format("%Y-%m-%d %H:%M").to_string()),
+        Err(_) => Utc
+            .timestamp_millis_opt(ms)
+            .single()
+            .map(|d| d.format("%Y-%m-%d %H:%M").to_string()),
     }
     .unwrap_or_default()
 }
@@ -51,7 +61,11 @@ pub fn write(items: &[ExportItem]) -> String {
     for it in items {
         let e = &it.event;
         // Fin inclusivo en día completo para que la hoja muestre el último día.
-        let end = if e.is_all_day { e.end_at - DAY_MS } else { e.end_at };
+        let end = if e.is_all_day {
+            e.end_at - DAY_MS
+        } else {
+            e.end_at
+        };
         let series = e.recurrence.is_some() && e.recurrence_master_id.is_none();
         let row = [
             e.title.clone(),
@@ -62,7 +76,11 @@ pub fn write(items: &[ExportItem]) -> String {
             e.location.clone(),
             e.description.clone(),
             e.timezone.clone(),
-            if series { e.recurrence.clone().unwrap_or_default() } else { String::new() },
+            if series {
+                e.recurrence.clone().unwrap_or_default()
+            } else {
+                String::new()
+            },
             match e.availability {
                 Availability::Busy => "Ocupado",
                 Availability::Free => "Libre",

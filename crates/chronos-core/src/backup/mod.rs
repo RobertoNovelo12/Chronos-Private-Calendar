@@ -13,9 +13,7 @@ use crate::security::BackupKey;
 use base64::{engine::general_purpose::STANDARD as B64, Engine};
 use chrono::Utc;
 pub use format::FILE_EXTENSION;
-use format::{
-    BackupHeader, CipherSection, PayloadSection, FORMAT_VERSION, MAX_FILE_LEN,
-};
+use format::{BackupHeader, CipherSection, PayloadSection, FORMAT_VERSION, MAX_FILE_LEN};
 use rusqlite::Connection;
 use serde::Serialize;
 use snapshot::Snapshot;

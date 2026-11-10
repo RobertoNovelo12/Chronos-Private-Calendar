@@ -130,7 +130,11 @@ impl Vault {
                     description: None,
                 },
             )?;
-            settings::set(&conn, settings::LOCAL_APP_VERSION, &crate::APP_VERSION.into())?;
+            settings::set(
+                &conn,
+                settings::LOCAL_APP_VERSION,
+                &crate::APP_VERSION.into(),
+            )?;
             keystore.save(&self.paths.keystore())?;
             Ok(conn)
         })();
@@ -308,7 +312,8 @@ pub struct DestroyReport {
 }
 
 fn is_backup_file(p: &Path) -> bool {
-    p.extension().is_some_and(|e| e.eq_ignore_ascii_case(backup::FILE_EXTENSION))
+    p.extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case(backup::FILE_EXTENSION))
 }
 
 impl Vault {
@@ -325,9 +330,15 @@ impl Vault {
     /// elimina las automáticas más antiguas que superen el límite.
     pub fn auto_backup_if_due(&self, now: i64) -> Result<Option<BackupRecord>> {
         let s = self.session()?;
-        let freq = AutoBackup::parse(&settings::get_string(&s.conn, settings::BACKUPS_AUTO)?.unwrap_or_default());
-        let Some(interval) = freq.interval_ms() else { return Ok(None) };
-        let last = backup_history::list_kind(&s.conn, BackupKind::Automatic)?.first().map(|r| r.created_at);
+        let freq = AutoBackup::parse(
+            &settings::get_string(&s.conn, settings::BACKUPS_AUTO)?.unwrap_or_default(),
+        );
+        let Some(interval) = freq.interval_ms() else {
+            return Ok(None);
+        };
+        let last = backup_history::list_kind(&s.conn, BackupKind::Automatic)?
+            .first()
+            .map(|r| r.created_at);
         if last.is_some_and(|t| now - t < interval && t <= now) {
             return Ok(None);
         }
@@ -347,7 +358,10 @@ impl Vault {
             .unwrap_or(DEFAULT_KEEP)
             .clamp(1, MAX_KEEP) as usize;
         let mut removed = 0;
-        for rec in backup_history::list_kind(&s.conn, BackupKind::Automatic)?.into_iter().skip(keep) {
+        for rec in backup_history::list_kind(&s.conn, BackupKind::Automatic)?
+            .into_iter()
+            .skip(keep)
+        {
             let path = PathBuf::from(&rec.file_path);
             if is_backup_file(&path) {
                 match std::fs::remove_file(&path) {
@@ -375,7 +389,11 @@ impl Vault {
         }
         let dir = self.backup_dir()?;
         let rec = backup::create_backup(&s.conn, &s.backup_key, &dir, BackupKind::PreUpdate)?;
-        settings::set(&s.conn, settings::LOCAL_APP_VERSION, &crate::APP_VERSION.into())?;
+        settings::set(
+            &s.conn,
+            settings::LOCAL_APP_VERSION,
+            &crate::APP_VERSION.into(),
+        )?;
         tracing::info!("copia previa a la actualización creada");
         Ok(Some(rec))
     }
@@ -391,7 +409,10 @@ impl Vault {
         keystore.unlock(password)?;
         let backup_files: Vec<PathBuf> = if remove_backups {
             let s = self.session()?;
-            let mut v: Vec<PathBuf> = backup_history::all_paths(&s.conn)?.into_iter().map(PathBuf::from).collect();
+            let mut v: Vec<PathBuf> = backup_history::all_paths(&s.conn)?
+                .into_iter()
+                .map(PathBuf::from)
+                .collect();
             if let Ok(entries) = std::fs::read_dir(self.paths.default_backup_dir()) {
                 v.extend(entries.flatten().map(|e| e.path()));
             }

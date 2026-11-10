@@ -3,7 +3,7 @@
 Calendario de escritorio **local, privado y cifrado**, escrito en Rust (Tauri 2) y React.
 Sin cuentas, sin servidores, sin telemetría: tus datos no salen de tu equipo.
 
-> **Estado: Fases 1–4 completas.** Calendario utilizable con eventos cifrados, vistas Día/Semana/Mes/Agenda/N días, eventos que se repiten (RFC 5545), recordatorios con notificaciones locales, borradores, búsqueda, deshacer/rehacer y bloqueo automático. Faltan importación/exportación y la pantalla de restauración de copias (Fase 5). Ver [docs/ROADMAP.md](docs/ROADMAP.md).
+> **Versión 1.0.0 — las 7 fases completas.** Instaladores de Windows y Linux probados; macOS se genera con GitHub Actions (sin probar todavía en un Mac). Para usarlo, empieza por la [guía de uso](docs/USER_GUIDE.md); para el plan y los resultados, [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Qué hay implementado
 
@@ -26,10 +26,15 @@ Sin cuentas, sin servidores, sin telemetría: tus datos no salen de tu equipo.
 * Tema claro, oscuro o del sistema
 * CSP estricta, sin acceso a red, fuentes empaquetadas localmente
 
+## Instalar
+
+Descarga el instalador de la página **Releases** del repositorio (o genéralo tú, ver «Crear instaladores») y sigue la [guía de uso](docs/USER_GUIDE.md). Los instaladores no están firmados: Windows y macOS mostrarán un aviso la primera vez.
+
 ## Documentación
 
 | Documento | Contenido |
 |---|---|
+| [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | **Guía de uso** para quien usa la aplicación |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Arquitectura, carpetas, dependencias, flujo de la app |
 | [docs/DATA_MODEL.md](docs/DATA_MODEL.md) | Esquema SQLite, recurrencias, zonas horarias |
 | [docs/SECURITY.md](docs/SECURITY.md) | Privacidad, cifrado, modelo de amenazas y **limitaciones** |
@@ -69,14 +74,33 @@ macOS: `xcode-select --install` + Rust + Node.
 ```powershell
 npm install
 npm run tauri dev        # desarrollo (la primera compilación tarda varios minutos: compila SQLCipher y OpenSSL)
-npm run tauri build      # instalador de producción en target/release/bundle/
+npm run tauri build      # instaladores de producción en target/release/bundle/
 ```
+
+## Crear instaladores
+
+| Sistema | Dónde | Resultado |
+|---|---|---|
+| Windows | En Windows: `npm.cmd run tauri build` | `target\release\bundle\nsis\*-setup.exe` y `target\release\bundle\msi\*.msi` |
+| Linux | En Linux: `npm run tauri build -- --bundles deb,appimage` | `target/release/bundle/{deb,appimage}/` |
+| macOS | En un Mac, o con GitHub Actions | `.dmg` |
+
+**Con GitHub Actions** (los tres sistemas a la vez): sube una etiqueta de versión y el flujo `.github/workflows/release.yml` crea un borrador de *Release* con todos los instaladores:
+
+```powershell
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Además, `.github/workflows/ci.yml` compila y ejecuta todas las pruebas en Windows, Linux y macOS en cada `push`.
 
 ## Pruebas
 
 ```powershell
-cargo test -p chronos-core      # 49 pruebas: cifrado, migraciones, eventos, recurrencias, recordatorios, copias, importar/exportar
-npm.cmd test                    # 18 pruebas de fechas, zonas horarias, disposición, reglas de repetición y pegar eventos
+cargo test -p chronos-core      # 54 pruebas: cifrado, migraciones, eventos, recurrencias, recordatorios,
+                                # copias, importar/exportar, rendimiento con 20 000 eventos, errores sin datos
+npm.cmd test                    # 25 pruebas: fechas, disposición, repetición, pegar, rendimiento y garantías de privacidad
+npm.cmd run test:tz             # las pruebas del frontend en 7 zonas horarias
 npm.cmd run typecheck
 ```
 

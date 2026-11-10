@@ -8,7 +8,9 @@
 use crate::errors::{CommandError, CommandResult};
 use crate::state::AppState;
 use chronos_core::backup::{self, BackupKind, BackupRecord};
-use chronos_core::interop::{self, ExportOptions, ExportReport, Format, ImportReport, ImportTarget};
+use chronos_core::interop::{
+    self, ExportOptions, ExportReport, Format, ImportReport, ImportTarget,
+};
 use chronos_core::repositories::settings;
 use chronos_core::vault::{AutoBackup, DestroyReport, DEFAULT_KEEP, MAX_KEEP};
 use serde::{Deserialize, Serialize};
@@ -18,12 +20,19 @@ use tauri_plugin_dialog::DialogExt;
 use zeroize::Zeroizing;
 
 fn validation(msg: &str) -> CommandError {
-    CommandError { code: "validation", message: msg.into() }
+    CommandError {
+        code: "validation",
+        message: msg.into(),
+    }
 }
 
 /// Ejecuta un diálogo bloqueante fuera del hilo principal.
-async fn run_dialog<T: Send + 'static>(f: impl FnOnce() -> Option<T> + Send + 'static) -> CommandResult<Option<T>> {
-    tauri::async_runtime::spawn_blocking(f).await.map_err(|_| CommandError::internal())
+async fn run_dialog<T: Send + 'static>(
+    f: impl FnOnce() -> Option<T> + Send + 'static,
+) -> CommandResult<Option<T>> {
+    tauri::async_runtime::spawn_blocking(f)
+        .await
+        .map_err(|_| CommandError::internal())
 }
 
 fn file_path(p: tauri_plugin_dialog::FilePath) -> Option<PathBuf> {
@@ -61,17 +70,36 @@ pub async fn export_data(
         .filter(|c| c.is_alphanumeric() || matches!(c, '-' | '_' | ' '))
         .take(80)
         .collect();
-    let name = format!("{}.{ext}", if base.trim().is_empty() { "chronos" } else { base.trim() });
+    let name = format!(
+        "{}.{ext}",
+        if base.trim().is_empty() {
+            "chronos"
+        } else {
+            base.trim()
+        }
+    );
     let Some(path) = run_dialog(move || {
-        app.dialog().file().set_title("Exportar").add_filter(label, &[ext]).set_file_name(name).blocking_save_file().and_then(file_path)
+        app.dialog()
+            .file()
+            .set_title("Exportar")
+            .add_filter(label, &[ext])
+            .set_file_name(name)
+            .blocking_save_file()
+            .and_then(file_path)
     })
     .await?
     else {
         return Ok(None);
     };
-    let path = if path.extension().is_none() { path.with_extension(ext) } else { path };
+    let path = if path.extension().is_none() {
+        path.with_extension(ext)
+    } else {
+        path
+    };
     state
-        .with_vault(move |v| interop::export_to_file(v.session()?.conn(), format, &options, &path).map(Some))
+        .with_vault(move |v| {
+            interop::export_to_file(v.session()?.conn(), format, &options, &path).map(Some)
+        })
         .await
 }
 
@@ -93,12 +121,19 @@ pub struct ImportPreview {
 
 /// Selector de archivo + análisis previo (sin modificar nada).
 #[tauri::command]
-pub async fn import_pick(app: AppHandle, state: State<'_, AppState>, default_tz: String) -> CommandResult<Option<ImportPreview>> {
+pub async fn import_pick(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    default_tz: String,
+) -> CommandResult<Option<ImportPreview>> {
     let Some(path) = run_dialog(move || {
         app.dialog()
             .file()
             .set_title("Importar")
-            .add_filter("Calendarios y copias", &["ics", "json", backup::FILE_EXTENSION])
+            .add_filter(
+                "Calendarios y copias",
+                &["ics", "json", backup::FILE_EXTENSION],
+            )
             .blocking_pick_file()
             .and_then(file_path)
     })
@@ -109,8 +144,13 @@ pub async fn import_pick(app: AppHandle, state: State<'_, AppState>, default_tz:
     state
         .with_vault(move |v| {
             v.session()?;
-            let file_name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-            let is_backup = path.extension().is_some_and(|e| e.eq_ignore_ascii_case(backup::FILE_EXTENSION));
+            let file_name = path
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_default();
+            let is_backup = path
+                .extension()
+                .is_some_and(|e| e.eq_ignore_ascii_case(backup::FILE_EXTENSION));
             if is_backup {
                 backup::inspect_backup(&path)?;
                 return Ok(Some(ImportPreview {
@@ -133,7 +173,10 @@ pub async fn import_pick(app: AppHandle, state: State<'_, AppState>, default_tz:
                 }
                 .into(),
                 events: batches.iter().map(|b| b.events.len()).sum(),
-                calendars: batches.iter().filter_map(|b| b.calendar_name.clone()).collect(),
+                calendars: batches
+                    .iter()
+                    .filter_map(|b| b.calendar_name.clone())
+                    .collect(),
                 rules_dropped: batches.iter().map(|b| b.rules_dropped).sum(),
             }))
         })
@@ -151,7 +194,10 @@ pub async fn import_apply(
         .with_vault(move |v| {
             let path = PathBuf::from(path);
             let (_, batches) = interop::read_file(&path, &default_tz)?;
-            let stem = path.file_stem().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| "Importado".into());
+            let stem = path
+                .file_stem()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_else(|| "Importado".into());
             interop::apply(v.session()?.conn(), batches, &target, &stem)
         })
         .await
@@ -182,8 +228,12 @@ fn auto_str(a: AutoBackup) -> &'static str {
 
 fn read_backup_settings(v: &chronos_core::Vault) -> chronos_core::Result<BackupSettings> {
     let conn = v.session()?.conn();
-    let auto = AutoBackup::parse(&settings::get_string(conn, settings::BACKUPS_AUTO)?.unwrap_or_default());
-    let keep = settings::get(conn, settings::BACKUPS_KEEP)?.and_then(|x| x.as_i64()).unwrap_or(DEFAULT_KEEP).clamp(1, MAX_KEEP);
+    let auto =
+        AutoBackup::parse(&settings::get_string(conn, settings::BACKUPS_AUTO)?.unwrap_or_default());
+    let keep = settings::get(conn, settings::BACKUPS_KEEP)?
+        .and_then(|x| x.as_i64())
+        .unwrap_or(DEFAULT_KEEP)
+        .clamp(1, MAX_KEEP);
     let dir = v.backup_dir()?;
     Ok(BackupSettings {
         auto: auto_str(auto).into(),
@@ -199,7 +249,11 @@ pub async fn backup_settings_get(state: State<'_, AppState>) -> CommandResult<Ba
 }
 
 #[tauri::command]
-pub async fn backup_settings_set(state: State<'_, AppState>, auto: Option<String>, keep: Option<i64>) -> CommandResult<BackupSettings> {
+pub async fn backup_settings_set(
+    state: State<'_, AppState>,
+    auto: Option<String>,
+    keep: Option<i64>,
+) -> CommandResult<BackupSettings> {
     if let Some(a) = &auto {
         if !matches!(a.as_str(), "off" | "daily" | "weekly") {
             return Err(validation("frecuencia no válida"));
@@ -227,11 +281,23 @@ pub async fn backup_settings_set(state: State<'_, AppState>, auto: Option<String
 
 /// Elige la carpeta de copias (`reset` vuelve a la predeterminada).
 #[tauri::command]
-pub async fn backup_choose_dir(app: AppHandle, state: State<'_, AppState>, reset: bool) -> CommandResult<BackupSettings> {
+pub async fn backup_choose_dir(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    reset: bool,
+) -> CommandResult<BackupSettings> {
     let chosen = if reset {
         None
     } else {
-        match run_dialog(move || app.dialog().file().set_title("Carpeta de copias").blocking_pick_folder().and_then(file_path)).await? {
+        match run_dialog(move || {
+            app.dialog()
+                .file()
+                .set_title("Carpeta de copias")
+                .blocking_pick_folder()
+                .and_then(file_path)
+        })
+        .await?
+        {
             Some(p) => Some(p),
             None => return state.with_vault(|v| read_backup_settings(v)).await,
         }
@@ -245,7 +311,11 @@ pub async fn backup_choose_dir(app: AppHandle, state: State<'_, AppState>, reset
                     let probe = dir.join(".chronos-escritura");
                     std::fs::write(&probe, b"")?;
                     let _ = std::fs::remove_file(&probe);
-                    settings::set(conn, settings::BACKUPS_DIR, &dir.to_string_lossy().into_owned().into())?;
+                    settings::set(
+                        conn,
+                        settings::BACKUPS_DIR,
+                        &dir.to_string_lossy().into_owned().into(),
+                    )?;
                 }
                 None => settings::set(conn, settings::BACKUPS_DIR, &"".into())?,
             }
@@ -265,7 +335,15 @@ pub async fn backup_create_in(
     password: Option<Zeroizing<String>>,
 ) -> CommandResult<Option<BackupRecord>> {
     let dir = if pick_dir {
-        match run_dialog(move || app.dialog().file().set_title("Guardar copia cifrada en…").blocking_pick_folder().and_then(file_path)).await? {
+        match run_dialog(move || {
+            app.dialog()
+                .file()
+                .set_title("Guardar copia cifrada en…")
+                .blocking_pick_folder()
+                .and_then(file_path)
+        })
+        .await?
+        {
             Some(d) => Some(d),
             None => return Ok(None),
         }
@@ -314,7 +392,12 @@ pub async fn vault_destroy(
     remove_backups: bool,
 ) -> CommandResult<DestroyReport> {
     if confirmation != "ELIMINAR" {
-        return Err(CommandError { code: "confirmation_required", message: "escribe ELIMINAR para confirmar".into() });
+        return Err(CommandError {
+            code: "confirmation_required",
+            message: "escribe ELIMINAR para confirmar".into(),
+        });
     }
-    state.with_vault(move |v| v.destroy(&password, remove_backups)).await
+    state
+        .with_vault(move |v| v.destroy(&password, remove_backups))
+        .await
 }

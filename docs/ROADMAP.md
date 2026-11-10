@@ -54,8 +54,42 @@ Arquitectura, estructura, dependencias, modelo de datos, seguridad, copias y cif
 * ✅ 49 pruebas Rust + 18 de frontend
 * ⬜ No incluido: importar CSV (el CSV es solo de exportación); exportar varios eventos seleccionados a la vez (se exporta uno desde su menú o por calendario/rango)
 
-## Fase 6 — Calidad ⬜
-Pruebas de recurrencias/zonas horarias/día completo, pruebas de frontend, rendimiento con decenas de miles de eventos, revisión de seguridad, documentación de usuario.
+## Fase 6 — Calidad ✅
+* ✅ **54 pruebas Rust** (41 unitarias + 13 de integración) y **25 de frontend**; todas pasan en Linux y en Windows
+* ✅ Pruebas nuevas: actualización de esquema v1 → v2 conservando datos; **rendimiento** sobre la base cifrada real; importación de 5 000 eventos; mensajes de error que no repiten datos del usuario; garantías de privacidad (CSP, permisos, sin APIs ni dependencias de red); disposición de 2 000 eventos en una semana
+* ✅ `npm run test:tz`: las pruebas del frontend en 7 zonas horarias (incl. Kolkata +5:30 y Sídney)
+* ✅ Rendimiento medido (compilación de lanzamiento, 20 000 eventos + 150 series diarias infinitas):
 
-## Fase 7 — Entrega ⬜
-Instaladores para Windows (MSI/NSIS), Linux (AppImage/deb) y macOS (dmg); lista de verificación final (compila, se ejecuta, guarda, offline, copia, restaura, sin servicios externos).
+  | Operación | Tiempo |
+  |---|---|
+  | Consultar una semana (≈1 240 eventos con series expandidas) | 31 ms |
+  | Consultar 6 semanas (vista Mes, ≈7 430 eventos) | 33 ms |
+  | Buscar texto en toda la base | 29 ms |
+  | Calcular recordatorios pendientes | 22 ms |
+  | Importar un .ics de 5 000 eventos | 0,36 s |
+  | Crear / verificar / restaurar copia de 20 150 eventos (7,2 MB) | 0,16 s / 0,08 s / 1,1 s |
+
+  No se añadió virtualización a la Agenda: muestra como máximo 60 días y la disposición de 2 000 eventos tarda milisegundos.
+* ✅ Revisión de seguridad: `npm audit` y `cargo audit` sin vulnerabilidades (499 crates); sin `unwrap()` en código de producción; `unsafe` prohibido en el núcleo; logs sin datos del usuario; sin `innerHTML`; `localStorage` solo con preferencias de presentación
+* ✅ Guía de usuario (`docs/USER_GUIDE.md`) y CI de GitHub Actions (Windows, Linux, macOS)
+
+## Fase 7 — Entrega ✅ (Windows y Linux verificados; macOS mediante CI)
+* ✅ Versión **1.0.0**
+* ✅ Instaladores de Linux (`.deb`, `.AppImage`) y de Windows (`.exe` NSIS y `.msi`) generados y probados
+* ✅ Flujo `release.yml`: instaladores de los tres sistemas (macOS Apple Silicon e Intel) en un borrador de *Release* al subir una etiqueta `v*`
+* ✅ Lista de verificación final, sobre el paquete `.deb` instalado y **sin red** (espacio de red aislado, solo `lo`):
+
+  | Comprobación | Resultado |
+  |---|---|
+  | Compila | ✅ Linux y Windows, sin avisos de clippy |
+  | Se ejecuta | ✅ paquete instalado |
+  | Guarda los datos | ✅ un evento creado con 0.1.0 sigue tras instalar 1.0.0 |
+  | Funciona sin conexión | ✅ crear eventos, copias y restauración sin ninguna interfaz de red |
+  | Crea copias | ✅ manual, automática (al minuto) y previa a la actualización |
+  | Restaura | ✅ con copia previa «Antes de restaurar» |
+  | Sin servicios externos | ✅ 0 conexiones; sin clientes HTTP en las dependencias de Windows, Linux y macOS |
+
+### Pendiente fuera del alcance de 1.0
+* Firma de código de los instaladores (requiere certificados de pago de Microsoft/Apple): hoy Windows SmartScreen y macOS Gatekeeper muestran un aviso
+* macOS: compilado por CI pero no probado en un Mac real
+* Etiquetas, asistentes y tareas en la interfaz (el esquema ya existe); deshacer/rehacer para cambios en series
