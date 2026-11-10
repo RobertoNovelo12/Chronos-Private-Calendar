@@ -3,7 +3,7 @@
 Calendario de escritorio **local, privado y cifrado**, escrito en Rust (Tauri 2) y React.
 Sin cuentas, sin servidores, sin telemetría: tus datos no salen de tu equipo.
 
-> **Versión 1.1.0** — las 7 fases de la 1.0 más tareas, etiquetas, participantes, deshacer en series y la sección «Acerca de». Instaladores de Windows y Linux probados; macOS se genera con GitHub Actions (sin probar todavía en un Mac). Para usarlo, empieza por la [guía de uso](docs/USER_GUIDE.md); para el plan y los resultados, [docs/ROADMAP.md](docs/ROADMAP.md).
+> **Versión 1.2.0** — las 7 fases de la 1.0; tareas, etiquetas, participantes y deshacer en series (1.1); 9 idiomas; menú de comandos, crear eventos escribiendo, ir a una fecha, navegación con teclado y horario laboral por día (1.2). Instaladores de Windows y Linux probados; macOS se genera con GitHub Actions (sin probar todavía en un Mac). Para usarlo, empieza por la [guía de uso](docs/USER_GUIDE.md); para el plan y los resultados, [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Qué hay implementado
 
@@ -18,7 +18,12 @@ Sin cuentas, sin servidores, sin telemetría: tus datos no salen de tu equipo.
 * **Recordatorios** con notificaciones locales del sistema (con opción de ocultar el título)
 * **Borradores**: un clic crea un evento provisional que solo se guarda si escribes un título o cambias algo
 * Menú contextual en eventos y en huecos vacíos (**crear / pegar evento**), copiar y pegar (`Ctrl+C` / `Ctrl+V`), duplicar, eliminar con confirmación, **deshacer/rehacer** (`Ctrl+Z` / `Ctrl+Shift+Z`)
-* Búsqueda local (`/` o `Ctrl+K`) y atajos de teclado (lista completa en Configuración)
+* **Menú de comandos** (`Ctrl+K` o `/`): busca eventos (sin distinguir acentos), ejecuta acciones, salta a fechas y crea eventos o tareas
+* **Crear eventos escribiendo** (`N` o el botón ✎), en español o inglés: «Dentista mañana 5pm 1h», «Gimnasio lunes y miércoles 7am», «Viaje 10–12 dic», con vista previa de lo entendido
+* **Ir a la fecha** (`.`): «15 dic», «próximo lunes», «en 2 semanas» o selector de fecha
+* **Navegación con teclado**: `↓`/`Tab` enfoca eventos, flechas para moverse entre ellos, `Enter` abre, `Alt+flechas` los mueve 15 min o un día; foco visible y etiquetas para lectores de pantalla
+* **Horario laboral por día** de la semana (o día libre), sombreado en la rejilla
+* Atajos de teclado (lista completa con `?`)
 * **Tareas** con fecha opcional, prioridad, notas y recordatorios: lista en la barra lateral (vencidas, hoy, próximas, sin fecha, completadas) y en el calendario (Día, Semana, Agenda y recuento en Mes)
 * **Participantes** como nota local (nombre, correo, papel y respuesta); Chronos no envía invitaciones
 * **Etiquetas** de color en los eventos (varias por evento), con creación rápida y filtro desde la barra lateral
@@ -92,8 +97,8 @@ npm run tauri build      # instaladores de producción en target/release/bundle/
 **Con GitHub Actions** (los tres sistemas a la vez): sube una etiqueta de versión y el flujo `.github/workflows/release.yml` crea un borrador de *Release* con todos los instaladores:
 
 ```powershell
-git tag v1.1.0
-git push origin v1.1.0
+git tag v1.2.0
+git push origin v1.2.0
 ```
 
 Además, `.github/workflows/ci.yml` compila y ejecuta todas las pruebas en Windows, Linux y macOS en cada `push`.
@@ -101,11 +106,12 @@ Además, `.github/workflows/ci.yml` compila y ejecuta todas las pruebas en Windo
 ## Pruebas
 
 ```powershell
-cargo test -p chronos-core      # 69 pruebas: cifrado, migraciones, eventos, recurrencias, recordatorios, tareas,
+cargo test -p chronos-core      # 70 pruebas: cifrado, migraciones, eventos, recurrencias, recordatorios, tareas,
                                 # etiquetas, participantes, deshacer en series, copias, importar/exportar,
                                 # rendimiento con 20 000 eventos, errores sin datos
-npm.cmd test                    # 46 pruebas: fechas, disposición, repetición, pegar, tareas, etiquetas,
-                                # rendimiento, garantías de privacidad y traducciones completas
+npm.cmd test                    # 159 pruebas: fechas, disposición, repetición, pegar, tareas, etiquetas, intérprete
+                                # de fechas y eventos escritos, menú de comandos, navegación con teclado, horario
+                                # laboral, rendimiento, garantías de privacidad y traducciones completas
 node scripts/i18n-check.mjs     # textos sin traducir o con marcadores rotos en cada idioma
 npm.cmd run test:tz             # las pruebas del frontend en 7 zonas horarias
 npm.cmd run typecheck

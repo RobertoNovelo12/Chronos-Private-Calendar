@@ -12,11 +12,12 @@ import { createEventAt, eventBlockStyle, shiftedByDays, updateEvent } from "@/fe
 import { setHoverSlot } from "@/features/events/clipboard";
 import { CalendarTaskChip } from "@/features/tasks/CalendarTaskChip";
 import { taskOnDay } from "@/lib/tasks";
-import { MAX_CUSTOM_DAYS, usePrefsStore } from "@/stores/prefsStore";
+import { MAX_CUSTOM_DAYS, usePrefsStore, workStartMinutes, type WorkDay } from "@/stores/prefsStore";
 import { DRAFT_ID } from "@/stores/eventStore";
 import { useUiStore } from "@/stores/uiStore";
 import type { CalendarEvent } from "@/types/domain";
 import { dateLocale, t } from "@/i18n";
+import { EVENT_FOCUS, eventNavProps } from "./keyboardNav";
 
 const HOUR_H = 48;
 const PX_PER_MIN = HOUR_H / 60;
@@ -48,7 +49,7 @@ interface Props {
 export function TimeGridView({ days }: Props) {
   const events = useVisibleEvents();
   const calendars = useCalendarMap();
-  const { workStartHour, workEndHour, defaultDurationMin, secondaryTimeZone } = usePrefsStore();
+  const { workHours, defaultDurationMin, secondaryTimeZone } = usePrefsStore();
   const setPrefs = usePrefsStore((s) => s.set);
   const gutterW = secondaryTimeZone ? 112 : 64;
   const selectedId = useUiStore((s) => s.selectedEventId);
@@ -93,7 +94,7 @@ export function TimeGridView({ days }: Props) {
     const el = scrollRef.current;
     if (!el) return;
     const todayVisible = days.some((d) => isSameDay(d, new Date()));
-    const hour = todayVisible ? Math.max(0, new Date().getHours() - 2) : Math.max(0, workStartHour - 1);
+    const hour = todayVisible ? Math.max(0, new Date().getHours() - 2) : Math.max(0, Math.floor(workStartMinutes(workHours, days[0]!) / 60) - 1);
     el.scrollTop = hour * HOUR_H;
     setScrollbarW(el.offsetWidth - el.clientWidth);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -328,6 +329,7 @@ export function TimeGridView({ days }: Props) {
                 <div
                   key={s.event.id}
                   data-event-key={s.event.id}
+                  {...eventNavProps(s.event, days[s.startIndex]!)}
                   onPointerDown={(e) => onSpanPointerDown(e, s.event)}
                   onContextMenu={(e) => {
                     e.preventDefault();
@@ -335,6 +337,7 @@ export function TimeGridView({ days }: Props) {
                   }}
                   className={cn(
                     "absolute flex items-center truncate px-1.5 text-[11.5px] font-medium",
+                    EVENT_FOCUS,
                     s.clippedStart ? "rounded-l-none" : "rounded-l",
                     s.clippedEnd ? "rounded-r-none" : "rounded-r",
                   )}
@@ -417,8 +420,7 @@ export function TimeGridView({ days }: Props) {
                 index={i}
                 count={n}
                 now={now}
-                workStartHour={workStartHour}
-                workEndHour={workEndHour}
+                work={workHours[d.getDay()] ?? null}
               />
             ))}
             {Array.from({ length: 23 }, (_, i) => i + 1).map((h) => (
@@ -439,6 +441,7 @@ export function TimeGridView({ days }: Props) {
                 <div
                   key={`${s.event.id}-${s.dayIndex}`}
                   data-event-key={s.event.id}
+                  {...eventNavProps(s.event, days[s.dayIndex]!)}
                   onPointerDown={(e) => onEventPointerDown(e, s.event, false)}
                   onContextMenu={(e) => {
                     e.preventDefault();
@@ -446,6 +449,7 @@ export function TimeGridView({ days }: Props) {
                   }}
                   className={cn(
                     "group absolute overflow-hidden rounded-[4px] px-1.5 text-[11.5px] leading-[1.3]",
+                    EVENT_FOCUS,
                     compact ? "py-0.5" : "py-1",
                     dragging ? "z-30 opacity-90 shadow-lg" : selected ? "z-20 shadow-md" : "z-10",
                     !s.isStart && "rounded-t-none",
@@ -507,15 +511,14 @@ function DayColumn({
   index,
   count,
   now,
-  workStartHour,
-  workEndHour,
+  work,
 }: {
   day: Date;
   index: number;
   count: number;
   now: Date;
-  workStartHour: number;
-  workEndHour: number;
+  /** Horario laboral del día; null = día libre (todo sombreado). */
+  work: WorkDay;
 }) {
   const today = isSameDay(day, now);
   const nowMin = now.getHours() * 60 + now.getMinutes();
@@ -524,8 +527,14 @@ function DayColumn({
       className="pointer-events-none absolute inset-y-0 border-l border-grid"
       style={{ left: `${(index / count) * 100}%`, width: `${100 / count}%` }}
     >
-      <div className="absolute inset-x-0 top-0 bg-shade" style={{ height: workStartHour * HOUR_H }} />
-      <div className="absolute inset-x-0 bottom-0 bg-shade" style={{ top: workEndHour * HOUR_H }} />
+      {work ? (
+        <>
+          <div className="absolute inset-x-0 top-0 bg-shade" style={{ height: work.start * PX_PER_MIN }} />
+          <div className="absolute inset-x-0 bottom-0 bg-shade" style={{ top: work.end * PX_PER_MIN }} />
+        </>
+      ) : (
+        <div className="absolute inset-0 bg-shade" />
+      )}
       {today && (
         <div className="absolute inset-x-0 z-40" style={{ top: nowMin * PX_PER_MIN }}>
           <div className="absolute -top-[5px] left-0 h-[11px] w-[2px] rounded-full bg-today" />

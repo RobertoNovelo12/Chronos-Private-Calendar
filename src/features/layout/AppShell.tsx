@@ -2,6 +2,8 @@ import { useCallback, useEffect } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Toaster } from "@/components/ui/toaster";
 import { CalendarView, useVisibleRange } from "@/features/calendar/CalendarView";
+import { CommandMenu } from "@/features/command/CommandMenu";
+import { GoToDate } from "@/features/command/GoToDate";
 import { deleteEventConfirmed } from "@/features/events/actions";
 import { EventContextMenu } from "@/features/events/EventContextMenu";
 import { SlotContextMenu } from "@/features/events/SlotContextMenu";
@@ -70,6 +72,8 @@ export function AppShell() {
       <SlotContextMenu />
       <SettingsDialog />
       <ShortcutsDialog />
+      <CommandMenu onLock={onLock} />
+      <GoToDate />
       {/* Edición de un evento repetido */}
       <ScopeDialog
         open={scopeRequest !== null}

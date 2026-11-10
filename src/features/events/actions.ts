@@ -8,6 +8,7 @@ import { DRAFT_ID, useEventStore } from "@/stores/eventStore";
 import { usePrefsStore } from "@/stores/prefsStore";
 import { toast } from "@/stores/toastStore";
 import { useUiStore } from "@/stores/uiStore";
+import type { QuickEvent } from "@/lib/nlp";
 import type { CalendarEvent, EditScope, EventPatch } from "@/types/domain";
 import { t } from "@/i18n";
 
@@ -158,6 +159,52 @@ export async function createEventNow(): Promise<void> {
   const start = snap(addMinutes(base, 14), "floor");
   const duration = usePrefsStore.getState().defaultDurationMin * MINUTE_MS;
   await createEventAt(start, new Date(start.getTime() + duration), false);
+}
+
+/** Crea directamente un evento escrito («Dentista mañana 5pm») y lo abre. */
+export async function createQuickEvent(q: QuickEvent): Promise<boolean> {
+  const calendarId = targetCalendarId();
+  if (!calendarId) {
+    toast.error(t("Crea un calendario antes de añadir eventos"));
+    return false;
+  }
+  const times = q.allDay
+    ? { startAt: localToAllDay(q.start), endAt: localToAllDay(q.end) }
+    : { startAt: q.start.getTime(), endAt: q.end.getTime() };
+  try {
+    useUiStore.getState().setAnchor(q.start);
+    const store = useEventStore.getState();
+    const created = await store.create({
+      calendarId,
+      title: q.title,
+      description: "",
+      location: "",
+      links: [],
+      color: null,
+      timezone: systemTimeZone(),
+      isAllDay: q.allDay,
+      visibility: "default",
+      availability: "busy",
+      recurrence: q.recurrence,
+      reminders: [],
+      labels: [],
+      attendees: [],
+      ...times,
+    });
+    // Una serie se muestra como ocurrencias («serie@inicio»): se abre la primera.
+    const events = Object.values(useEventStore.getState().events);
+    const open =
+      events.find((e) => e.id === created.id) ??
+      events
+        .filter((e) => e.recurrenceMasterId === created.id || e.id.startsWith(`${created.id}@`))
+        .sort((a, b) => a.startAt - b.startAt)[0];
+    if (open) useUiStore.getState().select(open.id);
+    toast.info(t("Evento creado: {title}", { title: q.title }), { label: t("Deshacer"), run: () => void undo() });
+    return true;
+  } catch (e) {
+    toast.error(errorMessage(e));
+    return false;
+  }
 }
 
 /** Desplaza un evento `delta` días conservando la hora local. */

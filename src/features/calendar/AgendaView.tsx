@@ -9,6 +9,7 @@ import { taskOnDay } from "@/lib/tasks";
 import { dayMonth } from "@/lib/rrule";
 import { useUiStore } from "@/stores/uiStore";
 import { dateLocale, t } from "@/i18n";
+import { EVENT_FOCUS, eventNavProps } from "./keyboardNav";
 
 /** Lista de los próximos días con eventos o tareas (los días vacíos se omiten). */
 export function AgendaView({ days }: { days: Date[] }) {
@@ -67,6 +68,7 @@ export function AgendaView({ days }: { days: Date[] }) {
                     <li key={e.id}>
                       <button
                         data-event-key={e.id}
+                        {...eventNavProps(e, day)}
                         onClick={() => select(e.id)}
                         onContextMenu={(ev) => {
                           ev.preventDefault();
@@ -74,6 +76,7 @@ export function AgendaView({ days }: { days: Date[] }) {
                         }}
                         className={cn(
                           "flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left hover:bg-surface-hover",
+                          EVENT_FOCUS,
                           e.id === selectedId && "bg-surface-hover",
                         )}
                       >

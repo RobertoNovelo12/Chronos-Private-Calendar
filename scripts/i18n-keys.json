@@ -32,6 +32,9 @@
   "Sin título": {
     "plural": false
   },
+  "Semana {n}": {
+    "plural": false
+  },
   "Ver este día": {
     "plural": false
   },
@@ -144,6 +147,12 @@
   "Formato de hora": {
     "plural": false
   },
+  "12 horas (1:00PM)": {
+    "plural": false
+  },
+  "24 horas (13:00)": {
+    "plural": false
+  },
   "La semana empieza el": {
     "plural": false
   },
@@ -214,7 +223,152 @@
   "Guardar": {
     "plural": false
   },
+  "Crear": {
+    "plural": false
+  },
+  "Ir a": {
+    "plural": false
+  },
+  "Acciones": {
+    "plural": false
+  },
+  "Eventos": {
+    "plural": false
+  },
+  "{date} · todo el día": {
+    "plural": false
+  },
+  "Nuevo evento": {
+    "plural": false
+  },
+  "Nueva tarea": {
+    "plural": false
+  },
+  "Ir a hoy": {
+    "plural": false
+  },
+  "Ir a la fecha…": {
+    "plural": false
+  },
+  "Vista: Día": {
+    "plural": false
+  },
+  "Vista: Semana": {
+    "plural": false
+  },
+  "Vista: Mes": {
+    "plural": false
+  },
+  "Vista: Agenda": {
+    "plural": false
+  },
+  "Vista: {n} días": {
+    "plural": false
+  },
+  "Crear copia de seguridad ahora": {
+    "plural": false
+  },
+  "Mostrar/ocultar barra lateral": {
+    "plural": false
+  },
+  "Mostrar/ocultar panel derecho": {
+    "plural": false
+  },
+  "Configuración": {
+    "plural": false
+  },
+  "Configuración: Copias de seguridad": {
+    "plural": false
+  },
+  "Configuración: Importar y exportar": {
+    "plural": false
+  },
+  "Configuración: Privacidad y seguridad": {
+    "plural": false
+  },
+  "Cambiar contraseña": {
+    "plural": false
+  },
+  "Configuración: Acerca de": {
+    "plural": false
+  },
+  "Apoya el proyecto": {
+    "plural": false
+  },
+  "Atajos de teclado": {
+    "plural": false
+  },
+  "Tema: Claro": {
+    "plural": false
+  },
+  "Tema: Oscuro": {
+    "plural": false
+  },
+  "Tema: Del sistema": {
+    "plural": false
+  },
+  "Idioma: {name}": {
+    "plural": false
+  },
+  "Bloquear Chronos": {
+    "plural": false
+  },
   "Copia cifrada creada ({size})": {
+    "plural": false
+  },
+  "Crear «{title}»": {
+    "plural": false
+  },
+  "Abrir el formulario vacío": {
+    "plural": false
+  },
+  "Crear tarea «{title}»": {
+    "plural": false
+  },
+  "Crear evento escribiendo": {
+    "plural": false
+  },
+  "Menú de comandos": {
+    "plural": false
+  },
+  "Escribe el evento: «Dentista mañana 5pm 1h»": {
+    "plural": false
+  },
+  "Busca eventos y acciones, salta a una fecha o escribe un evento": {
+    "plural": false
+  },
+  "Resultados": {
+    "plural": false
+  },
+  "Escribe el título con la fecha, la hora, la duración o la repetición, en español o en inglés. Por ejemplo:": {
+    "plural": false
+  },
+  "moverse": {
+    "plural": false
+  },
+  "abrir": {
+    "plural": false
+  },
+  "{n} resultados": {
+    "plural": true,
+    "one": "{n} resultado"
+  },
+  "Ir a la fecha": {
+    "plural": false
+  },
+  "Escribe una fecha": {
+    "plural": false
+  },
+  "«15 dic», «próximo lunes», «en 2 semanas»…": {
+    "plural": false
+  },
+  "o elígela": {
+    "plural": false
+  },
+  "No se entiende la fecha. Prueba «15/12», «dec 15» o «viernes».": {
+    "plural": false
+  },
+  "Ir": {
     "plural": false
   },
   "Copias automáticas": {
@@ -444,9 +598,6 @@
     "plural": false
   },
   "Contraseña cambiada": {
-    "plural": false
-  },
-  "Cambiar contraseña": {
     "plural": false
   },
   "Los datos no se vuelven a cifrar: se protege de nuevo su clave. Las copias nuevas usarán la contraseña nueva; las copias anteriores se siguen abriendo con la contraseña con la que se crearon.": {
@@ -886,6 +1037,12 @@
   "Crea un calendario antes de añadir eventos": {
     "plural": false
   },
+  "Evento creado: {title}": {
+    "plural": false
+  },
+  "Deshacer": {
+    "plural": false
+  },
   "Evento duplicado": {
     "plural": false
   },
@@ -893,9 +1050,6 @@
     "plural": false
   },
   "Evento eliminado": {
-    "plural": false
-  },
-  "Deshacer": {
     "plural": false
   },
   "Deshecho: {action}": {
@@ -964,22 +1118,7 @@
   "“{title}” se eliminará de este equipo. Podrás deshacerlo con Ctrl+Z mientras la aplicación siga desbloqueada.": {
     "plural": false
   },
-  "Buscar eventos": {
-    "plural": false
-  },
-  "Nuevo evento": {
-    "plural": false
-  },
-  "Nueva tarea": {
-    "plural": false
-  },
-  "Ir a hoy": {
-    "plural": false
-  },
-  "Mostrar/ocultar barra lateral": {
-    "plural": false
-  },
-  "Bloquear Chronos": {
+  "Menú de comandos y búsqueda": {
     "plural": false
   },
   "Ocultar panel": {
@@ -1003,10 +1142,7 @@
   "Buscar (Ctrl+K)": {
     "plural": false
   },
-  "Nuevo evento (C)": {
-    "plural": false
-  },
-  "Atajos de teclado": {
+  "Crear evento escribiendo (N)": {
     "plural": false
   },
   "Atajos de teclado (?)": {
@@ -1018,9 +1154,6 @@
   "Crear copia de seguridad cifrada": {
     "plural": false
   },
-  "Configuración": {
-    "plural": false
-  },
   "Bloquear": {
     "plural": false
   },
@@ -1030,7 +1163,7 @@
   "Buscar (/ o Ctrl+K)": {
     "plural": false
   },
-  "Limpiar": {
+  "Buscar eventos": {
     "plural": false
   },
   "Protege tu calendario": {
@@ -1132,10 +1265,13 @@
   "Oscuro": {
     "plural": false
   },
-  "Horario laboral": {
+  "Duración de eventos nuevos": {
     "plural": false
   },
-  "Duración de eventos nuevos": {
+  "{n} min": {
+    "plural": false
+  },
+  "{n} h": {
     "plural": false
   },
   "Bloqueo automático": {
@@ -1145,12 +1281,6 @@
     "plural": false
   },
   "Tras {n} min sin actividad": {
-    "plural": false
-  },
-  "12 horas (1:00PM)": {
-    "plural": false
-  },
-  "24 horas (13:00)": {
     "plural": false
   },
   "Notificaciones de recordatorios": {
@@ -1163,6 +1293,24 @@
     "plural": false
   },
   "{zone} (del sistema)": {
+    "plural": false
+  },
+  "Fin del día": {
+    "plural": false
+  },
+  "Horario laboral": {
+    "plural": false
+  },
+  "Las horas fuera del horario se sombrean en la rejilla. Desmarca un día para tratarlo como libre.": {
+    "plural": false
+  },
+  "{day}: inicio": {
+    "plural": false
+  },
+  "{day}: fin": {
+    "plural": false
+  },
+  "Día libre": {
     "plural": false
   },
   "Vistas": {
@@ -1178,9 +1326,6 @@
     "plural": false
   },
   "Periodo anterior": {
-    "plural": false
-  },
-  "Eventos": {
     "plural": false
   },
   "Nueva tarea (para hoy)": {
@@ -1202,6 +1347,27 @@
     "plural": false
   },
   "Rehacer": {
+    "plural": false
+  },
+  "Con un evento enfocado": {
+    "plural": false
+  },
+  "Enfocar eventos de la vista": {
+    "plural": false
+  },
+  "Evento anterior / siguiente": {
+    "plural": false
+  },
+  "Día anterior / siguiente": {
+    "plural": false
+  },
+  "Mover 15 minutos": {
+    "plural": false
+  },
+  "Mover un día": {
+    "plural": false
+  },
+  "Menú contextual": {
     "plural": false
   },
   "Privacidad": {
@@ -1430,13 +1596,7 @@
   "zona horaria desconocida": {
     "plural": false
   },
-  "{n} min": {
-    "plural": false
-  },
   "{h} h {m} min": {
-    "plural": false
-  },
-  "{n} h": {
     "plural": false
   },
   "Error inesperado de la aplicación": {
@@ -1623,6 +1783,9 @@
     "plural": false
   },
   "Alta": {
+    "plural": false
+  },
+  "crear evento repetido": {
     "plural": false
   },
   "crear evento": {

@@ -15,7 +15,7 @@ chrono-tz = "0.10.4"
 getrandom = "0.3"
 hkdf = "0.12"
 rrule = "0.14.0"
-rusqlite = { version = "0.41.1", features = ["bundled-sqlcipher-vendored-openssl"] }
+rusqlite = { version = "0.41.1", features = ["bundled-sqlcipher-vendored-openssl", "functions"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 sha2 = "0.10"

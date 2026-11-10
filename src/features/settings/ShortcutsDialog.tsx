@@ -21,7 +21,8 @@ const GROUPS: { title: string; items: { label: string; keys: string[] }[] }[] = 
       { label: msg("Ir a hoy"), keys: ["T"] },
       { label: msg("Periodo siguiente"), keys: ["J", "→"] },
       { label: msg("Periodo anterior"), keys: ["K", "←"] },
-      { label: msg("Buscar eventos"), keys: ["/", "Ctrl K"] },
+      { label: msg("Menú de comandos y búsqueda"), keys: ["/", "Ctrl K"] },
+      { label: msg("Ir a la fecha…"), keys: ["."] },
       { label: msg("Mostrar/ocultar barra lateral"), keys: ["`"] },
     ],
   },
@@ -29,6 +30,7 @@ const GROUPS: { title: string; items: { label: string; keys: string[] }[] }[] = 
     title: msg("Eventos"),
     items: [
       { label: msg("Nuevo evento"), keys: ["C"] },
+      { label: msg("Crear evento escribiendo"), keys: ["N"] },
       { label: msg("Nueva tarea (para hoy)"), keys: ["Shift", "C"] },
       { label: msg("Copiar el seleccionado"), keys: ["Ctrl C"] },
       { label: msg("Pegar bajo el puntero"), keys: ["Ctrl V"] },
@@ -37,6 +39,18 @@ const GROUPS: { title: string; items: { label: string; keys: string[] }[] }[] = 
       { label: msg("Cerrar detalles"), keys: ["Esc"] },
       { label: msg("Deshacer"), keys: ["Ctrl Z"] },
       { label: msg("Rehacer"), keys: ["Ctrl Shift Z"] },
+    ],
+  },
+  {
+    title: msg("Con un evento enfocado"),
+    items: [
+      { label: msg("Enfocar eventos de la vista"), keys: ["↓", "Tab"] },
+      { label: msg("Evento anterior / siguiente"), keys: ["↑", "↓"] },
+      { label: msg("Día anterior / siguiente"), keys: ["←", "→"] },
+      { label: msg("Abrir detalles"), keys: ["Enter"] },
+      { label: msg("Mover 15 minutos"), keys: ["Alt ↑", "Alt ↓"] },
+      { label: msg("Mover un día"), keys: ["Alt ←", "Alt →"] },
+      { label: msg("Menú contextual"), keys: ["Shift F10"] },
     ],
   },
   {

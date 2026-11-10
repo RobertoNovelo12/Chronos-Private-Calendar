@@ -9,7 +9,7 @@ import { errorMessage } from "@/lib/ipc";
 import { PRIORITY_LABEL, taskDue, todayAllDay } from "@/lib/tasks";
 import { cn } from "@/lib/utils";
 import { useCalendarStore } from "@/stores/calendarStore";
-import { usePrefsStore } from "@/stores/prefsStore";
+import { usePrefsStore, workStartMinutes } from "@/stores/prefsStore";
 import { useTaskStore } from "@/stores/taskStore";
 import { toast } from "@/stores/toastStore";
 import { useUiStore } from "@/stores/uiStore";
@@ -39,7 +39,7 @@ export function TaskPanel() {
 function TaskBody({ task }: { task: Task }) {
   const calendars = useCalendarStore((s) => s.calendars);
   const calendarMap = useCalendarMap();
-  const { weekStartsOn, workStartHour } = usePrefsStore();
+  const { weekStartsOn, workHours } = usePrefsStore();
   const selectTask = useUiStore((s) => s.selectTask);
   const focusTitle = useUiStore((s) => s.focusTaskTitle);
   const update = useTaskStore((s) => s.update);
@@ -99,7 +99,7 @@ function TaskBody({ task }: { task: Task }) {
   function toggleAllDay() {
     if (!due) return;
     if (task.isAllDay) {
-      const at = new Date(due.getFullYear(), due.getMonth(), due.getDate(), workStartHour);
+      const at = new Date(due.getFullYear(), due.getMonth(), due.getDate(), 0, workStartMinutes(workHours, due));
       void commit({ isAllDay: false, dueAt: at.getTime() });
     } else {
       void commit({ isAllDay: true, dueAt: localToAllDay(due) });

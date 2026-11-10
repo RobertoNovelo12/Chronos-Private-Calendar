@@ -259,3 +259,19 @@ export function fromInputs(date: string, time = "00:00"): Date | null {
   const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(t[1]), Number(t[2]));
   return Number.isNaN(d.getTime()) ? null : d;
 }
+
+/** ¿El idioma escribe el día antes que el mes en fechas numéricas (15/12)? */
+export function localeDayFirst(): boolean {
+  const parts = new Intl.DateTimeFormat(intlLocale(), { day: "numeric", month: "numeric" }).formatToParts(new Date(2000, 11, 31));
+  return parts.findIndex((p) => p.type === "day") < parts.findIndex((p) => p.type === "month");
+}
+
+/** «martes, 15 de diciembre de 2026» en el idioma de la interfaz. */
+export function formatLongDate(d: Date): string {
+  return new Intl.DateTimeFormat(intlLocale(), { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(d);
+}
+
+/** «15 dic 2026» en el idioma de la interfaz. */
+export function formatMediumDate(d: Date): string {
+  return new Intl.DateTimeFormat(intlLocale(), { dateStyle: "medium" }).format(d);
+}

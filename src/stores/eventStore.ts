@@ -130,6 +130,16 @@ export const useEventStore = create<EventState>((set, get) => {
       const created = await api.events.create(input);
       if (created.isRecurring) {
         await get().reload();
+        const snap = await snapshotOf(created.id);
+        if (snap) {
+          // Deshacer borra la serie entera; rehacer la repone tal cual.
+          const roots = [snap.root.id];
+          const apply = async (snaps: SeriesSnapshot[]) => {
+            await api.events.replaceSeries(roots, snaps);
+            await get().reload();
+          };
+          record({ label: msg("crear evento repetido"), undo: () => apply([]), redo: () => apply([snap]) });
+        }
         return created;
       }
       upsert(created);

@@ -910,6 +910,51 @@ pub fn list_range(conn: &Connection, from: i64, to: i64) -> Result<Vec<Event>> {
 
 /// Búsqueda por texto en título, ubicación y descripción. Las series aparecen
 /// una vez (como su primera ocurrencia).
+/// Minúsculas y sin acentos («Reunión» → «reunion», «ÉTÉ» → «ete», «Ключ» → «ключ»).
+/// Así la búsqueda no distingue acentos ni mayúsculas en ningún alfabeto
+/// (`LIKE` de SQLite solo pliega mayúsculas ASCII).
+pub fn fold_text(s: &str) -> String {
+    s.chars()
+        .flat_map(char::to_lowercase)
+        .map(strip_accent)
+        .collect()
+}
+
+fn strip_accent(c: char) -> char {
+    match c {
+        'á' | 'à' | 'â' | 'ä' | 'ã' | 'å' | 'ā' | 'ă' | 'ą' | 'ǎ' => 'a',
+        'é' | 'è' | 'ê' | 'ë' | 'ē' | 'ĕ' | 'ė' | 'ę' | 'ě' => 'e',
+        'í' | 'ì' | 'î' | 'ï' | 'ī' | 'ĭ' | 'į' | 'ı' | 'ǐ' => 'i',
+        'ó' | 'ò' | 'ô' | 'ö' | 'õ' | 'ø' | 'ō' | 'ŏ' | 'ő' | 'ǒ' => 'o',
+        'ú' | 'ù' | 'û' | 'ü' | 'ū' | 'ŭ' | 'ů' | 'ű' | 'ų' | 'ǔ' => 'u',
+        'ý' | 'ÿ' | 'ŷ' => 'y',
+        'ñ' | 'ń' | 'ň' | 'ņ' => 'n',
+        'ç' | 'ć' | 'č' | 'ĉ' | 'ċ' => 'c',
+        'ś' | 'š' | 'ş' | 'ŝ' | 'ș' => 's',
+        'ź' | 'ž' | 'ż' => 'z',
+        'ď' | 'đ' => 'd',
+        'ğ' | 'ĝ' | 'ġ' | 'ģ' => 'g',
+        'ł' | 'ľ' | 'ĺ' | 'ļ' => 'l',
+        'ř' | 'ŕ' => 'r',
+        'ť' | 'ţ' | 'ț' => 't',
+        'ё' => 'е',
+        'й' => 'и',
+        other => other,
+    }
+}
+
+/// Registra `chronos_fold(texto)` en la conexión (idempotente y barato).
+fn register_fold(conn: &Connection) -> Result<()> {
+    use rusqlite::functions::FunctionFlags;
+    conn.create_scalar_function(
+        "chronos_fold",
+        1,
+        FunctionFlags::SQLITE_UTF8 | FunctionFlags::SQLITE_DETERMINISTIC,
+        |ctx| Ok(ctx.get::<Option<String>>(0)?.map(|s| fold_text(&s))),
+    )?;
+    Ok(())
+}
+
 pub fn search(conn: &Connection, query: &str, limit: u32) -> Result<Vec<Event>> {
     let q = query.trim();
     if q.is_empty() {
@@ -918,14 +963,15 @@ pub fn search(conn: &Connection, query: &str, limit: u32) -> Result<Vec<Event>> 
     if q.chars().count() > 200 {
         return Err(CoreError::Validation("búsqueda demasiado larga".into()));
     }
-    let escaped = q
+    register_fold(conn)?;
+    let escaped = fold_text(q)
         .replace('\\', "\\\\")
         .replace('%', "\\%")
         .replace('_', "\\_");
     let pattern = format!("%{escaped}%");
     let mut stmt = conn.prepare_cached(&format!(
-        "{SELECT} WHERE e.title LIKE ?1 ESCAPE '\\' OR e.location LIKE ?1 ESCAPE '\\' OR e.description LIKE ?1 ESCAPE '\\'
-         ORDER BY e.start_at DESC LIMIT ?2"
+        "{SELECT} WHERE chronos_fold(e.title) LIKE ?1 ESCAPE '\\' OR chronos_fold(e.location) LIKE ?1 ESCAPE '\\' \
+         OR chronos_fold(e.description) LIKE ?1 ESCAPE '\\' ORDER BY e.start_at DESC LIMIT ?2"
     ))?;
     let rows = stmt.query_map(params![pattern, limit.min(200)], from_row)?;
     let mut found = rows.collect::<rusqlite::Result<Vec<_>>>()?;
@@ -1650,6 +1696,13 @@ mod tests {
     }
 
     #[test]
+    fn fold_text_ignores_accents_and_case_in_any_script() {
+        assert_eq!(fold_text("Reunión ÉTÉ Ñandú"), "reunion ete nandu");
+        assert_eq!(fold_text("ВСТРЕЧА Ёлка"), "встреча елка");
+        assert_eq!(fold_text("会议 Straße"), "会议 straße");
+    }
+
+    #[test]
     fn search_is_literal_and_case_insensitive() {
         let (c, a, _) = setup();
         let mut e = new(&a, H, 2 * H);
@@ -1660,7 +1713,17 @@ mod tests {
         assert_eq!(search(&c, "dentista", 10).unwrap().len(), 1);
         assert_eq!(search(&c, "norte", 10).unwrap().len(), 1);
         assert_eq!(search(&c, "%", 10).unwrap().len(), 1, "% es literal");
+        assert_eq!(
+            search(&c, "CLINICA", 10).unwrap().len(),
+            1,
+            "sin acentos ni mayúsculas"
+        );
+        assert_eq!(search(&c, "clínica", 10).unwrap().len(), 1);
         let s = series(&c, &a, "FREQ=DAILY");
+        assert!(
+            !search(&c, "reunion", 10).unwrap().is_empty(),
+            "«reunion» encuentra «Reunión»"
+        );
         let found = search(&c, "reunión", 10).unwrap();
         assert!(
             found.iter().any(|f| f.id == s.id),

@@ -3,6 +3,7 @@ import { MINUTE_MS } from "@/lib/dates";
 import { createEventNow, duplicateEvent, redo, undo } from "@/features/events/actions";
 import { copyEvent, pasteEvent } from "@/features/events/clipboard";
 import { createTask, deleteTask } from "@/features/tasks/actions";
+import { handleEventNavKey } from "@/features/calendar/keyboardNav";
 import { usePrefsStore } from "@/stores/prefsStore";
 import { useUiStore } from "@/stores/uiStore";
 
@@ -26,10 +27,13 @@ export function useShortcuts(onLock: () => void) {
       }
       if (mod && key === "k") {
         e.preventDefault();
-        window.dispatchEvent(new Event("chronos:focus-search"));
+        ui.openCommandMenu(ui.commandMenu ? null : "all");
         return;
       }
+      if (ui.commandMenu || ui.goToOpen) return;
       if (isTyping(e.target) || ui.settingsOpen || ui.shortcutsOpen || ui.confirmDeleteId || ui.scopeRequest) return;
+      // Flechas sobre un evento enfocado y Alt+flechas para moverlo.
+      if (handleEventNavKey(e)) return;
 
       if (mod && key === "z") {
         e.preventDefault();
@@ -108,7 +112,13 @@ export function useShortcuts(onLock: () => void) {
           void (e.shiftKey ? createTask() : createEventNow());
           break;
         case "/":
-          window.dispatchEvent(new Event("chronos:focus-search"));
+          ui.openCommandMenu("all");
+          break;
+        case "n":
+          ui.openCommandMenu("create");
+          break;
+        case ".":
+          ui.setGoToOpen(true);
           break;
         case "delete":
         case "backspace":

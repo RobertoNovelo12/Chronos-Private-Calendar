@@ -156,32 +156,32 @@ Principio: la aplicación **no se conecta a PayPal**. Solo abre el enlace en el 
 5. ✅ `scripts/i18n-check.mjs` y `i18n.test.ts`: ningún idioma puede tener textos sin traducir, sobrantes o con marcadores `{n}` rotos.
 6. Añadir un idioma: copiar `en.json`, traducirlo, registrarlo en `LANGUAGES` (`src/i18n/index.ts`) y en `src-tauri/src/i18n.rs`.
 
-## Versión 1.2 — Funciones de productividad
+## Versión 1.2 — Funciones de productividad ✅
 
 ### 1.2.1 Menú de comandos (`Ctrl+K`)
-1. ⬜ Caja única con resultados agrupados: eventos, acciones (vistas, ir a hoy, nuevo evento, nueva tarea, bloquear, copias…) y fechas.
-2. ⬜ Navegación con flechas y `Enter`; búsqueda sin acentos.
-3. ⬜ El buscador actual pasa a ser parte del menú (se mantiene `/`).
-4. ⬜ Pruebas de filtrado y ranking.
+1. ✅ Caja única con resultados agrupados: crear (evento escrito o tarea), ir a una fecha, acciones (vistas, hoy, nuevo evento/tarea, copia de seguridad, configuración, tema, idioma, bloquear…) y eventos.
+2. ✅ Flechas, `Tab` y `Enter`; filtrado sin acentos ni mayúsculas (empieza igual > empieza una palabra > contiene > iniciales). La búsqueda de eventos en la base también ignora acentos y mayúsculas en cualquier alfabeto (función `chronos_fold` en SQLite).
+3. ✅ El buscador del panel derecho abre el menú; se mantienen `/` y `Ctrl+K`.
+4. ✅ Pruebas de filtrado y orden (`commands.test.ts`) y de búsqueda sin acentos en Rust.
 
 ### 1.2.2 Ir a la fecha (`.`)
-1. ⬜ Ventana pequeña con selector de fecha y texto libre («15 dic», «próximo lunes»).
-2. ⬜ Pruebas del intérprete de fechas.
+1. ✅ Ventana con texto libre («15 dic», «próximo lunes», «en 2 semanas», «2027-03-01», «march») y selector de fecha; muestra la fecha entendida antes de ir.
+2. ✅ Pruebas del intérprete de fechas (español e inglés; día/mes o mes/día según el idioma).
 
 ### 1.2.3 Crear eventos escribiendo
-1. ⬜ Intérprete local en español: «Dentista mañana 5pm 1h», «Gimnasio lunes y miércoles 7am», «Viaje 10–12 dic».
-2. ⬜ Vista previa de lo entendido antes de crear (fecha, hora, duración, repetición).
-3. ⬜ Disponible desde el menú de comandos y desde el botón «Nuevo evento».
-4. ⬜ Batería de pruebas con frases reales.
+1. ✅ Intérprete local en español e inglés (`src/lib/nlp.ts`, sin red): fechas, intervalos de días, horas e intervalos de horas, duraciones, «por la tarde», repeticiones (diaria, días laborables, días concretos, cada N semanas, mensual, anual, «10 veces», «hasta el 15 dic»).
+2. ✅ Vista previa de lo entendido (fecha, hora, duración y repetición) antes de crear; se puede deshacer, también si es una serie.
+3. ✅ Disponible desde el menú de comandos, el botón «Nuevo evento» y la tecla `N` (`C` sigue abriendo el formulario).
+4. ✅ Batería de 97 pruebas con frases reales, incluidas trampas («Reunión 10-12», «Partido 2-1», «Cumpleaños de Mayo»).
 
 ### 1.2.4 Navegación con teclado
-1. ⬜ `Tab` / flechas para moverse entre eventos de la vista; `Enter` abre detalles.
-2. ⬜ Mover el evento seleccionado con `Alt+flechas` (15 min / un día).
-3. ⬜ Revisión de accesibilidad (foco visible, lectores de pantalla).
+1. ✅ `↓` (o `Tab`) enfoca los eventos de la vista; `↑`/`↓` evento anterior/siguiente, `←`/`→` día anterior/siguiente; `Enter` abre los detalles; `Shift+F10` abre el menú contextual.
+2. ✅ `Alt+↑/↓` mueve el evento 15 min y `Alt+←/→` un día (pregunta el alcance en eventos repetidos).
+3. ✅ Accesibilidad: foco visible en eventos, menú y diálogos; eventos con nombre accesible (título, fecha y hora); menú como `combobox` + `listbox`; el foco vuelve a su sitio al cerrar.
 
 ### 1.2.5 Horario laboral por día
-1. ⬜ Configuración: horario distinto para cada día de la semana (o día libre).
-2. ⬜ Sombreado de la rejilla según el día.
+1. ✅ Configuración → General: horario para cada día de la semana en tramos de 30 min, o día libre. Por defecto, lunes a viernes de 9:00 a 18:00; el horario único anterior se migra a todos los días.
+2. ✅ Sombreado de la rejilla según el día (los días libres, enteros).
 
 ## Versión 1.3 — Privacidad y comodidad
 

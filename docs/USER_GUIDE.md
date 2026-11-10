@@ -30,10 +30,27 @@ Al abrirlo por primera vez, elige una contraseña (mínimo 8 caracteres). Con el
 - **Vistas:** botón de vista arriba a la derecha (Día `1`/`D`, Semana `0`/`W`, Mes `M`, Agenda `A`) o «Número de días» (`2`…`9`). El botón **±** al final de los días ajusta cuántos se ven.
 - **Navegar:** **Hoy** (`T`), flechas (`J`/`K` o `←`/`→`), o un día del mini calendario.
 - **Segunda zona horaria:** botón **+** junto a la zona (arriba a la izquierda de la rejilla).
+- **Ir a una fecha:** pulsa `.` y escribe «15 dic», «próximo lunes», «en 2 semanas»… o elígela en el selector.
+- **Menú de comandos:** `Ctrl+K` o `/` (o el buscador del panel derecho). Escribe para buscar eventos, ejecutar acciones (cambiar de vista, crear una copia, cambiar el tema o el idioma, bloquear…), saltar a una fecha o crear un evento. Muévete con las flechas y pulsa `Enter`.
+- **Con el teclado:** `↓` enfoca el primer evento de la vista; las flechas pasan de un evento a otro, `Enter` abre los detalles y `Alt+flechas` mueve el evento 15 minutos o un día.
+- **Horario laboral:** Configuración → General. Elige el horario de cada día o márcalo como libre; las horas fuera del horario se ven sombreadas.
 - **Configuración de la vista:** formato 12/24 h, inicio de semana, números de semana.
 - **Paneles:** `` ` `` muestra u oculta la barra izquierda; el icono de panel (arriba a la derecha) oculta el panel derecho. Con el panel oculto, los detalles se abren en una tarjeta flotante junto al evento.
 
 ## 4. Eventos
+
+**Crear escribiendo:** pulsa `N` o el botón ✎ (arriba a la izquierda) y escribe el evento en español o en inglés. Chronos muestra lo que ha entendido antes de crearlo:
+
+| Escribes | Se crea |
+|---|---|
+| Dentista mañana 5pm 1h | Mañana de 17:00 a 18:00 |
+| Gimnasio lunes y miércoles 7am | Cada semana, lunes y miércoles a las 7:00 |
+| Viaje 10–12 dic | Del 10 al 12 de diciembre, días completos |
+| Reunión jueves 10:00-11:30 | El jueves de 10:00 a 11:30 |
+| Yoga los martes 18:00 hasta el 15 dic | Cada martes hasta el 15 de diciembre |
+| Standup every weekday 9:30 | De lunes a viernes a las 9:30 |
+
+Sin hora, el evento es de día completo; sin fecha, es para hoy (o mañana, si la hora ya pasó). «A las 5» sin am/pm se entiende como 17:00 (de 1 a 6, por la tarde). Puedes deshacerlo con `Ctrl+Z`.
 
 - **Crear:** clic en un hueco (evento de la duración predeterminada), arrastrar para elegir la duración, clic en la franja «Todo el día» o en un día del Mes, o la tecla `C`.
   Lo que creas empieza como **borrador**: se guarda cuando escribes un título o cambias algún dato. Si cierras sin cambiar nada, desaparece.

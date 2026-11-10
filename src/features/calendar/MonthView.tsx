@@ -12,6 +12,7 @@ import { DRAFT_ID } from "@/stores/eventStore";
 import { useUiStore } from "@/stores/uiStore";
 import type { CalendarEvent } from "@/types/domain";
 import { dateLocale, t, tp } from "@/i18n";
+import { EVENT_FOCUS, eventNavProps } from "./keyboardNav";
 
 const ROW_H = 21;
 const HEADER_H = 26;
@@ -183,6 +184,7 @@ export function MonthView({ days, anchor }: Props) {
                     <div
                       key={s.event.id}
                       data-event-key={s.event.id}
+                      {...eventNavProps(s.event, week[s.startIndex]!)}
                       onPointerDown={(e) => onChipPointerDown(e, s.event)}
                       onClick={(e) => e.stopPropagation()}
                       onContextMenu={(e) => {
@@ -191,6 +193,7 @@ export function MonthView({ days, anchor }: Props) {
                       }}
                       className={cn(
                         "absolute flex items-center gap-1.5 truncate px-1.5 text-[12px]",
+                        EVENT_FOCUS,
                         bar ? "font-medium" : "hover:bg-surface-hover",
                         bar && (s.clippedStart ? "rounded-l-none" : "rounded-l"),
                         bar && (s.clippedEnd ? "rounded-r-none" : "rounded-r"),

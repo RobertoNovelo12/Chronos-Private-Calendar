@@ -5,7 +5,6 @@ import { MiniCalendar } from "@/features/calendar/MiniCalendar";
 import { CalendarList } from "@/features/calendars/CalendarList";
 import { LabelList } from "@/features/labels/LabelList";
 import { TaskList } from "@/features/tasks/TaskList";
-import { createEventNow } from "@/features/events/actions";
 import { api, errorMessage } from "@/lib/ipc";
 import type { VisibleRange } from "@/lib/dates";
 import { formatBytes } from "@/lib/utils";
@@ -44,16 +43,13 @@ export function Sidebar({ range, onLock }: { range: VisibleRange; onLock: () => 
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => {
-              setPrefs({ rightPanelOpen: true });
-              requestAnimationFrame(() => window.dispatchEvent(new Event("chronos:focus-search")));
-            }}
+            onClick={() => useUiStore.getState().openCommandMenu("all")}
             aria-label={t("Buscar")}
             title={t("Buscar (Ctrl+K)")}
           >
             <Search />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => void createEventNow()} aria-label={t("Nuevo evento")} title={t("Nuevo evento (C)")}>
+          <Button variant="ghost" size="icon" onClick={() => useUiStore.getState().openCommandMenu("create")} aria-label={t("Nuevo evento")} title={t("Crear evento escribiendo (N)")}>
             <SquarePen />
           </Button>
         </div>

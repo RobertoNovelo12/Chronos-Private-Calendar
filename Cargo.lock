@@ -559,7 +559,7 @@ dependencies = [
 
 [[package]]
 name = "chronos-core"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "argon2",
  "base64 0.22.1",
@@ -582,7 +582,7 @@ dependencies = [
 
 [[package]]
 name = "chronos-desktop"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "chronos-core",
  "serde",

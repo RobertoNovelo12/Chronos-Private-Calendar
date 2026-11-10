@@ -14,7 +14,7 @@ import { eventColor } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { DRAFT_ID, useEventStore, useSelectedEvent } from "@/stores/eventStore";
-import { usePrefsStore } from "@/stores/prefsStore";
+import { usePrefsStore, workStartMinutes } from "@/stores/prefsStore";
 import { useUiStore } from "@/stores/uiStore";
 import type { Availability, CalendarEvent, EventLink, EventPatch, Visibility } from "@/types/domain";
 import { duplicateEvent, updateEvent } from "./actions";
@@ -74,7 +74,7 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
   const visibleEvents = useVisibleEvents();
   const { select, askDelete } = useUiStore();
   const focusTitle = useUiStore((s) => s.focusTitle);
-  const { workStartHour, defaultDurationMin, weekStartsOn } = usePrefsStore();
+  const { workHours, defaultDurationMin, weekStartsOn } = usePrefsStore();
 
   const [title, setTitle] = useState(event.title);
   const [location, setLocation] = useState(event.location);
@@ -181,7 +181,7 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
       commit({ isAllDay: true, startAt, endAt: startAt + days * DAY_MS });
     } else {
       const s = new Date(start);
-      s.setHours(workStartHour, 0, 0, 0);
+      s.setHours(0, workStartMinutes(workHours, s), 0, 0);
       commit({ isAllDay: false, startAt: s.getTime(), endAt: s.getTime() + defaultDurationMin * MINUTE_MS });
     }
   }

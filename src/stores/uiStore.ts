@@ -22,6 +22,8 @@ export interface SlotMenuState {
 
 export type SettingsTab = "general" | "backups" | "data" | "privacy" | "about";
 
+export type CommandMode = "all" | "create";
+
 export interface ScopeRequest {
   kind: "edit" | "delete";
   /** Cambiar la regla no admite "solo este evento". */
@@ -52,6 +54,9 @@ interface UiState {
   contextMenu: ContextMenuState | null;
   slotMenu: SlotMenuState | null;
   scopeRequest: ScopeRequest | null;
+  /** Menú de comandos (Ctrl+K) o creación escribiendo. */
+  commandMenu: CommandMode | null;
+  goToOpen: boolean;
   setView: (v: ViewKind) => void;
   setAnchor: (d: Date) => void;
   today: () => void;
@@ -68,6 +73,8 @@ interface UiState {
   openSlotMenu: (m: SlotMenuState | null) => void;
   /** Pregunta "este / siguientes / todos" para un evento repetido. */
   askScope: (kind: "edit" | "delete", allowThis?: boolean) => Promise<EditScope | null>;
+  openCommandMenu: (mode: CommandMode | null) => void;
+  setGoToOpen: (open: boolean) => void;
   reset: () => void;
 }
 
@@ -86,6 +93,8 @@ export const useUiStore = create<UiState>((set, get) => ({
   contextMenu: null,
   slotMenu: null,
   scopeRequest: null,
+  commandMenu: null,
+  goToOpen: false,
   setView: (view) => {
     usePrefsStore.getState().set({ lastView: view });
     set({ view });
@@ -131,6 +140,8 @@ export const useUiStore = create<UiState>((set, get) => ({
         },
       });
     }),
+  openCommandMenu: (commandMenu) => set({ commandMenu, goToOpen: false, contextMenu: null, slotMenu: null }),
+  setGoToOpen: (goToOpen) => set({ goToOpen, commandMenu: null, contextMenu: null, slotMenu: null }),
   reset: () => {
     get().scopeRequest?.resolve(null);
     set({
@@ -143,6 +154,8 @@ export const useUiStore = create<UiState>((set, get) => ({
       settingsOpen: false,
       shortcutsOpen: false,
       scopeRequest: null,
+      commandMenu: null,
+      goToOpen: false,
     });
   },
 }));

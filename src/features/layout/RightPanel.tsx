@@ -9,8 +9,9 @@ import { useUiStore } from "@/stores/uiStore";
 import { msg, t } from "@/i18n";
 
 const SHORTCUTS: { label: string; keys: string[] }[] = [
-  { label: msg("Buscar eventos"), keys: ["Ctrl", "K"] },
-  { label: msg("Nuevo evento"), keys: ["C"] },
+  { label: msg("Menú de comandos y búsqueda"), keys: ["Ctrl", "K"] },
+  { label: msg("Crear evento escribiendo"), keys: ["N"] },
+  { label: msg("Ir a la fecha…"), keys: ["."] },
   { label: msg("Nueva tarea"), keys: ["Shift", "C"] },
   { label: msg("Ir a hoy"), keys: ["T"] },
   { label: msg("Mostrar/ocultar barra lateral"), keys: ["`"] },

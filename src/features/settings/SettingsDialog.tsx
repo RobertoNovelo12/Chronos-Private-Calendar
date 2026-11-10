@@ -5,10 +5,11 @@ import { DataTab } from "@/features/data/DataTab";
 import { PrivacyTab } from "@/features/data/PrivacyTab";
 import { AboutTab } from "./AboutTab";
 import { Button } from "@/components/ui/button";
-import { systemTimeZone } from "@/lib/dates";
+import { formatTime, systemTimeZone } from "@/lib/dates";
+import { dayName, WEEKDAY_CODES } from "@/lib/rrule";
 import { api, errorMessage } from "@/lib/ipc";
 import { toast } from "@/stores/toastStore";
-import { usePrefsStore } from "@/stores/prefsStore";
+import { usePrefsStore, type WorkDay } from "@/stores/prefsStore";
 import { useThemeStore, type ThemePreference } from "@/stores/themeStore";
 import { useUiStore, type SettingsTab } from "@/stores/uiStore";
 import { msg, t, t as tr } from "@/i18n";
@@ -23,7 +24,6 @@ const TABS: { id: SettingsTab; label: string; icon: typeof X }[] = [
 ];
 
 const NOTIF_KEY = "notifications.show_details";
-const HOURS = Array.from({ length: 25 }, (_, i) => i);
 const selectCls =
   "h-8 rounded-md bg-control px-2 text-[13px] text-strong focus:outline-none focus:ring-2 focus:ring-ring";
 
@@ -141,35 +141,7 @@ function GeneralTab() {
           <option value={0}>{t("Domingo")}</option>
         </select>
       </Row>
-      <Row label={t("Horario laboral")}>
-        <div className="flex items-center gap-1.5">
-          <select
-            className={selectCls}
-            value={prefs.workStartHour}
-            onChange={(e) => {
-              const v = Number(e.target.value);
-              prefs.set({
-                workStartHour: v,
-                workEndHour: Math.max(prefs.workEndHour, v + 1),
-              });
-            }}
-          >
-            {HOURS.slice(0, 24).map((h) => (
-              <option key={h} value={h}>{`${h}:00`}</option>
-            ))}
-          </select>
-          <span className="text-muted">–</span>
-          <select
-            className={selectCls}
-            value={prefs.workEndHour}
-            onChange={(e) => prefs.set({ workEndHour: Number(e.target.value) })}
-          >
-            {HOURS.filter((h) => h > prefs.workStartHour).map((h) => (
-              <option key={h} value={h}>{`${h}:00`}</option>
-            ))}
-          </select>
-        </div>
-      </Row>
+      <WorkHoursEditor />
       <Row label={t("Duración de eventos nuevos")}>
         <select
           className={selectCls}
@@ -222,6 +194,71 @@ function GeneralTab() {
         <span className="text-muted">{t("{zone} (del sistema)", { zone: systemTimeZone() })}</span>
       </Row>
     </div>
+  );
+}
+
+/** Horario laboral por día de la semana (o día libre). */
+function WorkHoursEditor() {
+  const { workHours, weekStartsOn, set } = usePrefsStore();
+  const order = Array.from({ length: 7 }, (_, i) => (i + weekStartsOn) % 7);
+  const steps = Array.from({ length: 49 }, (_, i) => i * 30);
+  const label = (m: number) => (m === 1440 ? t("Fin del día") : formatTime(new Date(2000, 0, 1, 0, m)));
+  const change = (day: number, value: WorkDay) => set({ workHours: workHours.map((d, i) => (i === day ? value : d)) });
+  const firstWorking = workHours.find((d) => d) ?? { start: 540, end: 1080 };
+
+  return (
+    <fieldset className="space-y-1.5">
+      <legend className="pb-1.5">{t("Horario laboral")}</legend>
+      <p className="pb-1 text-[12px] text-muted">{t("Las horas fuera del horario se sombrean en la rejilla. Desmarca un día para tratarlo como libre.")}</p>
+      {order.map((day) => {
+        const wd = workHours[day] ?? null;
+        const name = dayName(WEEKDAY_CODES[day]!);
+        return (
+          <div key={day} className="flex h-8 items-center gap-2">
+            <label className="flex w-36 items-center gap-2">
+              <input type="checkbox" checked={!!wd} onChange={(e) => change(day, e.target.checked ? { ...firstWorking } : null)} />
+              <span className="capitalize">{name}</span>
+            </label>
+            {wd ? (
+              <div className="flex items-center gap-1.5">
+                <select
+                  className={selectCls}
+                  aria-label={t("{day}: inicio", { day: name })}
+                  value={wd.start}
+                  onChange={(e) => {
+                    const start = Number(e.target.value);
+                    change(day, { start, end: Math.max(wd.end, start + 30) });
+                  }}
+                >
+                  {steps.slice(0, -1).map((m) => (
+                    <option key={m} value={m}>
+                      {label(m)}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-muted">–</span>
+                <select
+                  className={selectCls}
+                  aria-label={t("{day}: fin", { day: name })}
+                  value={wd.end}
+                  onChange={(e) => change(day, { start: wd.start, end: Number(e.target.value) })}
+                >
+                  {steps
+                    .filter((m) => m > wd.start)
+                    .map((m) => (
+                      <option key={m} value={m}>
+                        {label(m)}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            ) : (
+              <span className="text-muted">{t("Día libre")}</span>
+            )}
+          </div>
+        );
+      })}
+    </fieldset>
   );
 }
 
