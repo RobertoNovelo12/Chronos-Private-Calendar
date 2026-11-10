@@ -4,6 +4,7 @@
 mod backups;
 mod commands;
 mod errors;
+mod i18n;
 mod notifier;
 mod state;
 
@@ -96,6 +97,7 @@ pub fn run() {
             commands::data::vault_destroy,
             commands::about::app_about,
             commands::about::open_donation_link,
+            commands::about::app_set_language,
         ])
         .run(tauri::generate_context!());
 

@@ -1,9 +1,9 @@
 // Lógica pura de tareas: fecha local, agrupación y textos.
 
 import { addDays, differenceInCalendarDays, format, isSameDay, startOfDay } from "date-fns";
-import { es } from "date-fns/locale";
 import { allDayToLocal, formatTime } from "@/lib/dates";
 import type { Task } from "@/types/domain";
+import { dateLocale, msg, t as tr } from "@/i18n";
 
 /** Momento de vencimiento en hora local (día completo: medianoche local de la fecha). */
 export function taskDue(t: Pick<Task, "dueAt" | "isAllDay">): Date | null {
@@ -28,11 +28,11 @@ export function isOverdue(t: Task, now: Date): boolean {
 export type TaskGroupId = "overdue" | "today" | "upcoming" | "someday" | "done";
 
 export const TASK_GROUP_LABEL: Record<TaskGroupId, string> = {
-  overdue: "Vencidas",
-  today: "Hoy",
-  upcoming: "Próximas",
-  someday: "Sin fecha",
-  done: "Completadas",
+  overdue: msg("Vencidas"),
+  today: msg("Hoy"),
+  upcoming: msg("Próximas"),
+  someday: msg("Sin fecha"),
+  done: msg("Completadas"),
 };
 
 /** Agrupa para la barra lateral. Dentro de cada grupo: por vencimiento, prioridad y orden. */
@@ -61,15 +61,15 @@ export function groupTasks(tasks: Task[], now: Date): Record<TaskGroupId, Task[]
 /** "Hoy", "Mañana 15:00", "Ayer", "Lun 16 nov", "16 nov 2027 9:00". */
 export function formatDue(t: Task, now: Date): string {
   const d = taskDue(t);
-  if (!d) return "Sin fecha";
+  if (!d) return tr("Sin fecha");
   const diff = differenceInCalendarDays(d, now);
   let day: string;
-  if (diff === 0) day = "Hoy";
-  else if (diff === 1) day = "Mañana";
-  else if (diff === -1) day = "Ayer";
-  else if (diff > 1 && diff < 7) day = cap(format(d, "EEEE", { locale: es }));
-  else if (d.getFullYear() === now.getFullYear()) day = cap(format(d, "EEE d MMM", { locale: es }).replace(/\./g, ""));
-  else day = format(d, "d MMM yyyy", { locale: es }).replace(/\./g, "");
+  if (diff === 0) day = tr("Hoy");
+  else if (diff === 1) day = tr("Mañana");
+  else if (diff === -1) day = tr("Ayer");
+  else if (diff > 1 && diff < 7) day = cap(format(d, "EEEE", { locale: dateLocale() }));
+  else if (d.getFullYear() === now.getFullYear()) day = cap(format(d, "EEE d MMM", { locale: dateLocale() }).replace(/\./g, ""));
+  else day = format(d, "d MMM yyyy", { locale: dateLocale() }).replace(/\./g, "");
   return t.isAllDay ? day : `${day} ${formatTime(d)}`;
 }
 
@@ -82,7 +82,7 @@ export function todayAllDay(now = new Date()): number {
   return Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
 }
 
-export const PRIORITY_LABEL = ["Sin prioridad", "Baja", "Media", "Alta"] as const;
+export const PRIORITY_LABEL = [msg("Sin prioridad"), msg("Baja"), msg("Media"), msg("Alta")] as const;
 
 /** Siguiente día local (para "vence mañana"). */
 export const tomorrow = (now = new Date()) => addDays(startOfDay(now), 1);

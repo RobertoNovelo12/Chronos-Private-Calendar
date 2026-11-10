@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { addDays, format, isSameDay, isSameMonth } from "date-fns";
-import { es } from "date-fns/locale";
-import { eventStart, formatEventTime, formatTime } from "@/lib/dates";
+import { dayMonthShort, eventStart, formatEventTime, formatTime } from "@/lib/dates";
 import { eventColor, layoutSpans } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 import { CircleCheck } from "lucide-react";
@@ -12,6 +11,7 @@ import { setHoverSlot } from "@/features/events/clipboard";
 import { DRAFT_ID } from "@/stores/eventStore";
 import { useUiStore } from "@/stores/uiStore";
 import type { CalendarEvent } from "@/types/domain";
+import { dateLocale, t, tp } from "@/i18n";
 
 const ROW_H = 21;
 const HEADER_H = 26;
@@ -117,7 +117,7 @@ export function MonthView({ days, anchor }: Props) {
       <div className="grid shrink-0 grid-cols-7 border-b border-grid">
         {weeks[0]!.map((d) => (
           <div key={d.getTime()} className="px-2 py-1.5 text-[12px] text-muted">
-            {format(d, "EEE", { locale: es }).replace(".", "").replace(/^./, (c) => c.toUpperCase())}
+            {format(d, "EEE", { locale: dateLocale() }).replace(".", "").replace(/^./, (c) => c.toUpperCase())}
           </div>
         ))}
       </div>
@@ -163,9 +163,9 @@ export function MonthView({ days, anchor }: Props) {
                           e.stopPropagation();
                           openDay(d);
                         }}
-                        title="Ver este día"
+                        title={t("Ver este día")}
                       >
-                        {d.getDate() === 1 ? format(d, "d MMM", { locale: es }) : d.getDate()}
+                        {d.getDate() === 1 ? dayMonthShort(d) : d.getDate()}
                       </button>
                       <DayTasksBadge tasks={tasks} day={d} onOpen={() => openDay(d)} />
                     </div>
@@ -204,11 +204,11 @@ export function MonthView({ days, anchor }: Props) {
                         top: HEADER_H + s.row * ROW_H,
                         height: ROW_H - 2,
                       }}
-                      title={`${s.event.title || "Sin título"} · ${formatEventTime(s.event)}`}
+                      title={`${s.event.title || t("Sin título")} · ${formatEventTime(s.event)}`}
                     >
                       {!bar && <span className="size-2 shrink-0 rounded-full" style={{ background: color }} />}
                       {!bar && <span className="shrink-0 tabular-nums text-muted">{formatTime(eventStart(s.event))}</span>}
-                      <span className="truncate">{s.event.title || "Sin título"}</span>
+                      <span className="truncate">{s.event.title || t("Sin título")}</span>
                     </div>
                   );
                 })}
@@ -226,7 +226,7 @@ export function MonthView({ days, anchor }: Props) {
                       openDay(d);
                     }}
                   >
-                    +{hidden} más
+                    {t("+{n} más", { n: hidden })}
                   </button>
                 );
               })}
@@ -249,7 +249,7 @@ function DayTasksBadge({ tasks, day, onOpen }: { tasks: ReturnType<typeof useCal
         e.stopPropagation();
         onOpen();
       }}
-      title={pending.length === 1 ? `1 tarea: ${pending[0]!.title}` : `${pending.length} tareas pendientes`}
+      title={pending.length === 1 ? t("1 tarea: {title}", { title: pending[0]!.title }) : tp(pending.length, "{n} tarea pendiente", "{n} tareas pendientes")}
     >
       <CircleCheck className="size-3" />
       <span className="tabular-nums">{pending.length}</span>

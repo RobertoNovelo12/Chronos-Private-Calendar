@@ -1,0 +1,1649 @@
+{
+  "No se pudo iniciar Chronos": {
+    "plural": false
+  },
+  "Cancelar": {
+    "plural": false
+  },
+  "Mes anterior": {
+    "plural": false
+  },
+  "Mes siguiente": {
+    "plural": false
+  },
+  "Zona horaria": {
+    "plural": false
+  },
+  "Sin resultados": {
+    "plural": false
+  },
+  "Cerrar": {
+    "plural": false
+  },
+  "Sin eventos ni tareas en los próximos {n} días": {
+    "plural": false
+  },
+  "Pulsa C o cambia a la vista Semana para crear uno.": {
+    "plural": false
+  },
+  "Hoy": {
+    "plural": false
+  },
+  "Sin título": {
+    "plural": false
+  },
+  "Ver este día": {
+    "plural": false
+  },
+  "+{n} más": {
+    "plural": false
+  },
+  "1 tarea: {title}": {
+    "plural": false
+  },
+  "{n} tareas pendientes": {
+    "plural": true,
+    "one": "{n} tarea pendiente"
+  },
+  "Menos": {
+    "plural": false
+  },
+  "Más": {
+    "plural": false
+  },
+  "Todo el día": {
+    "plural": false
+  },
+  "Haz clic o arrastra para crear un evento de día completo": {
+    "plural": false
+  },
+  "{city} · cambiar o quitar": {
+    "plural": false
+  },
+  "Añadir zona horaria": {
+    "plural": false
+  },
+  "Cambiar segunda zona horaria": {
+    "plural": false
+  },
+  "Zona horaria del sistema": {
+    "plural": false
+  },
+  "Quitar segunda zona horaria": {
+    "plural": false
+  },
+  "Número de días": {
+    "plural": false
+  },
+  "Ajustar número de días": {
+    "plural": false
+  },
+  "Menos días": {
+    "plural": false
+  },
+  "Más días": {
+    "plural": false
+  },
+  "Tareas": {
+    "plural": false
+  },
+  "Día": {
+    "plural": false
+  },
+  "Semana": {
+    "plural": false
+  },
+  "Mes": {
+    "plural": false
+  },
+  "Agenda": {
+    "plural": false
+  },
+  "Mostrar barra lateral": {
+    "plural": false
+  },
+  "Mostrar barra lateral (`)": {
+    "plural": false
+  },
+  "Cargando": {
+    "plural": false
+  },
+  "Ir a hoy (T)": {
+    "plural": false
+  },
+  "Anterior": {
+    "plural": false
+  },
+  "Anterior (K o ←)": {
+    "plural": false
+  },
+  "Siguiente": {
+    "plural": false
+  },
+  "Siguiente (J o →)": {
+    "plural": false
+  },
+  "Mostrar panel": {
+    "plural": false
+  },
+  "1 o D": {
+    "plural": false
+  },
+  "0 o W": {
+    "plural": false
+  },
+  "M": {
+    "plural": false
+  },
+  "A": {
+    "plural": false
+  },
+  "Configuración de la vista": {
+    "plural": false
+  },
+  "Formato de hora": {
+    "plural": false
+  },
+  "La semana empieza el": {
+    "plural": false
+  },
+  "Domingo": {
+    "plural": false
+  },
+  "Lunes": {
+    "plural": false
+  },
+  "Mostrar números de semana": {
+    "plural": false
+  },
+  "{n} días": {
+    "plural": true,
+    "one": "{n} día"
+  },
+  "En este equipo": {
+    "plural": false
+  },
+  "Añadir calendario": {
+    "plural": false
+  },
+  "¿Eliminar calendario?": {
+    "plural": false
+  },
+  "Se eliminarán “{name}” y todos sus eventos de forma permanente. Esta acción no se puede deshacer.": {
+    "plural": false
+  },
+  "Eliminar": {
+    "plural": false
+  },
+  "Ocultar": {
+    "plural": false
+  },
+  "Mostrar": {
+    "plural": false
+  },
+  "Predeterminado": {
+    "plural": false
+  },
+  "Oculto": {
+    "plural": false
+  },
+  "Opciones de {name}": {
+    "plural": false
+  },
+  "Editar nombre y color": {
+    "plural": false
+  },
+  "Hacer predeterminado": {
+    "plural": false
+  },
+  "Subir": {
+    "plural": false
+  },
+  "Bajar": {
+    "plural": false
+  },
+  "Eliminar calendario": {
+    "plural": false
+  },
+  "Color": {
+    "plural": false
+  },
+  "Nombre del calendario": {
+    "plural": false
+  },
+  "Guardar": {
+    "plural": false
+  },
+  "Copia cifrada creada ({size})": {
+    "plural": false
+  },
+  "Copias automáticas": {
+    "plural": false
+  },
+  "Se crean mientras Chronos está desbloqueado, cifradas con tu contraseña actual (Argon2id + XChaCha20-Poly1305). Las más antiguas se eliminan al superar el límite.": {
+    "plural": false
+  },
+  "Frecuencia": {
+    "plural": false
+  },
+  "Una vez al día": {
+    "plural": false
+  },
+  "Una vez por semana": {
+    "plural": false
+  },
+  "Desactivadas": {
+    "plural": false
+  },
+  "Conservar": {
+    "plural": false
+  },
+  "Carpeta": {
+    "plural": false
+  },
+  "Volver a la carpeta predeterminada": {
+    "plural": false
+  },
+  "Predeterminada": {
+    "plural": false
+  },
+  "Cambiar…": {
+    "plural": false
+  },
+  "Para protegerte de un fallo del disco, elige una carpeta en otra unidad o en una memoria externa.": {
+    "plural": false
+  },
+  "Historial": {
+    "plural": false
+  },
+  "Copias creadas en este equipo. Verificar comprueba la integridad y la contraseña sin cambiar nada.": {
+    "plural": false
+  },
+  "Creando…": {
+    "plural": false
+  },
+  "Crear copia ahora": {
+    "plural": false
+  },
+  "Restaurar desde archivo…": {
+    "plural": false
+  },
+  "Cargando…": {
+    "plural": false
+  },
+  "Todavía no hay copias.": {
+    "plural": false
+  },
+  "Falló": {
+    "plural": false
+  },
+  "Verificar": {
+    "plural": false
+  },
+  "Restaurar": {
+    "plural": false
+  },
+  "Las {n} más recientes": {
+    "plural": true,
+    "one": "La más reciente"
+  },
+  "iCalendar (.ics): para Google Calendar, Outlook, Apple Calendar y otras apps. Incluye repeticiones, recordatorios y tareas.": {
+    "plural": false
+  },
+  "JSON de Chronos: copia legible y completa para volver a importarla aquí. No está cifrada.": {
+    "plural": false
+  },
+  "CSV para hojas de cálculo (solo eventos). Solo exportación; no está cifrado.": {
+    "plural": false
+  },
+  "Copia completa cifrada (.chronosbak). Es la única exportación protegida con contraseña.": {
+    "plural": false
+  },
+  "Importar": {
+    "plural": false
+  },
+  "Archivos .ics (de Google, Outlook, Apple…) o .json exportados por Chronos. Los eventos que ya existen (mismo identificador) no se duplican. Una copia .chronosbak se restaura.": {
+    "plural": false
+  },
+  "Elegir archivo…": {
+    "plural": false
+  },
+  "Importar en": {
+    "plural": false
+  },
+  "Calendario «{name}»": {
+    "plural": false
+  },
+  "Si ya tienes un calendario con ese nombre, se usa ese; si no, se crea.": {
+    "plural": false
+  },
+  "Importando…": {
+    "plural": false
+  },
+  "Importar {what}": {
+    "plural": false
+  },
+  "Importar {events} y {tasks}": {
+    "plural": false
+  },
+  "Importación completada:": {
+    "plural": false
+  },
+  "Copia cifrada guardada ({size})": {
+    "plural": false
+  },
+  "{events} y {tasks}": {
+    "plural": false
+  },
+  "Exportar": {
+    "plural": false
+  },
+  "Copia cifrada": {
+    "plural": false
+  },
+  "Calendarios": {
+    "plural": false
+  },
+  "Todos": {
+    "plural": false
+  },
+  "Fechas": {
+    "plural": false
+  },
+  "Todas": {
+    "plural": false
+  },
+  "Entre dos fechas": {
+    "plural": false
+  },
+  "Desde": {
+    "plural": false
+  },
+  "Hasta": {
+    "plural": false
+  },
+  "Las series repetidas que abarcan esas fechas se exportan completas, con su regla.": {
+    "plural": false
+  },
+  "Cifrar con la contraseña de la aplicación": {
+    "plural": false
+  },
+  "Cifrar con otra contraseña (p. ej. para guardarla fuera)": {
+    "plural": false
+  },
+  "Contraseña (mín. 8)": {
+    "plural": false
+  },
+  "Repítela": {
+    "plural": false
+  },
+  "Las contraseñas no coinciden.": {
+    "plural": false
+  },
+  "Exportando…": {
+    "plural": false
+  },
+  "Elegir carpeta y guardar…": {
+    "plural": false
+  },
+  "Exportar…": {
+    "plural": false
+  },
+  "{n} eventos": {
+    "plural": true,
+    "one": "{n} evento"
+  },
+  "{n} tareas": {
+    "plural": true,
+    "one": "{n} tarea"
+  },
+  "{n} calendarios": {
+    "plural": true,
+    "one": "{n} calendario"
+  },
+  "{n} reglas de repetición no compatibles (se importarán como eventos únicos)": {
+    "plural": true,
+    "one": "{n} regla de repetición no compatible (se importará como evento único)"
+  },
+  "{n} eventos importados": {
+    "plural": true,
+    "one": "{n} evento importado"
+  },
+  "{n} tareas importadas": {
+    "plural": true,
+    "one": "{n} tarea importada"
+  },
+  "{n} ya existían": {
+    "plural": true,
+    "one": "{n} ya existía"
+  },
+  "{n} descartados (cancelados o no válidos)": {
+    "plural": true,
+    "one": "{n} descartado (cancelado o no válido)"
+  },
+  "{n} repeticiones no compatibles": {
+    "plural": true,
+    "one": "{n} repetición no compatible"
+  },
+  "{n} calendarios nuevos": {
+    "plural": true,
+    "one": "{n} calendario nuevo"
+  },
+  "{n} etiquetas nuevas": {
+    "plural": true,
+    "one": "{n} etiqueta nueva"
+  },
+  "{n} eventos exportados": {
+    "plural": true,
+    "one": "{n} evento exportado"
+  },
+  "Cómo se protegen tus datos": {
+    "plural": false
+  },
+  "La base de datos de este equipo está cifrada por completo con SQLCipher. La clave se deriva de tu contraseña con Argon2id y nunca se guarda en claro. Chronos no se conecta a internet ni envía estadísticas. Las exportaciones ICS, JSON y CSV <b>no</b> van cifradas: guárdalas en un lugar seguro.": {
+    "plural": false
+  },
+  "Contraseña cambiada": {
+    "plural": false
+  },
+  "Cambiar contraseña": {
+    "plural": false
+  },
+  "Los datos no se vuelven a cifrar: se protege de nuevo su clave. Las copias nuevas usarán la contraseña nueva; las copias anteriores se siguen abriendo con la contraseña con la que se crearon.": {
+    "plural": false
+  },
+  "Contraseña actual": {
+    "plural": false
+  },
+  "Nueva contraseña (mín. {n} caracteres)": {
+    "plural": false
+  },
+  "Repite la nueva contraseña": {
+    "plural": false
+  },
+  "Debe tener al menos {n} caracteres.": {
+    "plural": false
+  },
+  "Cambiando…": {
+    "plural": false
+  },
+  "Eliminar todos mis datos": {
+    "plural": false
+  },
+  "Borra de este equipo la base de datos cifrada y su almacén de claves. No se puede deshacer.": {
+    "plural": false
+  },
+  "Eliminar todos mis datos…": {
+    "plural": false
+  },
+  "Se borrarán todos los calendarios, eventos, tareas y ajustes de este equipo. Sin el almacén de claves, la base de datos cifrada no se puede recuperar. Después Chronos empezará de cero.": {
+    "plural": false
+  },
+  "Borrar también las copias de seguridad registradas en este equipo. Si no lo marcas, podrás restaurarlas más tarde con su contraseña.": {
+    "plural": false
+  },
+  "Escribe <b>{word}</b> para confirmar": {
+    "plural": false
+  },
+  "Contraseña": {
+    "plural": false
+  },
+  "Eliminando…": {
+    "plural": false
+  },
+  "Eliminar definitivamente": {
+    "plural": false
+  },
+  "{n} copias no se pudieron borrar; elimínalas a mano.": {
+    "plural": true,
+    "one": "{n} copia no se pudo borrar; elimínala a mano."
+  },
+  "Manual": {
+    "plural": false
+  },
+  "Automática": {
+    "plural": false
+  },
+  "Antes de restaurar": {
+    "plural": false
+  },
+  "Antes de actualizar": {
+    "plural": false
+  },
+  "Ocultar contraseña": {
+    "plural": false
+  },
+  "Mostrar contraseña": {
+    "plural": false
+  },
+  "Datos restaurados. Los anteriores se guardaron en «{file}».": {
+    "plural": false
+  },
+  "Restaurar copia de seguridad": {
+    "plural": false
+  },
+  "Verificar copia de seguridad": {
+    "plural": false
+  },
+  "Archivo": {
+    "plural": false
+  },
+  "Creada": {
+    "plural": false
+  },
+  "Versión": {
+    "plural": false
+  },
+  "Chronos {version} · esquema {schema}": {
+    "plural": false
+  },
+  "Tamaño": {
+    "plural": false
+  },
+  "Leyendo el archivo…": {
+    "plural": false
+  },
+  "La copia es íntegra y la contraseña es correcta: se puede restaurar.": {
+    "plural": false
+  },
+  "Contraseña con la que se creó la copia": {
+    "plural": false
+  },
+  "Entiendo que se <b>reemplazarán todos los datos actuales</b> por los de la copia. Antes se creará una copia automática de los datos actuales.": {
+    "plural": false
+  },
+  "Restaurando…": {
+    "plural": false
+  },
+  "Verificando…": {
+    "plural": false
+  },
+  "Pendiente": {
+    "plural": false
+  },
+  "Acepta": {
+    "plural": false
+  },
+  "Quizá": {
+    "plural": false
+  },
+  "Rechaza": {
+    "plural": false
+  },
+  "Participantes": {
+    "plural": false
+  },
+  "Añadir participante": {
+    "plural": false
+  },
+  "Solo para tu referencia: Chronos no envía invitaciones ni correos.": {
+    "plural": false
+  },
+  "Organizador": {
+    "plural": false
+  },
+  "(opcional)": {
+    "plural": false
+  },
+  "Respuesta de {name}": {
+    "plural": false
+  },
+  "Quitar participante": {
+    "plural": false
+  },
+  "Obligatorio": {
+    "plural": false
+  },
+  "Opcional": {
+    "plural": false
+  },
+  "Papel de {name}": {
+    "plural": false
+  },
+  "Papel": {
+    "plural": false
+  },
+  "Nombre": {
+    "plural": false
+  },
+  "correo@ejemplo.com (opcional)": {
+    "plural": false
+  },
+  "Ese correo ya está en la lista": {
+    "plural": false
+  },
+  "Revisa el correo": {
+    "plural": false
+  },
+  "Añadir": {
+    "plural": false
+  },
+  "{n} pendientes": {
+    "plural": true,
+    "one": "{n} pendiente"
+  },
+  "{n} aceptan": {
+    "plural": true,
+    "one": "{n} acepta"
+  },
+  "{n} quizá": {
+    "plural": true,
+    "one": "{n} quizá"
+  },
+  "{n} rechazan": {
+    "plural": true,
+    "one": "{n} rechaza"
+  },
+  "{n} participantes": {
+    "plural": true,
+    "one": "{n} participante"
+  },
+  "evento": {
+    "plural": false
+  },
+  "Evento exportado": {
+    "plural": false
+  },
+  "Abrir detalles": {
+    "plural": false
+  },
+  "Copiar": {
+    "plural": false
+  },
+  "Duplicar": {
+    "plural": false
+  },
+  "Exportar como .ics…": {
+    "plural": false
+  },
+  "Mover a": {
+    "plural": false
+  },
+  "Supr": {
+    "plural": false
+  },
+  "Ocupado": {
+    "plural": false
+  },
+  "Libre": {
+    "plural": false
+  },
+  "Provisional": {
+    "plural": false
+  },
+  "Fuera de la oficina": {
+    "plural": false
+  },
+  "Visibilidad predeterminada": {
+    "plural": false
+  },
+  "Pública": {
+    "plural": false
+  },
+  "Privada": {
+    "plural": false
+  },
+  "Confidencial": {
+    "plural": false
+  },
+  "Detalles del evento": {
+    "plural": false
+  },
+  "Evento nuevo": {
+    "plural": false
+  },
+  "Evento": {
+    "plural": false
+  },
+  "Abrir en el panel lateral": {
+    "plural": false
+  },
+  "Cerrar (Esc)": {
+    "plural": false
+  },
+  "Ctrl+D": {
+    "plural": false
+  },
+  "Descartar": {
+    "plural": false
+  },
+  "Título": {
+    "plural": false
+  },
+  "Fecha de inicio": {
+    "plural": false
+  },
+  "Fecha de fin": {
+    "plural": false
+  },
+  "Hora de inicio": {
+    "plural": false
+  },
+  "Hora de fin": {
+    "plural": false
+  },
+  "Coincide con otro evento:": {
+    "plural": false
+  },
+  "Coincide con {n} eventos:": {
+    "plural": false
+  },
+  "Ubicación": {
+    "plural": false
+  },
+  "Descripción": {
+    "plural": false
+  },
+  "Calendario": {
+    "plural": false
+  },
+  "Disponibilidad": {
+    "plural": false
+  },
+  "Visibilidad": {
+    "plural": false
+  },
+  "Color propio": {
+    "plural": false
+  },
+  "Color del calendario": {
+    "plural": false
+  },
+  "Del calendario": {
+    "plural": false
+  },
+  "Borrador: se guardará al escribir un título o cambiar algún dato": {
+    "plural": false
+  },
+  "Guardado automáticamente · cifrado en este equipo": {
+    "plural": false
+  },
+  "Quitar enlace": {
+    "plural": false
+  },
+  "Texto (opcional)": {
+    "plural": false
+  },
+  "Añade enlaces": {
+    "plural": false
+  },
+  "Añadir otro enlace": {
+    "plural": false
+  },
+  "Quitar recordatorio": {
+    "plural": false
+  },
+  "Recordatorios": {
+    "plural": false
+  },
+  "Añadir recordatorio": {
+    "plural": false
+  },
+  "No hay más opciones": {
+    "plural": false
+  },
+  "Repetir": {
+    "plural": false
+  },
+  "No se repite": {
+    "plural": false
+  },
+  "Personalizar…": {
+    "plural": false
+  },
+  "Aumentar": {
+    "plural": false
+  },
+  "Disminuir": {
+    "plural": false
+  },
+  "Cada": {
+    "plural": false
+  },
+  "Intervalo": {
+    "plural": false
+  },
+  "En": {
+    "plural": false
+  },
+  "Días de la semana": {
+    "plural": false
+  },
+  "El": {
+    "plural": false
+  },
+  "día {n} de cada mes": {
+    "plural": false
+  },
+  "{nth} de cada mes": {
+    "plural": false
+  },
+  "Termina": {
+    "plural": false
+  },
+  "Nunca": {
+    "plural": false
+  },
+  "Fecha en que termina": {
+    "plural": false
+  },
+  "Después de": {
+    "plural": false
+  },
+  "Número de veces": {
+    "plural": false
+  },
+  "Listo": {
+    "plural": false
+  },
+  "días": {
+    "plural": true,
+    "one": "día"
+  },
+  "semanas": {
+    "plural": true,
+    "one": "semana"
+  },
+  "meses": {
+    "plural": true,
+    "one": "mes"
+  },
+  "años": {
+    "plural": true,
+    "one": "año"
+  },
+  "veces": {
+    "plural": true,
+    "one": "vez"
+  },
+  "Este evento": {
+    "plural": false
+  },
+  "Este y los siguientes": {
+    "plural": false
+  },
+  "Todos los eventos": {
+    "plural": false
+  },
+  "Editar evento repetido": {
+    "plural": false
+  },
+  "Eliminar evento repetido": {
+    "plural": false
+  },
+  "Aceptar": {
+    "plural": false
+  },
+  "Crear evento": {
+    "plural": false
+  },
+  "Crear tarea": {
+    "plural": false
+  },
+  "Pegar evento": {
+    "plural": false
+  },
+  "Crea un calendario antes de añadir eventos": {
+    "plural": false
+  },
+  "Evento duplicado": {
+    "plural": false
+  },
+  "Eventos eliminados": {
+    "plural": false
+  },
+  "Evento eliminado": {
+    "plural": false
+  },
+  "Deshacer": {
+    "plural": false
+  },
+  "Deshecho: {action}": {
+    "plural": false
+  },
+  "Rehecho: {action}": {
+    "plural": false
+  },
+  "Evento copiado": {
+    "plural": false
+  },
+  "Etiquetas": {
+    "plural": false
+  },
+  "Mostrar todos los eventos": {
+    "plural": false
+  },
+  "Quitar filtro": {
+    "plural": false
+  },
+  "Añadir etiqueta": {
+    "plural": false
+  },
+  "¿Eliminar etiqueta?": {
+    "plural": false
+  },
+  "Se quitará “{name}” de todos los eventos. Los eventos no se eliminan.": {
+    "plural": false
+  },
+  "Mostrar solo eventos con “{name}”": {
+    "plural": false
+  },
+  "Filtro activo": {
+    "plural": false
+  },
+  "Mostrar solo esta etiqueta": {
+    "plural": false
+  },
+  "Eliminar etiqueta": {
+    "plural": false
+  },
+  "Nombre de la etiqueta": {
+    "plural": false
+  },
+  "Máximo {n} etiquetas por evento": {
+    "plural": false
+  },
+  "Quitar etiqueta {name}": {
+    "plural": false
+  },
+  "Asignar etiquetas": {
+    "plural": false
+  },
+  "Buscar o crear etiqueta…": {
+    "plural": false
+  },
+  "Crear «{name}»": {
+    "plural": false
+  },
+  "Escribe un nombre para crear tu primera etiqueta": {
+    "plural": false
+  },
+  "¿Eliminar evento?": {
+    "plural": false
+  },
+  "“{title}” se eliminará de este equipo. Podrás deshacerlo con Ctrl+Z mientras la aplicación siga desbloqueada.": {
+    "plural": false
+  },
+  "Buscar eventos": {
+    "plural": false
+  },
+  "Nuevo evento": {
+    "plural": false
+  },
+  "Nueva tarea": {
+    "plural": false
+  },
+  "Ir a hoy": {
+    "plural": false
+  },
+  "Mostrar/ocultar barra lateral": {
+    "plural": false
+  },
+  "Bloquear Chronos": {
+    "plural": false
+  },
+  "Ocultar panel": {
+    "plural": false
+  },
+  "Atajos útiles": {
+    "plural": false
+  },
+  "Todos los atajos de teclado": {
+    "plural": false
+  },
+  "Ocultar barra lateral": {
+    "plural": false
+  },
+  "Ocultar barra lateral (`)": {
+    "plural": false
+  },
+  "Buscar": {
+    "plural": false
+  },
+  "Buscar (Ctrl+K)": {
+    "plural": false
+  },
+  "Nuevo evento (C)": {
+    "plural": false
+  },
+  "Atajos de teclado": {
+    "plural": false
+  },
+  "Atajos de teclado (?)": {
+    "plural": false
+  },
+  "Crear copia de seguridad": {
+    "plural": false
+  },
+  "Crear copia de seguridad cifrada": {
+    "plural": false
+  },
+  "Configuración": {
+    "plural": false
+  },
+  "Bloquear": {
+    "plural": false
+  },
+  "Bloquear (Ctrl+L)": {
+    "plural": false
+  },
+  "Buscar (/ o Ctrl+K)": {
+    "plural": false
+  },
+  "Limpiar": {
+    "plural": false
+  },
+  "Protege tu calendario": {
+    "plural": false
+  },
+  "Chronos está bloqueado": {
+    "plural": false
+  },
+  "Elige una contraseña. Cifra la base de datos en este equipo. No existe recuperación: si la olvidas, solo podrás volver a tus datos desde una copia de seguridad cuya contraseña recuerdes.": {
+    "plural": false
+  },
+  "Introduce tu contraseña para descifrar tus datos.": {
+    "plural": false
+  },
+  "Repite la contraseña": {
+    "plural": false
+  },
+  "Mínimo {n} caracteres.": {
+    "plural": false
+  },
+  "Creando bóveda cifrada…": {
+    "plural": false
+  },
+  "Descifrando…": {
+    "plural": false
+  },
+  "Crear y entrar": {
+    "plural": false
+  },
+  "Desbloquear": {
+    "plural": false
+  },
+  "Sin cuenta · Sin conexión · Tus datos no salen de este equipo": {
+    "plural": false
+  },
+  "Enlace copiado": {
+    "plural": false
+  },
+  "No se pudo copiar; selecciona el texto y cópialo a mano": {
+    "plural": false
+  },
+  "Calendario local, privado y cifrado. Sin cuentas, sin nube y sin telemetría.": {
+    "plural": false
+  },
+  "Licencia": {
+    "plural": false
+  },
+  "{license} (código abierto)": {
+    "plural": false
+  },
+  "Código fuente": {
+    "plural": false
+  },
+  "Copiar enlace del repositorio": {
+    "plural": false
+  },
+  "Apoyar el proyecto": {
+    "plural": false
+  },
+  "Chronos es gratuito y lo seguirá siendo. Si te resulta útil, puedes apoyar su desarrollo con una donación voluntaria por PayPal.": {
+    "plural": false
+  },
+  "Donar con PayPal": {
+    "plural": false
+  },
+  "Se abrirá {url} en tu navegador. Chronos no envía ningún dato: es tu navegador el que carga la página, y la aplicación sigue sin conectarse a internet. Donar no desbloquea ninguna función.": {
+    "plural": false
+  },
+  "General": {
+    "plural": false
+  },
+  "Copias de seguridad": {
+    "plural": false
+  },
+  "Importar y exportar": {
+    "plural": false
+  },
+  "Privacidad y seguridad": {
+    "plural": false
+  },
+  "Acerca de": {
+    "plural": false
+  },
+  "Secciones": {
+    "plural": false
+  },
+  "Idioma": {
+    "plural": false
+  },
+  "Tema": {
+    "plural": false
+  },
+  "Del sistema": {
+    "plural": false
+  },
+  "Claro": {
+    "plural": false
+  },
+  "Oscuro": {
+    "plural": false
+  },
+  "Horario laboral": {
+    "plural": false
+  },
+  "Duración de eventos nuevos": {
+    "plural": false
+  },
+  "Bloqueo automático": {
+    "plural": false
+  },
+  "Desactivado": {
+    "plural": false
+  },
+  "Tras {n} min sin actividad": {
+    "plural": false
+  },
+  "12 horas (1:00PM)": {
+    "plural": false
+  },
+  "24 horas (13:00)": {
+    "plural": false
+  },
+  "Notificaciones de recordatorios": {
+    "plural": false
+  },
+  "Mostrar título y lugar": {
+    "plural": false
+  },
+  "Ocultar detalles": {
+    "plural": false
+  },
+  "{zone} (del sistema)": {
+    "plural": false
+  },
+  "Vistas": {
+    "plural": false
+  },
+  "Número de días (2–9)": {
+    "plural": false
+  },
+  "Navegación": {
+    "plural": false
+  },
+  "Periodo siguiente": {
+    "plural": false
+  },
+  "Periodo anterior": {
+    "plural": false
+  },
+  "Eventos": {
+    "plural": false
+  },
+  "Nueva tarea (para hoy)": {
+    "plural": false
+  },
+  "Copiar el seleccionado": {
+    "plural": false
+  },
+  "Pegar bajo el puntero": {
+    "plural": false
+  },
+  "Duplicar el seleccionado": {
+    "plural": false
+  },
+  "Eliminar el seleccionado": {
+    "plural": false
+  },
+  "Cerrar detalles": {
+    "plural": false
+  },
+  "Rehacer": {
+    "plural": false
+  },
+  "Privacidad": {
+    "plural": false
+  },
+  "Tarea: {title}": {
+    "plural": false
+  },
+  "Marcar como pendiente": {
+    "plural": false
+  },
+  "Completar «{title}»": {
+    "plural": false
+  },
+  "Tarea": {
+    "plural": false
+  },
+  "Ver menos": {
+    "plural": false
+  },
+  "Ver las {n}": {
+    "plural": false
+  },
+  "Añadir tarea (Shift+C)": {
+    "plural": false
+  },
+  "Añadir tarea": {
+    "plural": false
+  },
+  "Marcar «{title}» como pendiente": {
+    "plural": false
+  },
+  "Nueva tarea sin fecha · Enter": {
+    "plural": false
+  },
+  "Eliminar completadas": {
+    "plural": false
+  },
+  "¿Eliminar las tareas completadas?": {
+    "plural": false
+  },
+  "Se eliminarán {n} tareas completadas de forma permanente.": {
+    "plural": true,
+    "one": "Se eliminará {n} tarea completada de forma permanente."
+  },
+  "Eliminar tarea": {
+    "plural": false
+  },
+  "Completar tarea": {
+    "plural": false
+  },
+  "Título de la tarea": {
+    "plural": false
+  },
+  "Completada el {date}": {
+    "plural": false
+  },
+  "Fecha de vencimiento": {
+    "plural": false
+  },
+  "Hora de vencimiento": {
+    "plural": false
+  },
+  "Quitar fecha": {
+    "plural": false
+  },
+  "Añadir fecha": {
+    "plural": false
+  },
+  "Prioridad": {
+    "plural": false
+  },
+  "Prioridad {level}": {
+    "plural": false
+  },
+  "Sin calendario": {
+    "plural": false
+  },
+  "Notas": {
+    "plural": false
+  },
+  "Tarea eliminada": {
+    "plural": false
+  },
+  "búsqueda demasiado larga": {
+    "plural": false
+  },
+  "cabecera de copia demasiado grande": {
+    "plural": false
+  },
+  "correo no válido": {
+    "plural": false
+  },
+  "debe existir al menos un calendario": {
+    "plural": false
+  },
+  "demasiadas series": {
+    "plural": false
+  },
+  "deshacer no está disponible para eventos repetidos": {
+    "plural": false
+  },
+  "el archivo JSON no es una exportación de Chronos": {
+    "plural": false
+  },
+  "el archivo JSON no tiene el formato de exportación de Chronos": {
+    "plural": false
+  },
+  "el archivo no es un calendario iCalendar (.ics)": {
+    "plural": false
+  },
+  "el archivo no existe o es demasiado grande (máx. 20 MB)": {
+    "plural": false
+  },
+  "el archivo tiene demasiados eventos": {
+    "plural": false
+  },
+  "el color debe tener el formato #RRGGBB": {
+    "plural": false
+  },
+  "el evento es demasiado largo": {
+    "plural": false
+  },
+  "el fin no puede ser anterior al inicio": {
+    "plural": false
+  },
+  "el nombre de la etiqueta no puede estar vacío": {
+    "plural": false
+  },
+  "el nombre del calendario no puede estar vacío": {
+    "plural": false
+  },
+  "el nuevo orden debe incluir cada calendario una vez": {
+    "plural": false
+  },
+  "es demasiado larga": {
+    "plural": false
+  },
+  "fecha de vencimiento no válida": {
+    "plural": false
+  },
+  "fecha fuera de rango": {
+    "plural": false
+  },
+  "fecha no válida": {
+    "plural": false
+  },
+  "formato no compatible: usa un archivo .ics o .json": {
+    "plural": false
+  },
+  "frecuencia no admitida": {
+    "plural": false
+  },
+  "identificador no válido": {
+    "plural": false
+  },
+  "intervalo fuera de rango": {
+    "plural": false
+  },
+  "intervalo no válido": {
+    "plural": false
+  },
+  "iteraciones de Argon2id fuera de rango": {
+    "plural": false
+  },
+  "la exportación es de una versión más nueva de Chronos": {
+    "plural": false
+  },
+  "la tarea necesita un título": {
+    "plural": false
+  },
+  "longitud de sal no válida": {
+    "plural": false
+  },
+  "los enlaces deben empezar por https://, http:// o mailto:": {
+    "plural": false
+  },
+  "memoria de Argon2id fuera de rango": {
+    "plural": false
+  },
+  "no puede estar formada solo por espacios": {
+    "plural": false
+  },
+  "número de repeticiones no válido": {
+    "plural": false
+  },
+  "para cambiar la repetición aplica el cambio a todos los eventos de la serie": {
+    "plural": false
+  },
+  "para cambiar la repetición aplica el cambio a todos los eventos o a los siguientes": {
+    "plural": false
+  },
+  "paralelismo de Argon2id fuera de rango": {
+    "plural": false
+  },
+  "prioridad fuera de rango": {
+    "plural": false
+  },
+  "rango de fechas no válido": {
+    "plural": false
+  },
+  "recordatorio fuera de rango (0 a 4 semanas)": {
+    "plural": false
+  },
+  "regla de repetición no válida": {
+    "plural": false
+  },
+  "sal mal codificada": {
+    "plural": false
+  },
+  "solo puede haber un organizador": {
+    "plural": false
+  },
+  "un evento de día completo debe ocupar días enteros": {
+    "plural": false
+  },
+  "una regla no puede tener a la vez fin por fecha y por número": {
+    "plural": false
+  },
+  "una tarea de día completo debe vencer en una fecha sin hora": {
+    "plural": false
+  },
+  "ya existe una etiqueta con ese nombre": {
+    "plural": false
+  },
+  "zona horaria desconocida": {
+    "plural": false
+  },
+  "{n} min": {
+    "plural": false
+  },
+  "{h} h {m} min": {
+    "plural": false
+  },
+  "{n} h": {
+    "plural": false
+  },
+  "Error inesperado de la aplicación": {
+    "plural": false
+  },
+  "La bóveda todavía no se ha configurado": {
+    "plural": false
+  },
+  "La bóveda ya está configurada": {
+    "plural": false
+  },
+  "La aplicación está bloqueada": {
+    "plural": false
+  },
+  "Contraseña incorrecta": {
+    "plural": false
+  },
+  "La contraseña no cumple los requisitos": {
+    "plural": false
+  },
+  "Algún dato no es válido": {
+    "plural": false
+  },
+  "No se encontró el elemento": {
+    "plural": false
+  },
+  "El archivo de copia está dañado o no es válido": {
+    "plural": false
+  },
+  "Contraseña incorrecta o archivo de copia manipulado": {
+    "plural": false
+  },
+  "Versión no compatible": {
+    "plural": false
+  },
+  "Almacén de claves no válido": {
+    "plural": false
+  },
+  "Se requiere confirmación explícita para sobrescribir los datos": {
+    "plural": false
+  },
+  "Fallo criptográfico": {
+    "plural": false
+  },
+  "Error de base de datos": {
+    "plural": false
+  },
+  "Error al leer o escribir un archivo": {
+    "plural": false
+  },
+  "Error de serialización": {
+    "plural": false
+  },
+  "Error interno de la aplicación": {
+    "plural": false
+  },
+  "No se pudo abrir el navegador": {
+    "plural": false
+  },
+  "Error inesperado": {
+    "plural": false
+  },
+  "primer {day}": {
+    "plural": false
+  },
+  "segundo {day}": {
+    "plural": false
+  },
+  "tercer {day}": {
+    "plural": false
+  },
+  "cuarto {day}": {
+    "plural": false
+  },
+  "último {day}": {
+    "plural": false
+  },
+  "Cada día": {
+    "plural": false
+  },
+  "Cada semana el {day}": {
+    "plural": false
+  },
+  "Cada día laborable (lun–vie)": {
+    "plural": false
+  },
+  "Cada mes el día {n}": {
+    "plural": false
+  },
+  "Cada mes el {nth}": {
+    "plural": false
+  },
+  "Cada año el {date}": {
+    "plural": false
+  },
+  "Cada día laborable": {
+    "plural": false
+  },
+  "{base} el {days}": {
+    "plural": false
+  },
+  "{base} el día {days}": {
+    "plural": false
+  },
+  "{base} el {date}": {
+    "plural": false
+  },
+  "{base}, hasta el {date}": {
+    "plural": false
+  },
+  "El mismo día (00:00)": {
+    "plural": false
+  },
+  "El día anterior a las 9:00": {
+    "plural": false
+  },
+  "Al empezar": {
+    "plural": false
+  },
+  "{h} h {m} min antes": {
+    "plural": false
+  },
+  "Cada {n} días": {
+    "plural": true,
+    "one": "Cada día"
+  },
+  "Cada {n} semanas": {
+    "plural": true,
+    "one": "Cada semana"
+  },
+  "Cada {n} meses": {
+    "plural": true,
+    "one": "Cada mes"
+  },
+  "Cada {n} años": {
+    "plural": true,
+    "one": "Cada año"
+  },
+  "{base}, {n} veces": {
+    "plural": true,
+    "one": "{base}, {n} vez"
+  },
+  "{n} minutos antes": {
+    "plural": true,
+    "one": "{n} minuto antes"
+  },
+  "{n} horas antes": {
+    "plural": true,
+    "one": "{n} hora antes"
+  },
+  "{n} semanas antes": {
+    "plural": true,
+    "one": "{n} semana antes"
+  },
+  "{n} días antes": {
+    "plural": true,
+    "one": "{n} día antes"
+  },
+  "Vencidas": {
+    "plural": false
+  },
+  "Próximas": {
+    "plural": false
+  },
+  "Sin fecha": {
+    "plural": false
+  },
+  "Completadas": {
+    "plural": false
+  },
+  "Mañana": {
+    "plural": false
+  },
+  "Ayer": {
+    "plural": false
+  },
+  "Sin prioridad": {
+    "plural": false
+  },
+  "Baja": {
+    "plural": false
+  },
+  "Media": {
+    "plural": false
+  },
+  "Alta": {
+    "plural": false
+  },
+  "crear evento": {
+    "plural": false
+  },
+  "editar evento repetido": {
+    "plural": false
+  },
+  "editar evento": {
+    "plural": false
+  },
+  "eliminar evento repetido": {
+    "plural": false
+  },
+  "eliminar evento": {
+    "plural": false
+  },
+  "duplicar evento": {
+    "plural": false
+  },
+  "No se pudo iniciar": {
+    "plural": false
+  }
+}

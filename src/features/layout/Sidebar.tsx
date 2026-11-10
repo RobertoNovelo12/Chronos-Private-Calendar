@@ -13,6 +13,7 @@ import { useCalendarStore } from "@/stores/calendarStore";
 import { usePrefsStore } from "@/stores/prefsStore";
 import { toast } from "@/stores/toastStore";
 import { useUiStore } from "@/stores/uiStore";
+import { t } from "@/i18n";
 
 /** Barra lateral izquierda: acciones rápidas, mini calendario, calendarios, tareas y etiquetas. */
 export function Sidebar({ range, onLock }: { range: VisibleRange; onLock: () => void }) {
@@ -25,7 +26,7 @@ export function Sidebar({ range, onLock }: { range: VisibleRange; onLock: () => 
     setBackingUp(true);
     try {
       const rec = await api.backup.create();
-      toast.info(`Copia cifrada creada (${formatBytes(rec.sizeBytes)})`);
+      toast.info(t("Copia cifrada creada ({size})", { size: formatBytes(rec.sizeBytes) }));
     } catch (e) {
       toast.error(errorMessage(e));
     } finally {
@@ -36,7 +37,7 @@ export function Sidebar({ range, onLock }: { range: VisibleRange; onLock: () => 
   return (
     <aside className="flex w-[240px] shrink-0 flex-col bg-surface">
       <div className="flex h-11 shrink-0 items-center justify-between px-2.5">
-        <Button variant="ghost" size="icon" onClick={() => setPrefs({ leftSidebarOpen: false })} aria-label="Ocultar barra lateral" title="Ocultar barra lateral (`)">
+        <Button variant="ghost" size="icon" onClick={() => setPrefs({ leftSidebarOpen: false })} aria-label={t("Ocultar barra lateral")} title={t("Ocultar barra lateral (`)")}>
           <PanelLeft />
         </Button>
         <div className="flex">
@@ -47,12 +48,12 @@ export function Sidebar({ range, onLock }: { range: VisibleRange; onLock: () => 
               setPrefs({ rightPanelOpen: true });
               requestAnimationFrame(() => window.dispatchEvent(new Event("chronos:focus-search")));
             }}
-            aria-label="Buscar"
-            title="Buscar (Ctrl+K)"
+            aria-label={t("Buscar")}
+            title={t("Buscar (Ctrl+K)")}
           >
             <Search />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => void createEventNow()} aria-label="Nuevo evento" title="Nuevo evento (C)">
+          <Button variant="ghost" size="icon" onClick={() => void createEventNow()} aria-label={t("Nuevo evento")} title={t("Nuevo evento (C)")}>
             <SquarePen />
           </Button>
         </div>
@@ -66,17 +67,17 @@ export function Sidebar({ range, onLock }: { range: VisibleRange; onLock: () => 
       </div>
 
       <div className="flex h-11 shrink-0 items-center justify-between px-2.5">
-        <Button variant="ghost" size="icon" onClick={() => setShortcutsOpen(true)} aria-label="Atajos de teclado" title="Atajos de teclado (?)">
+        <Button variant="ghost" size="icon" onClick={() => setShortcutsOpen(true)} aria-label={t("Atajos de teclado")} title={t("Atajos de teclado (?)")}>
           <HelpCircle />
         </Button>
         <div className="flex">
-          <Button variant="ghost" size="icon" onClick={backup} disabled={backingUp} aria-label="Crear copia de seguridad" title="Crear copia de seguridad cifrada">
+          <Button variant="ghost" size="icon" onClick={backup} disabled={backingUp} aria-label={t("Crear copia de seguridad")} title={t("Crear copia de seguridad cifrada")}>
             <HardDriveDownload className={backingUp ? "animate-pulse" : undefined} />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setSettingsOpen(true)} aria-label="Configuración" title="Configuración">
+          <Button variant="ghost" size="icon" onClick={() => setSettingsOpen(true)} aria-label={t("Configuración")} title={t("Configuración")}>
             <Settings />
           </Button>
-          <Button variant="ghost" size="icon" onClick={onLock} aria-label="Bloquear" title="Bloquear (Ctrl+L)">
+          <Button variant="ghost" size="icon" onClick={onLock} aria-label={t("Bloquear")} title={t("Bloquear (Ctrl+L)")}>
             <Lock />
           </Button>
         </div>

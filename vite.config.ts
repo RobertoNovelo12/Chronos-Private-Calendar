@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -18,6 +19,8 @@ export default defineConfig({
     watch: { ignored: ["**/src-tauri/**", "**/crates/**", "**/target/**"] },
   },
   envPrefix: ["VITE_", "TAURI_ENV_"],
+  // Las pruebas usan el español (textos de referencia); cada idioma se comprueba aparte.
+  test: { setupFiles: ["src/test-setup.ts"] },
   build: {
     target: "es2022",
     sourcemap: false,

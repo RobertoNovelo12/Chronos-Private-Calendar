@@ -6,15 +6,16 @@ import { TaskPanel } from "@/features/tasks/TaskPanel";
 import { useSelectedEvent } from "@/stores/eventStore";
 import { usePrefsStore } from "@/stores/prefsStore";
 import { useUiStore } from "@/stores/uiStore";
+import { msg, t } from "@/i18n";
 
 const SHORTCUTS: { label: string; keys: string[] }[] = [
-  { label: "Buscar eventos", keys: ["Ctrl", "K"] },
-  { label: "Nuevo evento", keys: ["C"] },
-  { label: "Nueva tarea", keys: ["Shift", "C"] },
-  { label: "Ir a hoy", keys: ["T"] },
-  { label: "Mostrar/ocultar barra lateral", keys: ["`"] },
-  { label: "Deshacer", keys: ["Ctrl", "Z"] },
-  { label: "Bloquear Chronos", keys: ["Ctrl", "L"] },
+  { label: msg("Buscar eventos"), keys: ["Ctrl", "K"] },
+  { label: msg("Nuevo evento"), keys: ["C"] },
+  { label: msg("Nueva tarea"), keys: ["Shift", "C"] },
+  { label: msg("Ir a hoy"), keys: ["T"] },
+  { label: msg("Mostrar/ocultar barra lateral"), keys: ["`"] },
+  { label: msg("Deshacer"), keys: ["Ctrl", "Z"] },
+  { label: msg("Bloquear Chronos"), keys: ["Ctrl", "L"] },
 ];
 
 /** Panel derecho: buscador + detalles del evento o de la tarea, o atajos útiles. */
@@ -31,7 +32,7 @@ export function RightPanel() {
         <div className="min-w-0 flex-1">
           <SearchBox />
         </div>
-        <Button variant="ghost" size="icon" onClick={() => setPrefs({ rightPanelOpen: false })} aria-label="Ocultar panel" title="Ocultar panel">
+        <Button variant="ghost" size="icon" onClick={() => setPrefs({ rightPanelOpen: false })} aria-label={t("Ocultar panel")} title={t("Ocultar panel")}>
           <PanelRight />
         </Button>
       </div>
@@ -41,11 +42,11 @@ export function RightPanel() {
         <TaskPanel />
       ) : (
         <div className="px-4 pt-6">
-          <h2 className="pb-2 text-[13px] font-semibold text-strong">Atajos útiles</h2>
+          <h2 className="pb-2 text-[13px] font-semibold text-strong">{t("Atajos útiles")}</h2>
           <ul className="space-y-1">
             {SHORTCUTS.map((s) => (
               <li key={s.label} className="flex h-6 items-center justify-between text-[12px] text-muted">
-                <span>{s.label}</span>
+                <span>{t(s.label)}</span>
                 <span className="flex gap-1">
                   {s.keys.map((k) => (
                     <kbd key={k} className="kbd">
@@ -57,7 +58,7 @@ export function RightPanel() {
             ))}
             <li>
               <button className="flex h-6 w-full items-center justify-between text-[12px] text-muted hover:text-strong" onClick={() => setShortcutsOpen(true)}>
-                <span>Todos los atajos de teclado</span>
+                <span>{t("Todos los atajos de teclado")}</span>
                 <kbd className="kbd">?</kbd>
               </button>
             </li>

@@ -11,13 +11,15 @@ import { toast } from "@/stores/toastStore";
 import { usePrefsStore } from "@/stores/prefsStore";
 import { useThemeStore, type ThemePreference } from "@/stores/themeStore";
 import { useUiStore, type SettingsTab } from "@/stores/uiStore";
+import { msg, t, t as tr } from "@/i18n";
+import { LanguageSelect } from "@/i18n/LanguageSelect";
 
 const TABS: { id: SettingsTab; label: string; icon: typeof X }[] = [
-  { id: "general", label: "General", icon: Settings2 },
-  { id: "backups", label: "Copias de seguridad", icon: HardDriveDownload },
-  { id: "data", label: "Importar y exportar", icon: Database },
-  { id: "privacy", label: "Privacidad y seguridad", icon: ShieldCheck },
-  { id: "about", label: "Acerca de", icon: Info },
+  { id: "general", label: msg("General"), icon: Settings2 },
+  { id: "backups", label: msg("Copias de seguridad"), icon: HardDriveDownload },
+  { id: "data", label: msg("Importar y exportar"), icon: Database },
+  { id: "privacy", label: msg("Privacidad y seguridad"), icon: ShieldCheck },
+  { id: "about", label: msg("Acerca de"), icon: Info },
 ];
 
 const NOTIF_KEY = "notifications.show_details";
@@ -50,9 +52,9 @@ export function SettingsDialog() {
         className="flex h-[min(600px,calc(100vh-48px))] w-[min(780px,calc(100vw-48px))] overflow-hidden rounded-xl border border-border-strong bg-popover shadow-2xl"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <nav className="flex w-[200px] shrink-0 flex-col gap-0.5 bg-surface p-2" aria-label="Secciones">
+        <nav className="flex w-[200px] shrink-0 flex-col gap-0.5 bg-surface p-2" aria-label={t("Secciones")}>
           <h2 id="settings-title" className="px-2 pb-2 pt-2 text-[12px] font-semibold text-muted">
-            Configuración
+            {t("Configuración")}
           </h2>
           {TABS.map((t) => (
             <button
@@ -67,14 +69,14 @@ export function SettingsDialog() {
               }`}
             >
               <t.icon className="size-4 shrink-0" />
-              <span className="truncate">{t.label}</span>
+              <span className="truncate">{tr(t.label)}</span>
             </button>
           ))}
         </nav>
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex h-12 shrink-0 items-center justify-between px-6">
-            <h3 className="text-[15px] font-semibold">{current.label}</h3>
-            <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Cerrar">
+            <h3 className="text-[15px] font-semibold">{tr(current.label)}</h3>
+            <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label={t("Cerrar")}>
               <X />
             </Button>
           </div>
@@ -115,28 +117,31 @@ function GeneralTab() {
 
   return (
     <div className="space-y-4 pt-1 text-[13px]">
-      <Row label="Tema">
+      <Row label={t("Idioma")}>
+        <LanguageSelect />
+      </Row>
+      <Row label={t("Tema")}>
         <select
           className={selectCls}
           value={preference}
           onChange={(e) => setPreference(e.target.value as ThemePreference)}
         >
-          <option value="system">Del sistema</option>
-          <option value="light">Claro</option>
-          <option value="dark">Oscuro</option>
+          <option value="system">{t("Del sistema")}</option>
+          <option value="light">{t("Claro")}</option>
+          <option value="dark">{t("Oscuro")}</option>
         </select>
       </Row>
-      <Row label="La semana empieza el">
+      <Row label={t("La semana empieza el")}>
         <select
           className={selectCls}
           value={prefs.weekStartsOn}
           onChange={(e) => prefs.set({ weekStartsOn: Number(e.target.value) as 0 | 1 })}
         >
-          <option value={1}>Lunes</option>
-          <option value={0}>Domingo</option>
+          <option value={1}>{t("Lunes")}</option>
+          <option value={0}>{t("Domingo")}</option>
         </select>
       </Row>
-      <Row label="Horario laboral">
+      <Row label={t("Horario laboral")}>
         <div className="flex items-center gap-1.5">
           <select
             className={selectCls}
@@ -153,7 +158,7 @@ function GeneralTab() {
               <option key={h} value={h}>{`${h}:00`}</option>
             ))}
           </select>
-          <span className="text-muted">a</span>
+          <span className="text-muted">–</span>
           <select
             className={selectCls}
             value={prefs.workEndHour}
@@ -165,7 +170,7 @@ function GeneralTab() {
           </select>
         </div>
       </Row>
-      <Row label="Duración de eventos nuevos">
+      <Row label={t("Duración de eventos nuevos")}>
         <select
           className={selectCls}
           value={prefs.defaultDurationMin}
@@ -173,48 +178,48 @@ function GeneralTab() {
         >
           {[15, 30, 45, 60, 90, 120].map((m) => (
             <option key={m} value={m}>
-              {m < 60 ? `${m} min` : `${m / 60} h`.replace(".5", ",5")}
+              {m < 60 ? t("{n} min", { n: m }) : t("{n} h", { n: m / 60 })}
             </option>
           ))}
         </select>
       </Row>
-      <Row label="Bloqueo automático">
+      <Row label={t("Bloqueo automático")}>
         <select
           className={selectCls}
           value={prefs.autoLockMinutes}
           onChange={(e) => prefs.set({ autoLockMinutes: Number(e.target.value) })}
         >
-          <option value={0}>Desactivado</option>
+          <option value={0}>{t("Desactivado")}</option>
           {[1, 5, 10, 15, 30, 60].map((m) => (
             <option key={m} value={m}>
-              Tras {m} min sin actividad
+              {t("Tras {n} min sin actividad", { n: m })}
             </option>
           ))}
         </select>
       </Row>
-      <Row label="Formato de hora">
+      <Row label={t("Formato de hora")}>
         <select
           className={selectCls}
           value={prefs.timeFormat}
           onChange={(e) => prefs.set({ timeFormat: e.target.value as "12h" | "24h" })}
         >
-          <option value="12h">12 horas (1:00PM)</option>
-          <option value="24h">24 horas (13:00)</option>
+          <option value="12h">{t("12 horas (1:00PM)")}</option>
+          <option value="24h">{t("24 horas (13:00)")}</option>
         </select>
       </Row>
-      <Row label="Notificaciones de recordatorios">
+      <Row label={t("Notificaciones de recordatorios")}>
         <select
           className={selectCls}
           value={showDetails === false ? "hide" : "show"}
           disabled={showDetails === null}
           onChange={(e) => void changeShowDetails(e.target.value === "show")}
         >
-          <option value="show">Mostrar título y lugar</option>
-          <option value="hide">Ocultar detalles</option>
+          <option value="show">{t("Mostrar título y lugar")}</option>
+          <option value="hide">{t("Ocultar detalles")}</option>
         </select>
       </Row>
-      <Row label="Zona horaria">
-        <span className="text-muted">{systemTimeZone()} (del sistema)</span>
+      <Row label={t("Zona horaria")}>
+        <span className="text-muted">{t("{zone} (del sistema)", { zone: systemTimeZone() })}</span>
       </Row>
     </div>
   );

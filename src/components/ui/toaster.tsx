@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToastStore } from "@/stores/toastStore";
+import { t as tr } from "@/i18n";
 
 export function Toaster() {
   const { toasts, dismiss } = useToastStore();
@@ -30,7 +31,7 @@ export function Toaster() {
               {t.action.label}
             </button>
           )}
-          <button onClick={() => dismiss(t.id)} aria-label="Cerrar" className="shrink-0 opacity-60 hover:opacity-100">
+          <button onClick={() => dismiss(t.id)} aria-label={tr("Cerrar")} className="shrink-0 opacity-60 hover:opacity-100">
             <X className="size-3.5" />
           </button>
         </div>

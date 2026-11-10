@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { api } from "@/lib/ipc";
+import { t } from "@/i18n";
 
 type Phase = "loading" | "setup" | "locked" | "unlocked";
 
@@ -26,7 +27,7 @@ export const useVaultStore = create<VaultState>((set) => ({
       const s = await api.vault.status();
       set({ phase: phaseOf(s), bootError: null });
     } catch (e) {
-      set({ bootError: e instanceof Error ? e.message : "No se pudo iniciar" });
+      set({ bootError: e instanceof Error ? e.message : t("No se pudo iniciar") });
     }
   },
   setup: async (password) => {

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { addDays, addMonths, format, isSameDay, isSameMonth, startOfDay, startOfMonth, startOfWeek } from "date-fns";
-import { es } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { MINUTE_MS, formatDuration, formatShortDate, formatTime, monthGridTitle, type WeekStart } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { Popover } from "./popover";
+import { dateLocale, t } from "@/i18n";
 
 const triggerCls =
   "h-7 rounded-md px-1.5 text-[13px] font-medium text-strong hover:bg-surface-hover data-[open=true]:bg-surface-hover";
@@ -102,10 +102,10 @@ export function DateSelect({
         <div className="flex items-center justify-between pb-1">
           <span className="pl-1 text-[13px] font-semibold text-strong">{monthGridTitle(month)}</span>
           <div className="flex">
-            <button className="flex size-6 items-center justify-center rounded text-muted hover:bg-surface-hover" onClick={() => setMonth(addMonths(month, -1))} aria-label="Mes anterior">
+            <button className="flex size-6 items-center justify-center rounded text-muted hover:bg-surface-hover" onClick={() => setMonth(addMonths(month, -1))} aria-label={t("Mes anterior")}>
               <ChevronLeft className="size-4" />
             </button>
-            <button className="flex size-6 items-center justify-center rounded text-muted hover:bg-surface-hover" onClick={() => setMonth(addMonths(month, 1))} aria-label="Mes siguiente">
+            <button className="flex size-6 items-center justify-center rounded text-muted hover:bg-surface-hover" onClick={() => setMonth(addMonths(month, 1))} aria-label={t("Mes siguiente")}>
               <ChevronRight className="size-4" />
             </button>
           </div>
@@ -113,7 +113,7 @@ export function DateSelect({
         <div className="grid grid-cols-7 text-center text-[10px] font-medium text-muted">
           {cells.slice(0, 7).map((d) => (
             <div key={d.getTime()} className="py-1">
-              {format(d, "EEEEEE", { locale: es }).replace(/^./, (c) => c.toUpperCase())}
+              {format(d, "EEEEEE", { locale: dateLocale() }).replace(/^./, (c) => c.toUpperCase())}
             </div>
           ))}
         </div>

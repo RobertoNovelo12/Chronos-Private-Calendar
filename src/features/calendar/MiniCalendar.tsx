@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { addDays, addMonths, format, isSameDay, isSameMonth, startOfMonth, startOfWeek } from "date-fns";
-import { es } from "date-fns/locale";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { monthGridTitle, weekNumber, type VisibleRange } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { useNow } from "@/hooks/useCalendarData";
 import { usePrefsStore } from "@/stores/prefsStore";
 import { useUiStore } from "@/stores/uiStore";
+import { dateLocale, t } from "@/i18n";
 
 /** Mini calendario mensual con números de semana; resalta los días visibles. */
 export function MiniCalendar({ range }: { range: VisibleRange }) {
@@ -34,14 +34,14 @@ export function MiniCalendar({ range }: { range: VisibleRange }) {
           <button
             className="flex size-6 items-center justify-center rounded text-muted hover:bg-surface-hover hover:text-strong"
             onClick={() => setMonth(addMonths(month, -1))}
-            aria-label="Mes anterior"
+            aria-label={t("Mes anterior")}
           >
             <ChevronUp className="size-4" />
           </button>
           <button
             className="flex size-6 items-center justify-center rounded text-muted hover:bg-surface-hover hover:text-strong"
             onClick={() => setMonth(addMonths(month, 1))}
-            aria-label="Mes siguiente"
+            aria-label={t("Mes siguiente")}
           >
             <ChevronDown className="size-4" />
           </button>
@@ -53,7 +53,7 @@ export function MiniCalendar({ range }: { range: VisibleRange }) {
             {showWeekNumbers && <th className="w-5" />}
             {weeks[0]!.map((d) => (
               <th key={d.getTime()} className="pb-1 font-medium">
-                {format(d, "EEEEEE", { locale: es }).replace(/^./, (c) => c.toUpperCase())}
+                {format(d, "EEEEEE", { locale: dateLocale() }).replace(/^./, (c) => c.toUpperCase())}
               </th>
             ))}
           </tr>
@@ -87,7 +87,7 @@ export function MiniCalendar({ range }: { range: VisibleRange }) {
                           !today && "hover:bg-surface-hover",
                           today && "bg-today text-white",
                         )}
-                        aria-label={format(d, "d 'de' LLLL yyyy", { locale: es })}
+                        aria-label={format(d, "PPP", { locale: dateLocale() })}
                       >
                         {d.getDate()}
                       </button>

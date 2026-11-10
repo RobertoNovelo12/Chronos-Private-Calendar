@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { AppShell } from "@/features/layout/AppShell";
 import { UnlockScreen } from "@/features/security/UnlockScreen";
 import { useVaultStore } from "@/stores/vaultStore";
+import { t } from "@/i18n";
 
 export default function App() {
   const { phase, bootError, refresh } = useVaultStore();
@@ -14,7 +15,7 @@ export default function App() {
     return (
       <div className="flex h-full items-center justify-center p-8 text-center">
         <div>
-          <p className="font-medium">No se pudo iniciar Chronos</p>
+          <p className="font-medium">{t("No se pudo iniciar Chronos")}</p>
           <p className="mt-1 text-[13px] text-muted">{bootError}</p>
         </div>
       </div>

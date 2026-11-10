@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Bell, Plus, X } from "lucide-react";
 import { MenuItem, Popover } from "@/components/ui/popover";
 import { REMINDER_PRESETS_ALL_DAY, REMINDER_PRESETS_TIMED, describeReminder } from "@/lib/rrule";
+import { t } from "@/i18n";
 
 /** Pide permiso de notificaciones al sistema (solo lo requiere macOS). */
 async function ensureNotificationPermission() {
@@ -37,7 +38,7 @@ export function RemindersEditor({
             <span>{describeReminder(m, allDay)}</span>
             <button
               className="invisible text-muted hover:text-danger group-hover:visible"
-              aria-label="Quitar recordatorio"
+              aria-label={t("Quitar recordatorio")}
               onClick={() => onChange(reminders.filter((x) => x !== m))}
             >
               <X className="size-3.5" />
@@ -50,7 +51,7 @@ export function RemindersEditor({
             onClick={() => setOpen((v) => !v)}
             className="flex h-7 items-center gap-1 rounded-md px-1.5 text-[13px] text-muted hover:bg-surface-hover hover:text-strong"
           >
-            {reminders.length === 0 ? "Recordatorios" : <><Plus className="size-3.5" /> Añadir recordatorio</>}
+            {reminders.length === 0 ? t("Recordatorios") : <><Plus className="size-3.5" /> {t("Añadir recordatorio")}</>}
           </button>
         )}
         <Popover open={open} onClose={() => setOpen(false)} anchorRef={ref} className="w-[230px]">
@@ -66,7 +67,7 @@ export function RemindersEditor({
               {describeReminder(m, allDay)}
             </MenuItem>
           ))}
-          {options.length === 0 && <div className="px-2 py-1.5 text-[12px] text-muted">No hay más opciones</div>}
+          {options.length === 0 && <div className="px-2 py-1.5 text-[12px] text-muted">{t("No hay más opciones")}</div>}
         </Popover>
       </div>
     </div>

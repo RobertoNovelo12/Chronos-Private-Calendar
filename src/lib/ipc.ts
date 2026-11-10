@@ -32,6 +32,8 @@ import type {
   RestoreReport,
   VaultStatus,
 } from "@/types/domain";
+import { getLanguage, intlLocale, msg, t } from "@/i18n";
+import "@/i18n/backend";
 
 export class IpcError extends Error {
   readonly code: string;
@@ -51,7 +53,7 @@ async function call<T>(cmd: string, args?: Record<string, unknown>): Promise<T> 
     return await invoke<T>(cmd, args);
   } catch (e) {
     if (isCommandError(e)) throw new IpcError(e.code, e.message);
-    throw new IpcError("internal", typeof e === "string" ? e : "Error inesperado de la aplicación");
+    throw new IpcError("internal", typeof e === "string" ? e : t("Error inesperado de la aplicación"));
   }
 }
 
@@ -132,12 +134,51 @@ export const api = {
   },
   about: {
     info: () => call<AboutInfo>("app_about"),
+    /** Idioma de las notificaciones y diálogos que genera el backend. */
+    setLanguage: (lang: string) => call<boolean>("app_set_language", { lang }),
     /** Abre la página de donaciones (URL fija en Rust) en el navegador. */
     openDonation: () => call<void>("open_donation_link"),
   },
 };
 
+/** Mensaje por código de error (cuando el texto del backend no está traducido). */
+const CODE_MESSAGES: Record<string, string> = {
+  not_initialized: msg("La bóveda todavía no se ha configurado"),
+  already_initialized: msg("La bóveda ya está configurada"),
+  locked: msg("La aplicación está bloqueada"),
+  invalid_password: msg("Contraseña incorrecta"),
+  weak_password: msg("La contraseña no cumple los requisitos"),
+  validation: msg("Algún dato no es válido"),
+  not_found: msg("No se encontró el elemento"),
+  corrupt_backup: msg("El archivo de copia está dañado o no es válido"),
+  backup_authentication: msg("Contraseña incorrecta o archivo de copia manipulado"),
+  unsupported_version: msg("Versión no compatible"),
+  keystore: msg("Almacén de claves no válido"),
+  confirmation_required: msg("Se requiere confirmación explícita para sobrescribir los datos"),
+  crypto: msg("Fallo criptográfico"),
+  database: msg("Error de base de datos"),
+  io: msg("Error al leer o escribir un archivo"),
+  serialization: msg("Error de serialización"),
+  internal: msg("Error interno de la aplicación"),
+  open_failed: msg("No se pudo abrir el navegador"),
+};
+
+/** Prefijos con los que Rust envuelve el detalle («datos no válidos: …»). */
+const DETAIL_PREFIX = /^(datos no válidos|la contraseña no cumple los requisitos): /;
+
+const cap = (text: string) => text.charAt(0).toLocaleUpperCase(intlLocale()) + text.slice(1);
+
+/**
+ * Texto para mostrar un error. En español se usa el mensaje del backend; en
+ * otros idiomas, su traducción si existe (detalles de validación incluidos) o
+ * un mensaje genérico según el código.
+ */
 export function errorMessage(e: unknown): string {
-  const text = e instanceof Error ? e.message : "Error inesperado";
-  return text.charAt(0).toLocaleUpperCase("es") + text.slice(1);
+  if (!(e instanceof Error)) return t("Error inesperado");
+  if (getLanguage() === "es" || !(e instanceof IpcError)) return cap(e.message);
+  const detail = e.message.replace(DETAIL_PREFIX, "");
+  const translated = t(detail);
+  if (translated !== detail) return cap(translated);
+  const generic = CODE_MESSAGES[e.code];
+  return generic ? t(generic) : cap(e.message);
 }

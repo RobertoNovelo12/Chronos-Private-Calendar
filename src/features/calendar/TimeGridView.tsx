@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { addDays, format, isSameDay, startOfDay } from "date-fns";
-import { es } from "date-fns/locale";
 import { Minus, Plus, PlusIcon } from "lucide-react";
 import { Popover } from "@/components/ui/popover";
 import { TimeZonePicker } from "@/components/ui/timezone-picker";
@@ -17,6 +16,7 @@ import { MAX_CUSTOM_DAYS, usePrefsStore } from "@/stores/prefsStore";
 import { DRAFT_ID } from "@/stores/eventStore";
 import { useUiStore } from "@/stores/uiStore";
 import type { CalendarEvent } from "@/types/domain";
+import { dateLocale, t } from "@/i18n";
 
 const HOUR_H = 48;
 const PX_PER_MIN = HOUR_H / 60;
@@ -271,7 +271,7 @@ export function TimeGridView({ days }: Props) {
                   "flex h-8 items-center justify-center gap-[3px] truncate rounded-md text-[13px] hover:bg-surface-hover",
                   today ? "font-semibold text-strong" : "text-muted",
                 )}
-                title="Ver este día"
+                title={t("Ver este día")}
               >
                 <span>{weekdayLabel(d)}</span>
                 <span
@@ -293,10 +293,10 @@ export function TimeGridView({ days }: Props) {
         <div className="flex shrink-0 items-start justify-end whitespace-nowrap pr-2 pt-[5px] text-[10px] font-medium text-muted" style={{ width: gutterW }}>
           {laneRows > LANE_MAX_ROWS ? (
             <button className="hover:text-foreground" onClick={() => setLaneExpanded((v) => !v)}>
-              {laneExpanded ? "Menos" : "Más"}
+              {laneExpanded ? t("Menos") : t("Más")}
             </button>
           ) : (
-            "Todo el día"
+            t("Todo el día")
           )}
         </div>
         <div
@@ -308,7 +308,7 @@ export function TimeGridView({ days }: Props) {
           onPointerUp={onLanePointerUp}
           onPointerLeave={() => setHoverSlot(null)}
           onContextMenu={onLaneContextMenu}
-          title="Haz clic o arrastra para crear un evento de día completo"
+          title={t("Haz clic o arrastra para crear un evento de día completo")}
         >
           {days.map((d, i) => (
             <div key={d.getTime()} className="absolute inset-y-0 border-l border-grid" style={{ left: `${(i / n) * 100}%` }} />
@@ -345,9 +345,9 @@ export function TimeGridView({ days }: Props) {
                     top: 2 + s.row * LANE_ROW_H,
                     height: LANE_ROW_H - 3,
                   }}
-                  title={`${s.event.title || "Sin título"} · ${formatEventTime(s.event)}`}
+                  title={`${s.event.title || t("Sin título")} · ${formatEventTime(s.event)}`}
                 >
-                  <span className="truncate">{s.event.title || "Sin título"}</span>
+                  <span className="truncate">{s.event.title || t("Sin título")}</span>
                 </div>
               );
             })}
@@ -360,7 +360,7 @@ export function TimeGridView({ days }: Props) {
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => setLaneExpanded(true)}
               >
-                +{h} más
+                {t("+{n} más", { n: h })}
               </button>
             ) : null,
           )}
@@ -462,12 +462,12 @@ export function TimeGridView({ days }: Props) {
                 >
                   {compact ? (
                     <div className="truncate">
-                      <span className="font-semibold">{s.event.title || "Sin título"}</span>
+                      <span className="font-semibold">{s.event.title || t("Sin título")}</span>
                       <span className="opacity-80">, {formatTime(eventStart(s.event))}</span>
                     </div>
                   ) : (
                     <>
-                      <div className="line-clamp-2 font-semibold">{s.event.title || "Sin título"}</div>
+                      <div className="line-clamp-2 font-semibold">{s.event.title || t("Sin título")}</div>
                       <div className="truncate opacity-80">{formatEventTime(s.event)}</div>
                       {s.event.location && heightMin >= 75 && <div className="truncate opacity-75">{s.event.location}</div>}
                     </>
@@ -569,12 +569,12 @@ function TimeZoneHeader({
           "flex h-5 shrink-0 items-center justify-center rounded px-1 hover:bg-surface-hover hover:text-strong",
           secondary ? "w-12 justify-end text-faint" : "w-5",
         )}
-        title={secondary ? `${cityName(secondary)} · cambiar o quitar` : "Añadir zona horaria"}
-        aria-label={secondary ? "Cambiar segunda zona horaria" : "Añadir zona horaria"}
+        title={secondary ? t("{city} · cambiar o quitar", { city: cityName(secondary) }) : t("Añadir zona horaria")}
+        aria-label={secondary ? t("Cambiar segunda zona horaria") : t("Añadir zona horaria")}
       >
         {secondary ? formatOffsetShort(offsetMinutes(secondary)) : <PlusIcon className="size-3" />}
       </button>
-      <span className="ml-auto" title="Zona horaria del sistema">
+      <span className="ml-auto" title={t("Zona horaria del sistema")}>
         {primaryLabel.replace("-", "−")}
       </span>
       <TimeZonePicker
@@ -583,7 +583,7 @@ function TimeZoneHeader({
         anchorRef={ref}
         selected={secondary}
         onSelect={(tz) => onChange(tz)}
-        footer={secondary ? { label: "Quitar segunda zona horaria", run: () => onChange(null) } : undefined}
+        footer={secondary ? { label: t("Quitar segunda zona horaria"), run: () => onChange(null) } : undefined}
       />
     </div>
   );
@@ -610,8 +610,8 @@ function DaysStepper({ count }: { count: number }) {
         ref={ref}
         onClick={() => setOpen((v) => !v)}
         className="absolute right-0.5 top-1/2 z-10 flex size-5 -translate-y-1/2 items-center justify-center rounded text-[12px] text-muted hover:bg-surface-hover hover:text-strong"
-        title="Número de días"
-        aria-label="Ajustar número de días"
+        title={t("Número de días")}
+        aria-label={t("Ajustar número de días")}
       >
         ±
       </button>
@@ -620,7 +620,7 @@ function DaysStepper({ count }: { count: number }) {
           onClick={() => change(count - 1)}
           disabled={count <= 1}
           className="flex size-7 items-center justify-center rounded-md text-strong hover:bg-surface-hover disabled:opacity-40"
-          aria-label="Menos días"
+          aria-label={t("Menos días")}
         >
           <Minus className="size-3.5" />
         </button>
@@ -629,7 +629,7 @@ function DaysStepper({ count }: { count: number }) {
           onClick={() => change(count + 1)}
           disabled={count >= MAX_CUSTOM_DAYS}
           className="flex size-7 items-center justify-center rounded-md bg-control text-strong hover:bg-surface-hover disabled:opacity-40"
-          aria-label="Más días"
+          aria-label={t("Más días")}
         >
           <Plus className="size-3.5" />
         </button>
@@ -640,7 +640,7 @@ function DaysStepper({ count }: { count: number }) {
 
 /** "Dom", "Lun"… */
 function weekdayLabel(d: Date): string {
-  const w = format(d, "EEE", { locale: es }).replace(".", "");
+  const w = format(d, "EEE", { locale: dateLocale() }).replace(".", "");
   return w.charAt(0).toUpperCase() + w.slice(1);
 }
 
@@ -690,10 +690,10 @@ function TaskStrip({ days, gutterW, scrollbarW }: { days: Date[]; gutterW: numbe
       <div className="flex shrink-0 items-start justify-end whitespace-nowrap pr-2 pt-[5px] text-[10px] font-medium text-muted" style={{ width: gutterW }}>
         {most > TASKS_MAX_ROWS ? (
           <button className="hover:text-foreground" onClick={() => setExpanded((v) => !v)}>
-            {expanded ? "Menos" : "Tareas"}
+            {expanded ? t("Menos") : t("Tareas")}
           </button>
         ) : (
-          "Tareas"
+          t("Tareas")
         )}
       </div>
       <div className="grid flex-1 py-0.5" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
@@ -707,7 +707,7 @@ function TaskStrip({ days, gutterW, scrollbarW }: { days: Date[]; gutterW: numbe
               ))}
               {hidden > 0 && (
                 <button className="h-[20px] px-1.5 text-[11px] text-muted hover:text-foreground" onClick={() => setExpanded(true)}>
-                  +{hidden + 1} más
+                  {t("+{n} más", { n: hidden + 1 })}
                 </button>
               )}
             </div>

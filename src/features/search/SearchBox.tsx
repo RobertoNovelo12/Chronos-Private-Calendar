@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { eventStart, formatEventTime } from "@/lib/dates";
 import { api, errorMessage } from "@/lib/ipc";
 import { eventColor } from "@/lib/layout";
 import { useCalendarMap } from "@/hooks/useCalendarData";
 import { useUiStore } from "@/stores/uiStore";
 import type { CalendarEvent } from "@/types/domain";
+import { dateLocale, t } from "@/i18n";
 
 /** Buscador local: consulta la base cifrada a través del backend. */
 export function SearchBox() {
@@ -81,13 +81,13 @@ export function SearchBox() {
               open(results[active]!);
             }
           }}
-          placeholder="Buscar eventos"
+          placeholder={t("Buscar eventos")}
           spellCheck={false}
           className="h-8 w-full rounded-md bg-transparent pl-8 pr-7 text-[13px] text-strong placeholder:text-muted hover:bg-surface-hover focus:bg-surface-hover focus:outline-none"
-          title="Buscar (/ o Ctrl+K)"
+          title={t("Buscar (/ o Ctrl+K)")}
         />
         {query && (
-          <button className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground" onClick={() => setQuery("")} aria-label="Limpiar">
+          <button className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground" onClick={() => setQuery("")} aria-label={t("Limpiar")}>
             <X className="size-3.5" />
           </button>
         )}
@@ -95,7 +95,7 @@ export function SearchBox() {
       {(results || error) && (
         <div className="absolute inset-x-1 top-full z-40 mt-1 max-h-80 overflow-y-auto rounded-lg border border-border-strong bg-popover p-1 shadow-xl">
           {error && <p className="px-2 py-1.5 text-[12px] text-danger">{error}</p>}
-          {results?.length === 0 && <p className="px-2 py-1.5 text-[12px] text-muted">Sin resultados</p>}
+          {results?.length === 0 && <p className="px-2 py-1.5 text-[12px] text-muted">{t("Sin resultados")}</p>}
           {results?.map((e, i) => (
             <button
               key={e.id}
@@ -105,9 +105,9 @@ export function SearchBox() {
             >
               <span className="mt-1 size-2 shrink-0 rounded-full" style={{ background: eventColor(e, calendars.get(e.calendarId)?.color) }} />
               <span className="min-w-0">
-                <span className="block truncate text-[13px]">{e.title || "Sin título"}</span>
+                <span className="block truncate text-[13px]">{e.title || t("Sin título")}</span>
                 <span className="block text-[11px] text-muted">
-                  {format(eventStart(e), "d MMM yyyy", { locale: es })} · {formatEventTime(e)}
+                  {format(eventStart(e), "d MMM yyyy", { locale: dateLocale() })} · {formatEventTime(e)}
                 </span>
               </span>
             </button>

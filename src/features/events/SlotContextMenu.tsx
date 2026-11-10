@@ -8,6 +8,7 @@ import { usePrefsStore } from "@/stores/prefsStore";
 import { useUiStore } from "@/stores/uiStore";
 import { createEventAt } from "./actions";
 import { pasteEvent, useClipboard } from "./clipboard";
+import { t } from "@/i18n";
 
 const MOD = typeof navigator !== "undefined" && /Mac/i.test(navigator.platform) ? "⌘" : "Ctrl+";
 
@@ -46,11 +47,11 @@ export function SlotContextMenu() {
 
   return (
     <ContextMenuShell key={`${menu.x}-${menu.y}`} x={menu.x} y={menu.y} onClose={close} keys={{ c: create, "shift+c": task, "mod+v": paste }}>
-      <ContextMenuItem icon={<Plus />} label="Crear evento" shortcut="C" onSelect={create} />
-      <ContextMenuItem icon={<CircleCheck />} label="Crear tarea" shortcut="⇧C" onSelect={task} />
+      <ContextMenuItem icon={<Plus />} label={t("Crear evento")} shortcut="C" onSelect={create} />
+      <ContextMenuItem icon={<CircleCheck />} label={t("Crear tarea")} shortcut="⇧C" onSelect={task} />
       <ContextMenuItem
         icon={<ClipboardPaste />}
-        label="Pegar evento"
+        label={t("Pegar evento")}
         shortcut={`${MOD}V`}
         disabled={!copied}
         onSelect={paste}

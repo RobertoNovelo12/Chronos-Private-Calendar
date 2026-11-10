@@ -6,6 +6,7 @@
 //! al importar (extensión y tamaño).
 
 use crate::errors::{CommandError, CommandResult};
+use crate::i18n::{self, Key};
 use crate::state::AppState;
 use chronos_core::backup::{self, BackupKind, BackupRecord};
 use chronos_core::interop::{
@@ -62,7 +63,7 @@ pub async fn export_data(
 ) -> CommandResult<Option<ExportReport>> {
     let (format, ext, label) = match kind {
         ExportKind::Ics => (Format::Ics, "ics", "iCalendar"),
-        ExportKind::Json => (Format::Json, "json", "JSON de Chronos"),
+        ExportKind::Json => (Format::Json, "json", i18n::text(Key::ChronosJson)),
         ExportKind::Csv => (Format::Csv, "csv", "CSV"),
     };
     let base: String = suggested_name
@@ -81,7 +82,7 @@ pub async fn export_data(
     let Some(path) = run_dialog(move || {
         app.dialog()
             .file()
-            .set_title("Exportar")
+            .set_title(i18n::text(Key::Export))
             .add_filter(label, &[ext])
             .set_file_name(name)
             .blocking_save_file()
@@ -130,9 +131,9 @@ pub async fn import_pick(
     let Some(path) = run_dialog(move || {
         app.dialog()
             .file()
-            .set_title("Importar")
+            .set_title(i18n::text(Key::Import))
             .add_filter(
-                "Calendarios y copias",
+                i18n::text(Key::CalendarsAndBackups),
                 &["ics", "json", backup::FILE_EXTENSION],
             )
             .blocking_pick_file()
@@ -295,7 +296,7 @@ pub async fn backup_choose_dir(
         match run_dialog(move || {
             app.dialog()
                 .file()
-                .set_title("Carpeta de copias")
+                .set_title(i18n::text(Key::BackupFolder))
                 .blocking_pick_folder()
                 .and_then(file_path)
         })
@@ -341,7 +342,7 @@ pub async fn backup_create_in(
         match run_dialog(move || {
             app.dialog()
                 .file()
-                .set_title("Guardar copia cifrada en…")
+                .set_title(i18n::text(Key::SaveBackupIn))
                 .blocking_pick_folder()
                 .and_then(file_path)
         })
@@ -374,8 +375,8 @@ pub async fn backup_pick_file(app: AppHandle) -> CommandResult<Option<String>> {
     let p = run_dialog(move || {
         app.dialog()
             .file()
-            .set_title("Elegir copia de seguridad")
-            .add_filter("Copia de Chronos", &[backup::FILE_EXTENSION])
+            .set_title(i18n::text(Key::ChooseBackup))
+            .add_filter(i18n::text(Key::ChronosBackup), &[backup::FILE_EXTENSION])
             .blocking_pick_file()
             .and_then(file_path)
     })

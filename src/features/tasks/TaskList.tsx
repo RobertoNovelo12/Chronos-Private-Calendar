@@ -12,6 +12,7 @@ import { useUiStore } from "@/stores/uiStore";
 import type { Task } from "@/types/domain";
 import { toggleTask } from "./actions";
 import { TaskCheckbox } from "./TaskCheckbox";
+import { t, tp } from "@/i18n";
 
 const GROUPS: TaskGroupId[] = ["overdue", "today", "upcoming", "someday", "done"];
 /** Máximo de tareas visibles por grupo antes de «Ver todas». */
@@ -45,7 +46,7 @@ export function TaskList() {
     <section className="mt-4 px-2">
       <div className="flex h-6 items-center justify-between px-1.5 pb-1">
         <span className="text-[12px] font-medium text-muted">
-          Tareas{pending > 0 && <span className="ml-1 tabular-nums text-faint">{pending}</span>}
+          {t("Tareas")}{pending > 0 && <span className="ml-1 tabular-nums text-faint">{pending}</span>}
         </span>
       </div>
 
@@ -64,7 +65,7 @@ export function TaskList() {
               aria-expanded={open[g]}
             >
               <ChevronRight className={cn("size-3 transition-transform", open[g] && "rotate-90")} />
-              {TASK_GROUP_LABEL[g]}
+              {t(TASK_GROUP_LABEL[g])}
               <span className="tabular-nums text-faint">{list.length}</span>
             </button>
             {open[g] && (
@@ -78,7 +79,7 @@ export function TaskList() {
                       className="h-6 w-full rounded-md px-1.5 pl-7 text-left text-[12px] text-muted hover:bg-surface-hover hover:text-strong"
                       onClick={() => setExpanded((x) => ({ ...x, [g]: !x[g] }))}
                     >
-                      {expanded[g] ? "Ver menos" : `Ver las ${list.length}`}
+                      {expanded[g] ? t("Ver menos") : t("Ver las {n}", { n: list.length })}
                     </button>
                   </li>
                 )}
@@ -95,9 +96,9 @@ export function TaskList() {
         <button
           onClick={() => setAdding(true)}
           className="mt-0.5 flex h-7 w-full items-center gap-2 rounded-md px-1.5 text-[13px] font-medium text-muted hover:bg-surface-hover hover:text-strong"
-          title="Añadir tarea (Shift+C)"
+          title={t("Añadir tarea (Shift+C)")}
         >
-          <Plus className="size-4" /> Añadir tarea
+          <Plus className="size-4" /> {t("Añadir tarea")}
         </button>
       )}
     </section>
@@ -129,7 +130,7 @@ function TaskRow({ task, now }: { task: Task; now: Date }) {
         color={color}
         onToggle={() => void toggleTask(task.id)}
         size={14}
-        label={done ? `Marcar «${task.title}» como pendiente` : `Completar «${task.title}»`}
+        label={done ? t("Marcar «{title}» como pendiente", { title: task.title }) : t("Completar «{title}»", { title: task.title })}
       />
       <span className="min-w-0 flex-1">
         <span className={cn("block truncate text-[13px]", done ? "text-faint line-through" : "text-strong")}>
@@ -172,7 +173,7 @@ function QuickAdd({ onDone }: { onDone: () => void }) {
         onChange={(e) => setTitle(e.target.value)}
         onBlur={() => !title.trim() && onDone()}
         onKeyDown={(e) => e.key === "Escape" && onDone()}
-        placeholder="Nueva tarea sin fecha · Enter"
+        placeholder={t("Nueva tarea sin fecha · Enter")}
         className="h-7 min-w-0 flex-1 bg-transparent text-[13px] text-strong placeholder:text-faint focus:outline-none"
       />
     </form>
@@ -188,13 +189,13 @@ function ClearCompleted({ count }: { count: number }) {
         className="flex h-6 w-full items-center gap-1.5 rounded-md px-1.5 pl-7 text-left text-[12px] text-muted hover:bg-surface-hover hover:text-danger"
         onClick={() => setAsking(true)}
       >
-        <Trash2 className="size-3" /> Eliminar completadas
+        <Trash2 className="size-3" /> {t("Eliminar completadas")}
       </button>
       <ConfirmDialog
         open={asking}
-        title="¿Eliminar las tareas completadas?"
-        description={count === 1 ? "Se eliminará 1 tarea completada de forma permanente." : `Se eliminarán ${count} tareas completadas de forma permanente.`}
-        confirmLabel="Eliminar"
+        title={t("¿Eliminar las tareas completadas?")}
+        description={tp(count, "Se eliminará {n} tarea completada de forma permanente.", "Se eliminarán {n} tareas completadas de forma permanente.")}
+        confirmLabel={t("Eliminar")}
         destructive
         onCancel={() => setAsking(false)}
         onConfirm={async () => {

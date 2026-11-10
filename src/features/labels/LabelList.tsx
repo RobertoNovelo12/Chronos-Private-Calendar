@@ -9,6 +9,7 @@ import { errorMessage } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { nextLabelColor, useLabelStore } from "@/stores/labelStore";
 import type { Label } from "@/types/domain";
+import { t } from "@/i18n";
 
 /** Etiquetas en la barra lateral: pulsar una filtra el calendario por ella. */
 export function LabelList({ onError }: { onError: (message: string) => void }) {
@@ -29,14 +30,14 @@ export function LabelList({ onError }: { onError: (message: string) => void }) {
   return (
     <section className="mt-4 px-2 pb-3">
       <div className="flex h-6 items-center justify-between px-1.5 pb-1">
-        <span className="text-[12px] font-medium text-muted">Etiquetas</span>
+        <span className="text-[12px] font-medium text-muted">{t("Etiquetas")}</span>
         {filterId && (
           <button
             onClick={() => setFilter(null)}
             className="flex items-center gap-1 rounded px-1 text-[11px] text-accent hover:bg-surface-hover"
-            title="Mostrar todos los eventos"
+            title={t("Mostrar todos los eventos")}
           >
-            <FilterX className="size-3" /> Quitar filtro
+            <FilterX className="size-3" /> {t("Quitar filtro")}
           </button>
         )}
       </div>
@@ -74,15 +75,15 @@ export function LabelList({ onError }: { onError: (message: string) => void }) {
           onClick={() => setAdding(true)}
           className="mt-1 flex h-7 w-full items-center gap-2 rounded-md px-1.5 text-[13px] font-medium text-muted hover:bg-surface-hover hover:text-strong"
         >
-          <Plus className="size-4" /> Añadir etiqueta
+          <Plus className="size-4" /> {t("Añadir etiqueta")}
         </button>
       )}
 
       <ConfirmDialog
         open={pendingDelete !== null}
-        title="¿Eliminar etiqueta?"
-        description={`Se quitará “${pendingDelete?.name ?? ""}” de todos los eventos. Los eventos no se eliminan.`}
-        confirmLabel="Eliminar"
+        title={t("¿Eliminar etiqueta?")}
+        description={t("Se quitará “{name}” de todos los eventos. Los eventos no se eliminan.", { name: pendingDelete?.name ?? "" })}
+        confirmLabel={t("Eliminar")}
         destructive
         busy={busy}
         onCancel={() => setPendingDelete(null)}
@@ -136,14 +137,14 @@ function LabelRow({
         onClick={onFilter}
         onDoubleClick={onEdit}
         aria-pressed={active}
-        title={active ? "Mostrar todos los eventos" : `Mostrar solo eventos con “${label.name}”`}
+        title={active ? t("Mostrar todos los eventos") : t("Mostrar solo eventos con “{name}”", { name: label.name })}
       >
         <Tag className="size-3.5 shrink-0" style={{ color: label.color }} strokeWidth={2.5} />
         <span className={cn("min-w-0 truncate text-[13px] font-medium", dimmed ? "text-faint" : "text-strong")}>
           {label.name}
         </span>
       </button>
-      {active && <Filter className="size-3.5 shrink-0 text-accent group-hover:hidden" aria-label="Filtro activo" />}
+      {active && <Filter className="size-3.5 shrink-0 text-accent group-hover:hidden" aria-label={t("Filtro activo")} />}
       <button
         ref={moreRef}
         onClick={() => setMenu((v) => !v)}
@@ -151,21 +152,21 @@ function LabelRow({
           "hidden size-5 shrink-0 items-center justify-center rounded text-muted hover:bg-border-strong hover:text-strong group-hover:flex",
           menu && "flex",
         )}
-        aria-label={`Opciones de ${label.name}`}
+        aria-label={t("Opciones de {name}", { name: label.name })}
       >
         <MoreHorizontal className="size-3.5" />
       </button>
       <Popover open={menu} onClose={() => setMenu(false)} anchorRef={moreRef} align="start" className="min-w-[200px]">
         <MenuItem onClick={act(onFilter)}>
           {active ? <FilterX className="size-3.5 text-muted" /> : <Filter className="size-3.5 text-muted" />}
-          {active ? "Quitar filtro" : "Mostrar solo esta etiqueta"}
+          {active ? t("Quitar filtro") : t("Mostrar solo esta etiqueta")}
         </MenuItem>
         <MenuItem onClick={act(onEdit)}>
-          <Pencil className="size-3.5 text-muted" /> Editar nombre y color
+          <Pencil className="size-3.5 text-muted" /> {t("Editar nombre y color")}
         </MenuItem>
         <MenuSeparator />
         <MenuItem danger onClick={act(onDelete)}>
-          <Trash2 className="size-3.5" /> Eliminar etiqueta
+          <Trash2 className="size-3.5" /> {t("Eliminar etiqueta")}
         </MenuItem>
       </Popover>
     </li>
@@ -199,14 +200,14 @@ function LabelEditor({
       className="my-1 space-y-2 rounded-lg border border-border-strong bg-popover p-2"
       onKeyDown={(e) => e.key === "Escape" && onCancel()}
     >
-      <Input ref={ref} value={name} maxLength={100} placeholder="Nombre de la etiqueta" onChange={(e) => setName(e.target.value)} className="h-8" />
+      <Input ref={ref} value={name} maxLength={100} placeholder={t("Nombre de la etiqueta")} onChange={(e) => setName(e.target.value)} className="h-8" />
       <ColorPicker value={color} onChange={setColor} />
       <div className="flex justify-end gap-1.5">
         <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancelar
+          {t("Cancelar")}
         </Button>
         <Button type="submit" size="sm" disabled={!name.trim()}>
-          Guardar
+          {t("Guardar")}
         </Button>
       </div>
     </form>

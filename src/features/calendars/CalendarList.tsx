@@ -8,6 +8,7 @@ import { errorMessage } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useCalendarStore } from "@/stores/calendarStore";
 import type { Calendar } from "@/types/domain";
+import { t } from "@/i18n";
 
 export const CALENDAR_COLORS = [
   "#2f80ed", "#eb5757", "#f2994a", "#f2c94c", "#27ae60",
@@ -44,7 +45,7 @@ export function CalendarList({ onError }: Props) {
 
   return (
     <section className="px-2">
-      <div className="px-1.5 pb-1 text-[12px] font-medium text-muted">En este equipo</div>
+      <div className="px-1.5 pb-1 text-[12px] font-medium text-muted">{t("En este equipo")}</div>
       <ul>
         {calendars.map((cal, i) =>
           editingId === cal.id ? (
@@ -82,15 +83,15 @@ export function CalendarList({ onError }: Props) {
           onClick={() => setAdding(true)}
           className="mt-1 flex h-7 w-full items-center gap-2 rounded-md px-1.5 text-[13px] font-medium text-muted hover:bg-surface-hover hover:text-strong"
         >
-          <Plus className="size-4" /> Añadir calendario
+          <Plus className="size-4" /> {t("Añadir calendario")}
         </button>
       )}
 
       <ConfirmDialog
         open={pendingDelete !== null}
-        title="¿Eliminar calendario?"
-        description={`Se eliminarán “${pendingDelete?.name ?? ""}” y todos sus eventos de forma permanente. Esta acción no se puede deshacer.`}
-        confirmLabel="Eliminar"
+        title={t("¿Eliminar calendario?")}
+        description={t("Se eliminarán “{name}” y todos sus eventos de forma permanente. Esta acción no se puede deshacer.", { name: pendingDelete?.name ?? "" })}
+        confirmLabel={t("Eliminar")}
         destructive
         busy={busy}
         onCancel={() => setPendingDelete(null)}
@@ -145,7 +146,7 @@ function CalendarRow({
       <button
         role="checkbox"
         aria-checked={cal.isVisible}
-        aria-label={`${cal.isVisible ? "Ocultar" : "Mostrar"} ${cal.name}`}
+        aria-label={`${cal.isVisible ? t("Ocultar") : t("Mostrar")} ${cal.name}`}
         onClick={onToggle}
         className="flex size-[15px] shrink-0 items-center justify-center rounded-[4px]"
         style={{
@@ -163,9 +164,9 @@ function CalendarRow({
       >
         {cal.name}
       </button>
-      {cal.isDefault && <span className="shrink-0 text-[12px] text-muted group-hover:hidden">Predeterminado</span>}
+      {cal.isDefault && <span className="shrink-0 text-[12px] text-muted group-hover:hidden">{t("Predeterminado")}</span>}
       <span className="ml-auto flex shrink-0 items-center">
-        {!cal.isVisible && <EyeOff className="size-3.5 text-faint group-hover:hidden" aria-label="Oculto" />}
+        {!cal.isVisible && <EyeOff className="size-3.5 text-faint group-hover:hidden" aria-label={t("Oculto")} />}
         <button
           ref={moreRef}
           onClick={() => setMenu((v) => !v)}
@@ -173,35 +174,35 @@ function CalendarRow({
             "hidden size-5 items-center justify-center rounded text-muted hover:bg-border-strong hover:text-strong group-hover:flex",
             menu && "flex",
           )}
-          aria-label={`Opciones de ${cal.name}`}
+          aria-label={t("Opciones de {name}", { name: cal.name })}
         >
           <MoreHorizontal className="size-3.5" />
         </button>
       </span>
       <Popover open={menu} onClose={() => setMenu(false)} anchorRef={moreRef} align="start" className="min-w-[200px]">
         <MenuItem onClick={act(onEdit)}>
-          <Pencil className="size-3.5 text-muted" /> Editar nombre y color
+          <Pencil className="size-3.5 text-muted" /> {t("Editar nombre y color")}
         </MenuItem>
         {!cal.isDefault && (
           <MenuItem onClick={act(onDefault)}>
-            <Star className="size-3.5 text-muted" /> Hacer predeterminado
+            <Star className="size-3.5 text-muted" /> {t("Hacer predeterminado")}
           </MenuItem>
         )}
         {!first && (
           <MenuItem onClick={act(() => onMove(-1))}>
-            <ArrowUp className="size-3.5 text-muted" /> Subir
+            <ArrowUp className="size-3.5 text-muted" /> {t("Subir")}
           </MenuItem>
         )}
         {!last && (
           <MenuItem onClick={act(() => onMove(1))}>
-            <ArrowDown className="size-3.5 text-muted" /> Bajar
+            <ArrowDown className="size-3.5 text-muted" /> {t("Bajar")}
           </MenuItem>
         )}
         {!onlyOne && (
           <>
             <MenuSeparator />
             <MenuItem danger onClick={act(onDelete)}>
-              <Trash2 className="size-3.5" /> Eliminar calendario
+              <Trash2 className="size-3.5" /> {t("Eliminar calendario")}
             </MenuItem>
           </>
         )}
@@ -212,7 +213,7 @@ function CalendarRow({
 
 export function ColorPicker({ value, onChange }: { value: string; onChange: (c: string) => void }) {
   return (
-    <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Color">
+    <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={t("Color")}>
       {CALENDAR_COLORS.map((c) => (
         <button
           key={c}
@@ -255,14 +256,14 @@ function CalendarEditor({
       className="my-1 space-y-2 rounded-lg border border-border-strong bg-popover p-2"
       onKeyDown={(e) => e.key === "Escape" && onCancel()}
     >
-      <Input ref={ref} value={name} maxLength={200} placeholder="Nombre del calendario" onChange={(e) => setName(e.target.value)} className="h-8" />
+      <Input ref={ref} value={name} maxLength={200} placeholder={t("Nombre del calendario")} onChange={(e) => setName(e.target.value)} className="h-8" />
       <ColorPicker value={color} onChange={setColor} />
       <div className="flex justify-end gap-1.5">
         <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancelar
+          {t("Cancelar")}
         </Button>
         <Button type="submit" size="sm" disabled={!name.trim()}>
-          Guardar
+          {t("Guardar")}
         </Button>
       </div>
     </form>

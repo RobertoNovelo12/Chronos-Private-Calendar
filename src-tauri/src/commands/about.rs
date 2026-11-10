@@ -45,6 +45,12 @@ pub fn open_donation_link(app: AppHandle) -> CommandResult<()> {
         })
 }
 
+/// Idioma de los textos del backend (notificaciones y diálogos).
+#[tauri::command]
+pub fn app_set_language(lang: String) -> bool {
+    crate::i18n::set_language(&lang)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

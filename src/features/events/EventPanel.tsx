@@ -22,19 +22,20 @@ import { LabelsEditor } from "@/features/labels/LabelsEditor";
 import { AttendeesEditor } from "./AttendeesEditor";
 import { RemindersEditor } from "./RemindersEditor";
 import { RepeatPicker } from "./RepeatPicker";
+import { msg, t } from "@/i18n";
 
 const AVAILABILITY: { value: Availability; label: string }[] = [
-  { value: "busy", label: "Ocupado" },
-  { value: "free", label: "Libre" },
-  { value: "tentative", label: "Provisional" },
-  { value: "out_of_office", label: "Fuera de la oficina" },
+  { value: "busy", label: msg("Ocupado") },
+  { value: "free", label: msg("Libre") },
+  { value: "tentative", label: msg("Provisional") },
+  { value: "out_of_office", label: msg("Fuera de la oficina") },
 ];
 
 const VISIBILITY: { value: Visibility; label: string }[] = [
-  { value: "default", label: "Visibilidad predeterminada" },
-  { value: "public", label: "Pública" },
-  { value: "private", label: "Privada" },
-  { value: "confidential", label: "Confidencial" },
+  { value: "default", label: msg("Visibilidad predeterminada") },
+  { value: "public", label: msg("Pública") },
+  { value: "private", label: msg("Privada") },
+  { value: "confidential", label: msg("Confidencial") },
 ];
 
 const inlineSelect =
@@ -188,7 +189,7 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
   return (
     <div
       className="flex min-h-0 flex-1 flex-col"
-      aria-label="Detalles del evento"
+      aria-label={t("Detalles del evento")}
       onKeyDown={(e) => {
         if (e.key === "Escape" && !(e.target instanceof HTMLSelectElement)) {
           (document.activeElement as HTMLElement | null)?.blur();
@@ -202,21 +203,21 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
           onClick={() => setMenu((v) => !v)}
           className="flex h-7 items-center gap-1 rounded-md px-1.5 text-[13px] font-semibold text-strong hover:bg-surface-hover"
         >
-          {isDraft ? "Evento nuevo" : "Evento"} <ChevronDown className="size-3.5 text-muted" />
+          {isDraft ? t("Evento nuevo") : t("Evento")} <ChevronDown className="size-3.5 text-muted" />
         </button>
         <div className="flex items-center">
           {floating && (
             <Button
               variant="ghost"
               size="icon"
-              title="Abrir en el panel lateral"
-              aria-label="Abrir en el panel lateral"
+              title={t("Abrir en el panel lateral")}
+              aria-label={t("Abrir en el panel lateral")}
               onClick={() => usePrefsStore.getState().set({ rightPanelOpen: true })}
             >
               <PanelRight />
             </Button>
           )}
-          <Button variant="ghost" size="icon" title="Cerrar (Esc)" aria-label="Cerrar" onClick={() => select(null)}>
+          <Button variant="ghost" size="icon" title={t("Cerrar (Esc)")} aria-label={t("Cerrar")} onClick={() => select(null)}>
             <X />
           </Button>
         </div>
@@ -224,26 +225,26 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
           {!isDraft && (
             <>
               <MenuItem
-                hint="Ctrl+D"
+                hint={t("Ctrl+D")}
                 onClick={() => {
                   setMenu(false);
                   void duplicateEvent(event.id);
                 }}
               >
-                <Copy className="size-3.5 text-muted" /> Duplicar
+                <Copy className="size-3.5 text-muted" /> {t("Duplicar")}
               </MenuItem>
               <MenuSeparator />
             </>
           )}
           <MenuItem
             danger
-            hint="Supr"
+            hint={t("Supr")}
             onClick={() => {
               setMenu(false);
               askDelete(event.id);
             }}
           >
-            <Trash2 className="size-3.5" /> {isDraft ? "Descartar" : "Eliminar"}
+            <Trash2 className="size-3.5" /> {isDraft ? t("Descartar") : t("Eliminar")}
           </MenuItem>
         </Popover>
       </div>
@@ -255,7 +256,7 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
             value={title}
             rows={1}
             maxLength={1000}
-            placeholder="Título"
+            placeholder={t("Título")}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={() => commit({ title })}
             onKeyDown={(e) => {
@@ -275,36 +276,36 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
           <Row icon={<Clock className="size-4" />}>
             {event.isAllDay ? (
               <>
-                <DateSelect value={start} onChange={setStartDate} weekStartsOn={weekStartsOn} label="Fecha de inicio" />
+                <DateSelect value={start} onChange={setStartDate} weekStartsOn={weekStartsOn} label={t("Fecha de inicio")} />
                 <ArrowRight className="size-3.5 shrink-0 text-faint" />
-                <DateSelect value={lastDay} onChange={setEndDate} weekStartsOn={weekStartsOn} label="Fecha de fin" />
+                <DateSelect value={lastDay} onChange={setEndDate} weekStartsOn={weekStartsOn} label={t("Fecha de fin")} />
                 <span className="ml-1 truncate text-[12px] text-muted">{formatDuration(event.endAt - event.startAt)}</span>
               </>
             ) : (
               <>
-                <TimeSelect value={start} onChange={setStartTime} label="Hora de inicio" />
+                <TimeSelect value={start} onChange={setStartTime} label={t("Hora de inicio")} />
                 <ArrowRight className="size-3.5 shrink-0 text-faint" />
-                <TimeSelect value={end} onChange={setEndTime} durationFrom={multiDay ? undefined : start} label="Hora de fin" />
+                <TimeSelect value={end} onChange={setEndTime} durationFrom={multiDay ? undefined : start} label={t("Hora de fin")} />
                 <span className="ml-1 truncate text-[12px] text-muted">{formatDuration(event.endAt - event.startAt)}</span>
               </>
             )}
           </Row>
           {!event.isAllDay && (
             <Row>
-              <DateSelect value={start} onChange={setStartDate} weekStartsOn={weekStartsOn} label="Fecha de inicio" />
+              <DateSelect value={start} onChange={setStartDate} weekStartsOn={weekStartsOn} label={t("Fecha de inicio")} />
               {multiDay && (
                 <>
                   <ArrowRight className="size-3.5 shrink-0 text-faint" />
-                  <DateSelect value={end} onChange={setEndDate} weekStartsOn={weekStartsOn} label="Fecha de fin" />
+                  <DateSelect value={end} onChange={setEndDate} weekStartsOn={weekStartsOn} label={t("Fecha de fin")} />
                 </>
               )}
             </Row>
           )}
           {expanded ? (
             <>
-              <Row icon={<Switch on={event.isAllDay} onToggle={toggleAllDay} label="Todo el día" />}>
+              <Row icon={<Switch on={event.isAllDay} onToggle={toggleAllDay} label={t("Todo el día")} />}>
                 <button onClick={toggleAllDay} className="h-7 rounded-md px-1.5 text-[13px] text-strong hover:bg-surface-hover">
-                  Todo el día
+                  {t("Todo el día")}
                 </button>
               </Row>
               {!event.isAllDay && (
@@ -334,14 +335,14 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
           ) : (
             <Row>
               <button onClick={toggleAllDay} className="h-7 rounded-md px-1.5 text-[13px] text-muted hover:bg-surface-hover hover:text-strong">
-                Todo el día
+                {t("Todo el día")}
               </button>
               <button
                 ref={tzRef}
                 onClick={() => setTzOpen((v) => !v)}
                 className="h-7 rounded-md px-1.5 text-[13px] text-muted hover:bg-surface-hover hover:text-strong"
               >
-                Zona horaria
+                {t("Zona horaria")}
               </button>
               <RepeatPicker
                 variant="chip"
@@ -358,8 +359,8 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
             <div className="ml-7 mt-1 flex gap-2 rounded-md bg-control/60 px-2.5 py-2 text-[12px] text-foreground">
               <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-[#e3a008]" />
               <span>
-                Coincide con {conflicts.length === 1 ? "otro evento" : `${conflicts.length} eventos`}:{" "}
-                <span className="text-muted">{conflicts.slice(0, 3).map((c) => c.title || "Sin título").join(", ")}</span>
+                {conflicts.length === 1 ? t("Coincide con otro evento:") : t("Coincide con {n} eventos:", { n: conflicts.length })}{" "}
+                <span className="text-muted">{conflicts.slice(0, 3).map((c) => c.title || t("Sin título")).join(", ")}</span>
               </span>
             </div>
           )}
@@ -371,7 +372,7 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
             <input
               value={location}
               maxLength={1000}
-              placeholder="Ubicación"
+              placeholder={t("Ubicación")}
               spellCheck={false}
               onChange={(e) => setLocation(e.target.value)}
               onBlur={() => location !== event.location && commit({ location })}
@@ -391,7 +392,7 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
             value={description}
             rows={3}
             maxLength={50000}
-            placeholder="Descripción"
+            placeholder={t("Descripción")}
             onChange={(e) => setDescription(e.target.value)}
             onBlur={() => description !== event.description && commit({ description })}
             className="field-sizing-content min-h-[60px] w-full resize-none rounded-md bg-transparent px-1.5 py-1 text-[13px] leading-relaxed text-strong placeholder:text-muted hover:bg-surface-hover focus:bg-surface-hover focus:outline-none"
@@ -401,7 +402,7 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
 
         <section className="space-y-0.5 px-3 py-2.5">
           <Row icon={<span className="block size-3.5 rounded-[4px]" style={{ background: color }} />}>
-            <select value={event.calendarId} onChange={(e) => commit({ calendarId: e.target.value })} className={cn(inlineSelect, "font-medium")} aria-label="Calendario">
+            <select value={event.calendarId} onChange={(e) => commit({ calendarId: e.target.value })} className={cn(inlineSelect, "font-medium")} aria-label={t("Calendario")}>
               {calendars.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -410,17 +411,17 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
             </select>
           </Row>
           <Row>
-            <select value={event.availability} onChange={(e) => commit({ availability: e.target.value as Availability })} className={inlineSelect} aria-label="Disponibilidad">
+            <select value={event.availability} onChange={(e) => commit({ availability: e.target.value as Availability })} className={inlineSelect} aria-label={t("Disponibilidad")}>
               {AVAILABILITY.map((a) => (
                 <option key={a.value} value={a.value}>
-                  {a.label}
+                  {t(a.label)}
                 </option>
               ))}
             </select>
-            <select value={event.visibility} onChange={(e) => commit({ visibility: e.target.value as Visibility })} className={cn(inlineSelect, "min-w-0")} aria-label="Visibilidad">
+            <select value={event.visibility} onChange={(e) => commit({ visibility: e.target.value as Visibility })} className={cn(inlineSelect, "min-w-0")} aria-label={t("Visibilidad")}>
               {VISIBILITY.map((v) => (
                 <option key={v.value} value={v.value}>
-                  {v.label}
+                  {t(v.label)}
                 </option>
               ))}
             </select>
@@ -434,7 +435,7 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
               className="flex h-7 items-center gap-2 rounded-md px-1.5 text-[13px] text-strong hover:bg-surface-hover"
             >
               <span className="size-3 rounded-full" style={{ background: color }} />
-              {event.color ? "Color propio" : "Color del calendario"}
+              {event.color ? t("Color propio") : t("Color del calendario")}
             </button>
             <Popover open={colorsOpen} onClose={() => setColorsOpen(false)} anchorRef={colorRef} className="w-[204px] p-2">
               <button
@@ -444,7 +445,7 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
                 }}
                 className={cn("mb-2 flex h-7 w-full items-center gap-2 rounded-md px-2 text-[13px] text-strong hover:bg-surface-hover", event.color === null && "bg-surface-hover")}
               >
-                <span className="size-3 rounded-full" style={{ background: calendar?.color }} /> Del calendario
+                <span className="size-3 rounded-full" style={{ background: calendar?.color }} /> {t("Del calendario")}
               </button>
               <div className="grid grid-cols-5 gap-2 px-1">
                 {CALENDAR_COLORS.map((c) => (
@@ -465,7 +466,7 @@ function PanelBody({ event, floating }: { event: CalendarEvent; floating: boolea
         </section>
       </div>
       <div className={cn("shrink-0 px-4 py-2 text-[11px] text-faint", floating && "border-t border-border")}>
-        {isDraft ? "Borrador: se guardará al escribir un título o cambiar algún dato" : "Guardado automáticamente · cifrado en este equipo"}
+        {isDraft ? t("Borrador: se guardará al escribir un título o cambiar algún dato") : t("Guardado automáticamente · cifrado en este equipo")}
       </div>
     </div>
   );
@@ -518,7 +519,7 @@ function LinksEditor({ links, onChange }: { links: EventLink[]; onChange: (links
             <span className="min-w-0 flex-1 select-text truncate text-[13px] text-strong" title={l.url}>
               {l.label || l.url}
             </span>
-            <button className="invisible text-muted hover:text-danger group-hover:visible" aria-label="Quitar enlace" onClick={() => onChange(links.filter((_, j) => j !== i))}>
+            <button className="invisible text-muted hover:text-danger group-hover:visible" aria-label={t("Quitar enlace")} onClick={() => onChange(links.filter((_, j) => j !== i))}>
               <X className="size-3.5" />
             </button>
           </div>
@@ -527,13 +528,13 @@ function LinksEditor({ links, onChange }: { links: EventLink[]; onChange: (links
       {adding ? (
         <div className="ml-7 space-y-1.5 py-1">
           <Input autoFocus value={url} placeholder="https://…" className="h-8" onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} />
-          <Input value={label} placeholder="Texto (opcional)" className="h-8" onChange={(e) => setLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} />
+          <Input value={label} placeholder={t("Texto (opcional)")} className="h-8" onChange={(e) => setLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} />
           <div className="flex justify-end gap-1.5">
             <Button variant="ghost" size="sm" onClick={() => setAdding(false)}>
-              Cancelar
+              {t("Cancelar")}
             </Button>
             <Button size="sm" disabled={!valid} onClick={add}>
-              Añadir
+              {t("Añadir")}
             </Button>
           </div>
         </div>
@@ -541,7 +542,7 @@ function LinksEditor({ links, onChange }: { links: EventLink[]; onChange: (links
         links.length < 20 && (
           <Row icon={links.length === 0 ? <Link2 className="size-4" /> : <Plus className="size-3.5" />}>
             <button onClick={() => setAdding(true)} className="h-7 rounded-md px-1.5 text-[13px] text-muted hover:bg-surface-hover hover:text-strong">
-              {links.length === 0 ? "Añade enlaces" : "Añadir otro enlace"}
+              {links.length === 0 ? t("Añade enlaces") : t("Añadir otro enlace")}
             </button>
           </Row>
         )

@@ -27,6 +27,7 @@ Sin cuentas, sin servidores, sin telemetría: tus datos no salen de tu equipo.
 * **Importar** `.ics` y `.json` sin duplicados; **exportar** ICS, JSON, CSV o copia cifrada, por calendario, por fechas o un solo evento
 * Cambio de contraseña y **«Eliminar todos mis datos»**
 * Tema claro, oscuro o del sistema
+* **9 idiomas**: español, English, 简体中文, Português (Brasil), Français, Deutsch, 日本語, 한국어 y Русский (se elige al desbloquear o en Configuración → General; por defecto, el del sistema). Fechas, plurales y notificaciones en cada idioma, todo incluido en la aplicación y sin red
 * CSP estricta, sin acceso a red, fuentes empaquetadas localmente
 
 ## Instalar
@@ -103,8 +104,9 @@ Además, `.github/workflows/ci.yml` compila y ejecuta todas las pruebas en Windo
 cargo test -p chronos-core      # 69 pruebas: cifrado, migraciones, eventos, recurrencias, recordatorios, tareas,
                                 # etiquetas, participantes, deshacer en series, copias, importar/exportar,
                                 # rendimiento con 20 000 eventos, errores sin datos
-npm.cmd test                    # 33 pruebas: fechas, disposición, repetición, pegar, tareas, etiquetas,
-                                # rendimiento y garantías de privacidad
+npm.cmd test                    # 46 pruebas: fechas, disposición, repetición, pegar, tareas, etiquetas,
+                                # rendimiento, garantías de privacidad y traducciones completas
+node scripts/i18n-check.mjs     # textos sin traducir o con marcadores rotos en cada idioma
 npm.cmd run test:tz             # las pruebas del frontend en 7 zonas horarias
 npm.cmd run typecheck
 ```

@@ -9,6 +9,7 @@ import { usePrefsStore } from "@/stores/prefsStore";
 import { toast } from "@/stores/toastStore";
 import { useUiStore } from "@/stores/uiStore";
 import type { CalendarEvent, EditScope, EventPatch } from "@/types/domain";
+import { t } from "@/i18n";
 
 /** Calendario donde se crean los eventos nuevos: el predeterminado si es visible. */
 function targetCalendarId(): string | null {
@@ -25,7 +26,7 @@ function targetCalendarId(): string | null {
 export async function createEventAt(start: Date, end: Date, allDay: boolean): Promise<void> {
   const calendarId = targetCalendarId();
   if (!calendarId) {
-    toast.error("Crea un calendario antes de añadir eventos");
+    toast.error(t("Crea un calendario antes de añadir eventos"));
     return;
   }
   const times = allDay
@@ -173,7 +174,7 @@ export async function duplicateEvent(id: string): Promise<void> {
   try {
     const copy = await useEventStore.getState().duplicate(id);
     useUiStore.getState().select(copy.id);
-    toast.info("Evento duplicado");
+    toast.info(t("Evento duplicado"));
   } catch (e) {
     toast.error(errorMessage(e));
   }
@@ -185,8 +186,8 @@ export async function deleteEventConfirmed(id: string, scope?: EditScope): Promi
     const recurring = useEventStore.getState().events[id]?.isRecurring ?? false;
     await useEventStore.getState().remove(id, scope);
     if (useUiStore.getState().selectedEventId === id) useUiStore.getState().select(null);
-    const message = recurring && scope !== "this" ? "Eventos eliminados" : "Evento eliminado";
-    toast.info(message, { label: "Deshacer", run: () => void undo() });
+    const message = recurring && scope !== "this" ? t("Eventos eliminados") : t("Evento eliminado");
+    toast.info(message, { label: t("Deshacer"), run: () => void undo() });
   } catch (e) {
     toast.error(errorMessage(e));
   }
@@ -195,7 +196,7 @@ export async function deleteEventConfirmed(id: string, scope?: EditScope): Promi
 export async function undo(): Promise<void> {
   try {
     const label = await useEventStore.getState().undo();
-    if (label) toast.info(`Deshecho: ${label}`);
+    if (label) toast.info(t("Deshecho: {action}", { action: t(label) }));
   } catch (e) {
     toast.error(errorMessage(e));
   }
@@ -204,7 +205,7 @@ export async function undo(): Promise<void> {
 export async function redo(): Promise<void> {
   try {
     const label = await useEventStore.getState().redo();
-    if (label) toast.info(`Rehecho: ${label}`);
+    if (label) toast.info(t("Rehecho: {action}", { action: t(label) }));
   } catch (e) {
     toast.error(errorMessage(e));
   }

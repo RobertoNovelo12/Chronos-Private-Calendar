@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { errorMessage } from "@/lib/ipc";
 import { useVaultStore } from "@/stores/vaultStore";
+import { t } from "@/i18n";
+import { LanguageSelect } from "@/i18n/LanguageSelect";
 
 const MIN_LENGTH = 8;
 
@@ -52,12 +54,12 @@ export function UnlockScreen({ mode }: { mode: "setup" | "locked" }) {
           {isSetup ? <ShieldCheck className="size-5" /> : <Lock className="size-5" />}
         </div>
         <h1 className="text-xl font-semibold tracking-tight">
-          {isSetup ? "Protege tu calendario" : "Chronos está bloqueado"}
+          {isSetup ? t("Protege tu calendario") : t("Chronos está bloqueado")}
         </h1>
         <p className="mt-1.5 text-[13px] leading-relaxed text-muted">
           {isSetup
-            ? "Elige una contraseña. Cifra la base de datos en este equipo. No existe recuperación: si la olvidas, solo podrás volver a tus datos desde una copia de seguridad cuya contraseña recuerdes."
-            : "Introduce tu contraseña para descifrar tus datos."}
+            ? t("Elige una contraseña. Cifra la base de datos en este equipo. No existe recuperación: si la olvidas, solo podrás volver a tus datos desde una copia de seguridad cuya contraseña recuerdes.")
+            : t("Introduce tu contraseña para descifrar tus datos.")}
         </p>
 
         <div className="mt-6 space-y-3">
@@ -65,7 +67,7 @@ export function UnlockScreen({ mode }: { mode: "setup" | "locked" }) {
             <Input
               type={show ? "text" : "password"}
               autoFocus
-              placeholder="Contraseña"
+              placeholder={t("Contraseña")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={busy}
@@ -76,7 +78,7 @@ export function UnlockScreen({ mode }: { mode: "setup" | "locked" }) {
               type="button"
               onClick={() => setShow((v) => !v)}
               className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-muted hover:text-foreground"
-              aria-label={show ? "Ocultar contraseña" : "Mostrar contraseña"}
+              aria-label={show ? t("Ocultar contraseña") : t("Mostrar contraseña")}
               tabIndex={-1}
             >
               {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -85,15 +87,15 @@ export function UnlockScreen({ mode }: { mode: "setup" | "locked" }) {
           {isSetup && (
             <Input
               type={show ? "text" : "password"}
-              placeholder="Repite la contraseña"
+              placeholder={t("Repite la contraseña")}
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               disabled={busy}
               aria-invalid={mismatch}
             />
           )}
-          {tooShort && <p className="text-[12px] text-muted">Mínimo {MIN_LENGTH} caracteres.</p>}
-          {mismatch && <p className="text-[12px] text-danger">Las contraseñas no coinciden.</p>}
+          {tooShort && <p className="text-[12px] text-muted">{t("Mínimo {n} caracteres.", { n: MIN_LENGTH })}</p>}
+          {mismatch && <p className="text-[12px] text-danger">{t("Las contraseñas no coinciden.")}</p>}
           {error && (
             <p role="alert" className="text-[12px] text-danger">
               {error}
@@ -102,9 +104,12 @@ export function UnlockScreen({ mode }: { mode: "setup" | "locked" }) {
         </div>
 
         <Button type="submit" size="lg" className="mt-6 w-full" disabled={!canSubmit}>
-          {busy ? (isSetup ? "Creando bóveda cifrada…" : "Descifrando…") : isSetup ? "Crear y entrar" : "Desbloquear"}
+          {busy ? (isSetup ? t("Creando bóveda cifrada…") : t("Descifrando…")) : isSetup ? t("Crear y entrar") : t("Desbloquear")}
         </Button>
-        <p className="mt-4 text-center text-[11px] text-muted">Sin cuenta · Sin conexión · Tus datos no salen de este equipo</p>
+        <p className="mt-4 text-center text-[11px] text-muted">{t("Sin cuenta · Sin conexión · Tus datos no salen de este equipo")}</p>
+        <div className="mt-3 flex justify-center">
+          <LanguageSelect compact />
+        </div>
       </form>
     </div>
   );

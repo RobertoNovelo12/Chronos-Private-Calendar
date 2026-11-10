@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { EditScope } from "@/types/domain";
+import { msg, t } from "@/i18n";
 
 const OPTIONS: { value: EditScope; label: string }[] = [
-  { value: "this", label: "Este evento" },
-  { value: "following", label: "Este y los siguientes" },
-  { value: "all", label: "Todos los eventos" },
+  { value: "this", label: msg("Este evento") },
+  { value: "following", label: msg("Este y los siguientes") },
+  { value: "all", label: msg("Todos los eventos") },
 ];
 
 interface Props {
@@ -56,7 +57,7 @@ export function ScopeDialog({ open, kind, allowThis, onResolve }: Props) {
         onMouseDown={(e) => e.stopPropagation()}
       >
         <h2 id="scope-title" className="text-[15px] font-semibold text-strong">
-          {kind === "edit" ? "Editar evento repetido" : "Eliminar evento repetido"}
+          {kind === "edit" ? t("Editar evento repetido") : t("Eliminar evento repetido")}
         </h2>
         <div className="mt-3 space-y-0.5" role="radiogroup">
           {OPTIONS.filter((o) => allowThis || o.value !== "this").map((o) => (
@@ -74,16 +75,16 @@ export function ScopeDialog({ open, kind, allowThis, onResolve }: Props) {
                 onChange={() => setValue(o.value)}
                 className="radio"
               />
-              {o.label}
+              {t(o.label)}
             </label>
           ))}
         </div>
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="secondary" onClick={() => onResolve(null)}>
-            Cancelar
+            {t("Cancelar")}
           </Button>
           <Button variant={kind === "delete" ? "danger" : "default"} onClick={() => onResolve(value)} autoFocus>
-            {kind === "delete" ? "Eliminar" : "Aceptar"}
+            {kind === "delete" ? t("Eliminar") : t("Aceptar")}
           </Button>
         </div>
       </div>

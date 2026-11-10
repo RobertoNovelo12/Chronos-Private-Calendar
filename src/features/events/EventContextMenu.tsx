@@ -7,13 +7,14 @@ import { toast } from "@/stores/toastStore";
 import { useUiStore } from "@/stores/uiStore";
 import { duplicateEvent, updateEvent } from "./actions";
 import { copyEvent } from "./clipboard";
+import { t } from "@/i18n";
 
 const MOD = typeof navigator !== "undefined" && /Mac/i.test(navigator.platform) ? "⌘" : "Ctrl+";
 
 async function exportOne(id: string, title: string) {
   try {
-    const r = await api.data.export("ics", { eventIds: [id] }, title || "evento");
-    if (r) toast.info("Evento exportado");
+    const r = await api.data.export("ics", { eventIds: [id] }, title || t("evento"));
+    if (r) toast.info(t("Evento exportado"));
   } catch (e) {
     toast.error(errorMessage(e));
   }
@@ -43,12 +44,12 @@ export function EventContextMenu() {
         delete: () => useUiStore.getState().askDelete(event.id),
       }}
     >
-      <ContextMenuItem icon={<PanelRight />} label="Abrir detalles" onSelect={run(() => useUiStore.getState().select(event.id))} />
-      <ContextMenuItem icon={<ClipboardCopy />} label="Copiar" shortcut={`${MOD}C`} onSelect={run(() => copyEvent(event.id))} />
-      <ContextMenuItem icon={<Copy />} label="Duplicar" shortcut={`${MOD}D`} onSelect={run(() => void duplicateEvent(event.id))} />
-      <ContextMenuItem icon={<FileDown />} label="Exportar como .ics…" onSelect={run(() => void exportOne(event.id, event.title))} />
+      <ContextMenuItem icon={<PanelRight />} label={t("Abrir detalles")} onSelect={run(() => useUiStore.getState().select(event.id))} />
+      <ContextMenuItem icon={<ClipboardCopy />} label={t("Copiar")} shortcut={`${MOD}C`} onSelect={run(() => copyEvent(event.id))} />
+      <ContextMenuItem icon={<Copy />} label={t("Duplicar")} shortcut={`${MOD}D`} onSelect={run(() => void duplicateEvent(event.id))} />
+      <ContextMenuItem icon={<FileDown />} label={t("Exportar como .ics…")} onSelect={run(() => void exportOne(event.id, event.title))} />
       <ContextMenuSeparator />
-      <div className="px-2 pb-1 pt-0.5 text-[11px] uppercase tracking-wide text-muted">Mover a</div>
+      <div className="px-2 pb-1 pt-0.5 text-[11px] uppercase tracking-wide text-muted">{t("Mover a")}</div>
       {calendars.map((c) => (
         <button
           key={c.id}
@@ -65,7 +66,7 @@ export function EventContextMenu() {
         </button>
       ))}
       <ContextMenuSeparator />
-      <ContextMenuItem icon={<Trash2 />} label="Eliminar" shortcut="Supr" danger onSelect={() => useUiStore.getState().askDelete(event.id)} />
+      <ContextMenuItem icon={<Trash2 />} label={t("Eliminar")} shortcut={t("Supr")} danger onSelect={() => useUiStore.getState().askDelete(event.id)} />
     </ContextMenuShell>
   );
 }

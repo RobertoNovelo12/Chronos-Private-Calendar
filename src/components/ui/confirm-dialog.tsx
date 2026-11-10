@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Button } from "./button";
+import { t } from "@/i18n";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -51,7 +52,7 @@ export function ConfirmDialog({
         <p className="mt-2 text-[13px] leading-relaxed text-muted">{description}</p>
         <div className="mt-5 flex justify-end gap-2">
           <Button ref={cancelRef} variant="secondary" onClick={onCancel} disabled={busy}>
-            Cancelar
+            {t("Cancelar")}
           </Button>
           <Button variant={destructive ? "danger" : "default"} onClick={onConfirm} disabled={busy}>
             {confirmLabel}

@@ -23,6 +23,7 @@ Al abrirlo por primera vez, elige una contraseña (mínimo 8 caracteres). Con el
 - **Bloquear:** botón del candado (abajo a la izquierda) o `Ctrl+L`.
 - **Bloqueo automático:** Configuración → General → Bloqueo automático.
 - **Cambiar la contraseña:** Configuración → Privacidad y seguridad.
+- **Idioma:** Chronos usa el idioma del sistema si está disponible (si no, inglés). Cámbialo con el selector de la pantalla de desbloqueo o en Configuración → General → Idioma: español, English, 简体中文, Português (Brasil), Français, Deutsch, 日本語, 한국어 y Русский.
 
 ## 3. Calendario
 

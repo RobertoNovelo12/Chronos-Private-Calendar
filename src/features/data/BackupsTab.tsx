@@ -6,6 +6,7 @@ import { formatBytes } from "@/lib/utils";
 import { toast } from "@/stores/toastStore";
 import type { BackupRecord, BackupSettings } from "@/types/domain";
 import { BackupActionDialog, KIND_LABEL, Row, Section, selectCls } from "./shared";
+import { intlLocale, t, tp } from "@/i18n";
 
 const KEEP_OPTIONS = [3, 5, 7, 14, 30, 60];
 
@@ -62,7 +63,7 @@ export function BackupsTab() {
     setBusy(true);
     try {
       const rec = await api.backup.createIn(false);
-      if (rec) toast.info(`Copia cifrada creada (${formatBytes(rec.sizeBytes)})`);
+      if (rec) toast.info(t("Copia cifrada creada ({size})", { size: formatBytes(rec.sizeBytes) }));
       await refresh();
     } catch (e) {
       toast.error(errorMessage(e));
@@ -83,22 +84,22 @@ export function BackupsTab() {
   return (
     <div className="space-y-7">
       <Section
-        title="Copias automáticas"
-        description="Se crean mientras Chronos está desbloqueado, cifradas con tu contraseña actual (Argon2id + XChaCha20-Poly1305). Las más antiguas se eliminan al superar el límite."
+        title={t("Copias automáticas")}
+        description={t("Se crean mientras Chronos está desbloqueado, cifradas con tu contraseña actual (Argon2id + XChaCha20-Poly1305). Las más antiguas se eliminan al superar el límite.")}
       >
-        <Row label="Frecuencia">
+        <Row label={t("Frecuencia")}>
           <select
             className={selectCls}
             value={settings?.auto ?? "daily"}
             disabled={!settings}
             onChange={(e) => void update({ auto: e.target.value as BackupSettings["auto"] })}
           >
-            <option value="daily">Una vez al día</option>
-            <option value="weekly">Una vez por semana</option>
-            <option value="off">Desactivadas</option>
+            <option value="daily">{t("Una vez al día")}</option>
+            <option value="weekly">{t("Una vez por semana")}</option>
+            <option value="off">{t("Desactivadas")}</option>
           </select>
         </Row>
-        <Row label="Conservar">
+        <Row label={t("Conservar")}>
           <select
             className={selectCls}
             value={settings?.keep ?? 7}
@@ -107,22 +108,22 @@ export function BackupsTab() {
           >
             {[...new Set([...KEEP_OPTIONS, settings?.keep ?? 7])].sort((a, b) => a - b).map((n) => (
               <option key={n} value={n}>
-                Las {n} más recientes
+                {tp(n, "La más reciente", "Las {n} más recientes")}
               </option>
             ))}
           </select>
         </Row>
         <div className="space-y-1.5 text-[13px]">
           <div className="flex items-center justify-between gap-3">
-            <span>Carpeta</span>
+            <span>{t("Carpeta")}</span>
             <div className="flex gap-1">
               {settings && !settings.isDefaultDir && (
-                <Button variant="ghost" size="sm" onClick={() => void chooseDir(true)} title="Volver a la carpeta predeterminada">
-                  <RotateCcw /> Predeterminada
+                <Button variant="ghost" size="sm" onClick={() => void chooseDir(true)} title={t("Volver a la carpeta predeterminada")}>
+                  <RotateCcw /> {t("Predeterminada")}
                 </Button>
               )}
               <Button variant="secondary" size="sm" onClick={() => void chooseDir(false)} disabled={!settings}>
-                <FolderOpen /> Cambiar…
+                <FolderOpen /> {t("Cambiar…")}
               </Button>
             </div>
           </div>
@@ -130,25 +131,25 @@ export function BackupsTab() {
             {settings?.dir ?? "…"}
           </p>
           <p className="text-[11px] leading-relaxed text-muted">
-            Para protegerte de un fallo del disco, elige una carpeta en otra unidad o en una memoria externa.
+            {t("Para protegerte de un fallo del disco, elige una carpeta en otra unidad o en una memoria externa.")}
           </p>
         </div>
       </Section>
 
-      <Section title="Historial" description="Copias creadas en este equipo. Verificar comprueba la integridad y la contraseña sin cambiar nada.">
+      <Section title={t("Historial")} description={t("Copias creadas en este equipo. Verificar comprueba la integridad y la contraseña sin cambiar nada.")}>
         <div className="flex gap-2">
           <Button variant="default" size="sm" onClick={() => void createNow()} disabled={busy}>
-            {busy ? "Creando…" : "Crear copia ahora"}
+            {busy ? t("Creando…") : t("Crear copia ahora")}
           </Button>
           <Button variant="secondary" size="sm" onClick={() => void restoreFromFile()}>
-            Restaurar desde archivo…
+            {t("Restaurar desde archivo…")}
           </Button>
         </div>
         <div className="overflow-hidden rounded-lg border border-border">
           {history === null ? (
-            <p className="px-3 py-3 text-[12px] text-muted">Cargando…</p>
+            <p className="px-3 py-3 text-[12px] text-muted">{t("Cargando…")}</p>
           ) : history.length === 0 ? (
-            <p className="px-3 py-3 text-[12px] text-muted">Todavía no hay copias.</p>
+            <p className="px-3 py-3 text-[12px] text-muted">{t("Todavía no hay copias.")}</p>
           ) : (
             <ul className="max-h-[220px] divide-y divide-border overflow-y-auto">
               {history.map((r) => (
@@ -156,10 +157,10 @@ export function BackupsTab() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-strong">
-                        {new Date(r.createdAt).toLocaleString("es", { dateStyle: "medium", timeStyle: "short" })}
+                        {new Date(r.createdAt).toLocaleString(intlLocale(), { dateStyle: "medium", timeStyle: "short" })}
                       </span>
-                      <span className="rounded bg-control px-1.5 py-px text-[10px] text-muted">{KIND_LABEL[r.kind]}</span>
-                      {r.status !== "ok" && <span className="text-danger">Falló</span>}
+                      <span className="rounded bg-control px-1.5 py-px text-[10px] text-muted">{t(KIND_LABEL[r.kind])}</span>
+                      {r.status !== "ok" && <span className="text-danger">{t("Falló")}</span>}
                     </div>
                     <div className="truncate text-[11px] text-muted" title={r.filePath}>
                       {formatBytes(r.sizeBytes)} · {r.fileName}
@@ -168,10 +169,10 @@ export function BackupsTab() {
                   {r.status === "ok" && (
                     <div className="flex shrink-0 gap-1 opacity-70 group-hover:opacity-100">
                       <Button variant="ghost" size="sm" onClick={() => setAction({ path: r.filePath, mode: "verify" })}>
-                        Verificar
+                        {t("Verificar")}
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => setAction({ path: r.filePath, mode: "restore" })}>
-                        Restaurar
+                        {t("Restaurar")}
                       </Button>
                     </div>
                   )}

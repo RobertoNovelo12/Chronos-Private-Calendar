@@ -20,6 +20,7 @@ import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { RightPanel } from "./RightPanel";
 import { Sidebar } from "./Sidebar";
+import { t } from "@/i18n";
 
 /** Estructura principal: barra lateral + calendario + panel derecho. */
 export function AppShell() {
@@ -89,9 +90,9 @@ export function AppShell() {
       />
       <ConfirmDialog
         open={confirmDeleteId !== null && deleting?.isRecurring !== true}
-        title="¿Eliminar evento?"
-        description={`“${deleting?.title || "Sin título"}” se eliminará de este equipo. Podrás deshacerlo con Ctrl+Z mientras la aplicación siga desbloqueada.`}
-        confirmLabel="Eliminar"
+        title={t("¿Eliminar evento?")}
+        description={t("“{title}” se eliminará de este equipo. Podrás deshacerlo con Ctrl+Z mientras la aplicación siga desbloqueada.", { title: deleting?.title || t("Sin título") })}
+        confirmLabel={t("Eliminar")}
         destructive
         onCancel={() => askDelete(null)}
         onConfirm={() => {

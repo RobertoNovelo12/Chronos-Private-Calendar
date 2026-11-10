@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { format } from "date-fns";
 import { createPortal } from "react-dom";
 import { Check, ChevronDown, ChevronUp, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,8 @@ import { MenuItem, MenuSeparator, Popover } from "@/components/ui/popover";
 import type { WeekStart } from "@/lib/dates";
 import {
   WEEKDAY_CODES,
+  dayName,
+  nthWeekday,
   buildRule,
   describeRule,
   nthWeekdayOfMonth,
@@ -19,10 +22,10 @@ import {
   type RuleParts,
 } from "@/lib/rrule";
 import { cn } from "@/lib/utils";
+import { dateLocale, t, tp } from "@/i18n";
 
-const DAY_SHORT = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"];
-const DAY_NAMES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
-const ORDINAL = { "1": "primer", "2": "segundo", "3": "tercer", "4": "cuarto", "-1": "último" } as Record<string, string>;
+/** Inicial corta del día en el idioma activo ("Lu", "Mo", "一"…). */
+const dayShort = (i: number) => format(new Date(1970, 0, 4 + i), "EEEEEE", { locale: dateLocale() });
 
 interface Props {
   rule: string | null;
@@ -50,7 +53,7 @@ export function RepeatPicker({ rule, start, allDay, weekStartsOn, onChange, vari
     <>
       {variant === "chip" ? (
         <button ref={ref} onClick={() => setOpen((v) => !v)} className="h-7 rounded-md px-1.5 text-[13px] text-muted hover:bg-surface-hover hover:text-strong">
-          Repetir
+          {t("Repetir")}
         </button>
       ) : (
         <button
@@ -61,13 +64,13 @@ export function RepeatPicker({ rule, start, allDay, weekStartsOn, onChange, vari
             rule ? "text-strong" : "text-muted",
           )}
         >
-          <span className="truncate">{rule ? describeRule(rule, start, allDay) : "Repetir"}</span>
+          <span className="truncate">{rule ? describeRule(rule, start, allDay) : t("Repetir")}</span>
         </button>
       )}
       <Popover open={open} onClose={() => setOpen(false)} anchorRef={ref} className="w-[260px]">
         <MenuItem onClick={() => choose("")}>
           <span className="w-3.5">{!rule && <Check className="size-3.5" />}</span>
-          No se repite
+          {t("No se repite")}
         </MenuItem>
         <MenuSeparator />
         {presets(start).map((p) => (
@@ -84,7 +87,7 @@ export function RepeatPicker({ rule, start, allDay, weekStartsOn, onChange, vari
           }}
         >
           <span className="w-3.5">{rule && !isPreset && <Check className="size-3.5" />}</span>
-          Personalizar…
+          {t("Personalizar…")}
         </MenuItem>
       </Popover>
       {dialog && (
@@ -123,10 +126,10 @@ function NumberField({ value, onChange, min, max, disabled, label }: { value: nu
         className="w-8 bg-transparent text-[13px] tabular-nums text-strong focus:outline-none"
       />
       <div className="flex flex-col pr-0.5">
-        <button type="button" disabled={disabled} onClick={() => onChange(clamp(value + 1))} className="flex h-3.5 w-4 items-center justify-center text-muted hover:text-strong" aria-label="Aumentar">
+        <button type="button" disabled={disabled} onClick={() => onChange(clamp(value + 1))} className="flex h-3.5 w-4 items-center justify-center text-muted hover:text-strong" aria-label={t("Aumentar")}>
           <ChevronUp className="size-3" />
         </button>
-        <button type="button" disabled={disabled} onClick={() => onChange(clamp(value - 1))} className="flex h-3.5 w-4 items-center justify-center text-muted hover:text-strong" aria-label="Disminuir">
+        <button type="button" disabled={disabled} onClick={() => onChange(clamp(value - 1))} className="flex h-3.5 w-4 items-center justify-center text-muted hover:text-strong" aria-label={t("Disminuir")}>
           <ChevronDown className="size-3" />
         </button>
       </div>
@@ -193,11 +196,11 @@ function RepeatDialog({
   }, [onCancel]);
 
   const label = "w-16 shrink-0 text-[13px] text-strong";
-  const unitNames: Record<Freq, [string, string]> = {
-    DAILY: ["día", "días"],
-    WEEKLY: ["semana", "semanas"],
-    MONTHLY: ["mes", "meses"],
-    YEARLY: ["año", "años"],
+  const unitNames: Record<Freq, string> = {
+    DAILY: tp(interval, "día", "días"),
+    WEEKLY: tp(interval, "semana", "semanas"),
+    MONTHLY: tp(interval, "mes", "meses"),
+    YEARLY: tp(interval, "año", "años"),
   };
 
   return createPortal(
@@ -210,12 +213,12 @@ function RepeatDialog({
         onMouseDown={(e) => e.stopPropagation()}
       >
         <h2 id="repeat-title" className="mb-5 text-[16px] font-semibold text-strong">
-          Repetir
+          {t("Repetir")}
         </h2>
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <span className={label}>Cada</span>
-            <NumberField value={interval} onChange={setIntervalN} min={1} max={999} label="Intervalo" />
+            <span className={label}>{t("Cada")}</span>
+            <NumberField value={interval} onChange={setIntervalN} min={1} max={999} label={t("Intervalo")} />
             <div className="relative">
               <select
                 value={freq}
@@ -224,7 +227,7 @@ function RepeatDialog({
               >
                 {(Object.keys(unitNames) as Freq[]).map((f) => (
                   <option key={f} value={f}>
-                    {unitNames[f][interval === 1 ? 0 : 1]}
+                    {unitNames[f]}
                   </option>
                 ))}
               </select>
@@ -234,8 +237,8 @@ function RepeatDialog({
 
           {freq === "WEEKLY" && (
             <div className="flex items-center gap-2">
-              <span className={label}>En</span>
-              <div className="flex gap-1.5" role="group" aria-label="Días de la semana">
+              <span className={label}>{t("En")}</span>
+              <div className="flex gap-1.5" role="group" aria-label={t("Días de la semana")}>
                 {order.map((i) => {
                   const code = WEEKDAY_CODES[i]!;
                   const on = days.includes(code);
@@ -244,13 +247,13 @@ function RepeatDialog({
                       key={code}
                       onClick={() => setDays(on ? days.filter((d) => d !== code) : [...days, code])}
                       aria-pressed={on}
-                      aria-label={DAY_NAMES[i]}
+                      aria-label={dayName(code)}
                       className={cn(
                         "flex size-7 items-center justify-center rounded-full text-[11px] font-semibold",
                         on ? "bg-accent text-white" : "bg-control text-muted hover:text-strong",
                       )}
                     >
-                      {DAY_SHORT[i]}
+                      {dayShort(i)}
                     </button>
                   );
                 })}
@@ -260,49 +263,47 @@ function RepeatDialog({
 
           {freq === "MONTHLY" && (
             <div className="flex items-center gap-2">
-              <span className={label}>El</span>
+              <span className={label}>{t("El")}</span>
               <select
                 value={monthly}
                 onChange={(e) => setMonthly(e.target.value as "day" | "nth")}
                 className="h-8 rounded-md bg-control px-2.5 text-[13px] text-strong focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="day">día {start.getDate()} de cada mes</option>
-                <option value="nth">
-                  {ORDINAL[String(nth)]} {DAY_NAMES[start.getDay()]} de cada mes
-                </option>
+                <option value="day">{t("día {n} de cada mes", { n: start.getDate() })}</option>
+                <option value="nth">{t("{nth} de cada mes", { nth: nthWeekday(nth, WEEKDAY_CODES[start.getDay()]!) })}</option>
               </select>
             </div>
           )}
 
           <div>
-            <div className="mb-2 text-[13px] text-strong">Termina</div>
+            <div className="mb-2 text-[13px] text-strong">{t("Termina")}</div>
             <div className="space-y-2.5">
               <label className="flex h-8 items-center gap-2.5 text-[13px] text-strong">
                 <input type="radio" className="radio" checked={end === "never"} onChange={() => setEnd("never")} />
-                Nunca
+                {t("Nunca")}
               </label>
               <label className="flex h-8 items-center gap-2.5 text-[13px] text-strong">
                 <input type="radio" className="radio" checked={end === "until"} onChange={() => setEnd("until")} />
-                <span className="w-[76px]">En</span>
+                <span className="w-[76px]">{t("En")}</span>
                 <span className={cn("rounded-md bg-control", end !== "until" && "pointer-events-none opacity-50")}>
-                  <DateSelect value={untilDate} onChange={setUntilDate} weekStartsOn={weekStartsOn} label="Fecha en que termina" />
+                  <DateSelect value={untilDate} onChange={setUntilDate} weekStartsOn={weekStartsOn} label={t("Fecha en que termina")} />
                 </span>
               </label>
               <label className="flex h-8 items-center gap-2.5 text-[13px] text-strong">
                 <input type="radio" className="radio" checked={end === "count"} onChange={() => setEnd("count")} />
-                <span className="w-[76px] whitespace-nowrap">Después de</span>
-                <NumberField value={count} onChange={setCount} min={1} max={5000} disabled={end !== "count"} label="Número de veces" />
-                <span className={cn("text-muted", end !== "count" && "opacity-50")}>{count === 1 ? "vez" : "veces"}</span>
+                <span className="w-[76px] whitespace-nowrap">{t("Después de")}</span>
+                <NumberField value={count} onChange={setCount} min={1} max={5000} disabled={end !== "count"} label={t("Número de veces")} />
+                <span className={cn("text-muted", end !== "count" && "opacity-50")}>{tp(count, "vez", "veces")}</span>
               </label>
             </div>
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="secondary" onClick={onCancel}>
-            Cancelar
+            {t("Cancelar")}
           </Button>
           <Button disabled={!valid} onClick={done}>
-            Listo
+            {t("Listo")}
           </Button>
         </div>
       </div>

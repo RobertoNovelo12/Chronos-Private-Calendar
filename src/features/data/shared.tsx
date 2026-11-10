@@ -8,15 +8,17 @@ import { useCalendarStore } from "@/stores/calendarStore";
 import { useEventStore } from "@/stores/eventStore";
 import { toast } from "@/stores/toastStore";
 import type { BackupInfo, BackupKind } from "@/types/domain";
+import { intlLocale, msg, t } from "@/i18n";
+import { Rich } from "@/i18n/Rich";
 
 export const selectCls =
   "h-8 rounded-md bg-control px-2 text-[13px] text-strong focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50";
 
 export const KIND_LABEL: Record<BackupKind, string> = {
-  manual: "Manual",
-  automatic: "Automática",
-  pre_restore: "Antes de restaurar",
-  pre_update: "Antes de actualizar",
+  manual: msg("Manual"),
+  automatic: msg("Automática"),
+  pre_restore: msg("Antes de restaurar"),
+  pre_update: msg("Antes de actualizar"),
 };
 
 /** Vuelve a leer calendarios y eventos tras restaurar o importar. */
@@ -77,7 +79,7 @@ export function PasswordInput({
         type="button"
         onClick={() => setShow((v) => !v)}
         className="absolute right-1.5 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded text-muted hover:text-strong"
-        aria-label={show ? "Ocultar contraseña" : "Mostrar contraseña"}
+        aria-label={show ? t("Ocultar contraseña") : t("Mostrar contraseña")}
         tabIndex={-1}
       >
         {show ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
@@ -116,7 +118,7 @@ export function SubDialog({ title, onClose, children, width = 420 }: { title: st
 
 function formatIsoDate(iso: string) {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleString("es", { dateStyle: "long", timeStyle: "short" });
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleString(intlLocale(), { dateStyle: "long", timeStyle: "short" });
 }
 
 /**
@@ -167,7 +169,7 @@ export function BackupActionDialog({
         const r = await api.backup.restore(path, password, true);
         setPassword("");
         await reloadData();
-        toast.info(`Datos restaurados. Los anteriores se guardaron en «${r.preRestoreBackup.fileName}».`);
+        toast.info(t("Datos restaurados. Los anteriores se guardaron en «{file}».", { file: r.preRestoreBackup.fileName }));
         onDone?.();
         onClose();
       } else {
@@ -185,40 +187,43 @@ export function BackupActionDialog({
   }
 
   return (
-    <SubDialog title={isRestore ? "Restaurar copia de seguridad" : "Verificar copia de seguridad"} onClose={busy ? () => {} : onClose}>
+    <SubDialog title={isRestore ? t("Restaurar copia de seguridad") : t("Verificar copia de seguridad")} onClose={busy ? () => {} : onClose}>
       <form onSubmit={submit} className="mt-3 space-y-3 text-[13px]">
         {infoError ? (
           <p className="rounded-md bg-danger/10 px-3 py-2 text-danger">{infoError}</p>
         ) : info ? (
           <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-md bg-control px-3 py-2 text-[12px]">
-            <dt className="text-muted">Archivo</dt>
+            <dt className="text-muted">{t("Archivo")}</dt>
             <dd className="truncate" title={info.filePath}>{info.fileName}</dd>
-            <dt className="text-muted">Creada</dt>
+            <dt className="text-muted">{t("Creada")}</dt>
             <dd>{formatIsoDate(info.createdAt)}</dd>
-            <dt className="text-muted">Versión</dt>
-            <dd>Chronos {info.appVersion} · esquema {info.schemaVersion}</dd>
-            <dt className="text-muted">Tamaño</dt>
+            <dt className="text-muted">{t("Versión")}</dt>
+            <dd>{t("Chronos {version} · esquema {schema}", { version: info.appVersion, schema: info.schemaVersion })}</dd>
+            <dt className="text-muted">{t("Tamaño")}</dt>
             <dd>{formatBytes(info.sizeBytes)}</dd>
           </dl>
         ) : (
-          <p className="text-muted">Leyendo el archivo…</p>
+          <p className="text-muted">{t("Leyendo el archivo…")}</p>
         )}
         {verified ? (
           <p className="rounded-md bg-control px-3 py-2">
-            La copia es íntegra y la contraseña es correcta: se puede restaurar.
+            {t("La copia es íntegra y la contraseña es correcta: se puede restaurar.")}
           </p>
         ) : (
           <>
             <label className="block space-y-1">
-              <span className="text-[12px] text-muted">Contraseña con la que se creó la copia</span>
+              <span className="text-[12px] text-muted">{t("Contraseña con la que se creó la copia")}</span>
               <PasswordInput value={password} onChange={setPassword} autoFocus />
             </label>
             {isRestore && (
               <label className="flex items-start gap-2 text-[12px] leading-relaxed">
                 <input type="checkbox" className="mt-0.5" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} />
                 <span>
-                  Entiendo que se <b>reemplazarán todos los datos actuales</b> por los de la copia. Antes se creará una copia
-                  automática de los datos actuales.
+                  <Rich
+                    text={t(
+                      "Entiendo que se <b>reemplazarán todos los datos actuales</b> por los de la copia. Antes se creará una copia automática de los datos actuales.",
+                    )}
+                  />
                 </span>
               </label>
             )}
@@ -227,11 +232,11 @@ export function BackupActionDialog({
         {error && <p className="text-[12px] text-danger">{error}</p>}
         <div className="flex justify-end gap-2 pt-1">
           <Button variant="secondary" onClick={onClose} disabled={busy}>
-            {verified ? "Cerrar" : "Cancelar"}
+            {verified ? t("Cerrar") : t("Cancelar")}
           </Button>
           {!verified && (
             <Button type="submit" variant={isRestore ? "danger" : "default"} disabled={!canSubmit}>
-              {busy ? (isRestore ? "Restaurando…" : "Verificando…") : isRestore ? "Restaurar" : "Verificar"}
+              {busy ? (isRestore ? t("Restaurando…") : t("Verificando…")) : isRestore ? t("Restaurar") : t("Verificar")}
             </Button>
           )}
         </div>

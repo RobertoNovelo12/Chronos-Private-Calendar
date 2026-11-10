@@ -1,3 +1,4 @@
+import { intlLocale } from "@/i18n";
 // Utilidades de zonas horarias IANA con la API Intl (sin datos externos).
 
 export interface WallTime {
@@ -103,7 +104,7 @@ export function longZoneName(tz: string, instant: number = Date.now()): string {
   if (cached) return cached;
   let name = tz;
   try {
-    const part = new Intl.DateTimeFormat("es", { timeZone: tz, timeZoneName: "long" })
+    const part = new Intl.DateTimeFormat(intlLocale(), { timeZone: tz, timeZoneName: "long" })
       .formatToParts(new Date(instant))
       .find((p) => p.type === "timeZoneName");
     if (part) name = part.value;

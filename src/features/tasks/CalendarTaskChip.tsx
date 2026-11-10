@@ -7,6 +7,7 @@ import { useUiStore } from "@/stores/uiStore";
 import type { Task } from "@/types/domain";
 import { toggleTask } from "./actions";
 import { TaskCheckbox } from "./TaskCheckbox";
+import { t } from "@/i18n";
 
 /** Tarea dentro del calendario: casilla + título (y hora si la tiene). */
 export function CalendarTaskChip({
@@ -44,11 +45,11 @@ export function CalendarTaskChip({
         selected && "bg-surface-hover ring-1 ring-border-strong",
         className,
       )}
-      title={`Tarea: ${task.title}${due && !task.isAllDay ? ` · ${formatTime(due)}` : ""}`}
+      title={t("Tarea: {title}", { title: task.title }) + (due && !task.isAllDay ? ` · ${formatTime(due)}` : "")}
     >
-      <TaskCheckbox done={done} color={color} size={12} onToggle={() => void toggleTask(task.id)} label={done ? "Marcar como pendiente" : `Completar «${task.title}»`} />
+      <TaskCheckbox done={done} color={color} size={12} onToggle={() => void toggleTask(task.id)} label={done ? t("Marcar como pendiente") : t("Completar «{title}»", { title: task.title })} />
       {agenda ? (
-        <span className="w-32 shrink-0 text-[12px] tabular-nums text-muted">{due && !task.isAllDay ? formatTime(due) : "Tarea"}</span>
+        <span className="w-32 shrink-0 text-[12px] tabular-nums text-muted">{due && !task.isAllDay ? formatTime(due) : t("Tarea")}</span>
       ) : (
         showTime && due && !task.isAllDay && <span className="shrink-0 tabular-nums text-muted">{formatTime(due)}</span>
       )}

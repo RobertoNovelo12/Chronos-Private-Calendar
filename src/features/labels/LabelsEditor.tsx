@@ -6,6 +6,7 @@ import { errorMessage } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { nextLabelColor, useLabelStore } from "@/stores/labelStore";
 import { toast } from "@/stores/toastStore";
+import { intlLocale, t } from "@/i18n";
 
 const MAX_PER_EVENT = 20;
 
@@ -24,14 +25,14 @@ export function LabelsEditor({ value, onChange }: { value: string[]; onChange: (
     const norm = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
     return labels.filter((l) => norm(l.name).includes(norm(q)));
   }, [labels, q]);
-  const exact = labels.some((l) => l.name.localeCompare(q, "es", { sensitivity: "base" }) === 0);
+  const exact = labels.some((l) => l.name.localeCompare(q, intlLocale(), { sensitivity: "base" }) === 0);
   const canCreate = q.length > 0 && q.length <= 100 && !exact;
   const options = matches.length + (canCreate ? 1 : 0);
 
   function toggle(id: string) {
     if (value.includes(id)) onChange(value.filter((x) => x !== id));
     else if (value.length < MAX_PER_EVENT) onChange([...value, id]);
-    else toast.error(`Máximo ${MAX_PER_EVENT} etiquetas por evento`);
+    else toast.error(t("Máximo {n} etiquetas por evento", { n: MAX_PER_EVENT }));
   }
 
   async function createAndAssign() {
@@ -66,7 +67,7 @@ export function LabelsEditor({ value, onChange }: { value: string[]; onChange: (
             <span className="truncate">{l.name}</span>
             <button
               className="flex size-4 items-center justify-center rounded text-muted hover:text-danger"
-              aria-label={`Quitar etiqueta ${l.name}`}
+              aria-label={t("Quitar etiqueta {name}", { name: l.name })}
               onClick={() => onChange(value.filter((x) => x !== l.id))}
             >
               <X className="size-3" />
@@ -77,16 +78,16 @@ export function LabelsEditor({ value, onChange }: { value: string[]; onChange: (
           ref={ref}
           onClick={() => (open ? close() : setOpen(true))}
           className="flex h-6 items-center gap-1 rounded-md px-1.5 text-[13px] text-muted hover:bg-surface-hover hover:text-strong"
-          aria-label="Asignar etiquetas"
+          aria-label={t("Asignar etiquetas")}
         >
-          {assigned.length === 0 ? "Etiquetas" : <Plus className="size-3.5" />}
+          {assigned.length === 0 ? t("Etiquetas") : <Plus className="size-3.5" />}
         </button>
         <Popover open={open} onClose={close} anchorRef={ref} className="w-[240px] p-1">
           <input
             autoFocus
             value={query}
             maxLength={100}
-            placeholder="Buscar o crear etiqueta…"
+            placeholder={t("Buscar o crear etiqueta…")}
             className="mb-1 h-8 w-full rounded-md bg-control px-2 text-[13px] text-strong placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-ring"
             onChange={(e) => {
               setQuery(e.target.value);
@@ -106,7 +107,7 @@ export function LabelsEditor({ value, onChange }: { value: string[]; onChange: (
               }
             }}
           />
-          <div className="max-h-[240px] overflow-y-auto" role="listbox" aria-label="Etiquetas" aria-multiselectable="true">
+          <div className="max-h-[240px] overflow-y-auto" role="listbox" aria-label={t("Etiquetas")} aria-multiselectable="true">
             {matches.map((l, i) => {
               const on = value.includes(l.id);
               return (
@@ -138,13 +139,13 @@ export function LabelsEditor({ value, onChange }: { value: string[]; onChange: (
               >
                 <Plus className="size-3.5 shrink-0 text-muted" />
                 <span className="min-w-0 truncate">
-                  Crear «<span className="font-medium">{q}</span>»
+                  {t("Crear «{name}»", { name: q })}
                 </span>
               </button>
             )}
             {options === 0 && (
               <div className="px-2 py-1.5 text-[12px] text-muted">
-                {labels.length === 0 ? "Escribe un nombre para crear tu primera etiqueta" : "Sin resultados"}
+                {labels.length === 0 ? t("Escribe un nombre para crear tu primera etiqueta") : t("Sin resultados")}
               </div>
             )}
           </div>

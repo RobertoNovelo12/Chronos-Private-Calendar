@@ -148,6 +148,14 @@ Principio: la aplicación **no se conecta a PayPal**. Solo abre el enlace en el 
 ### 1.1.6 Correcciones
 1. ✅ La lista de copias se actualiza sola (cada 20 s) cuando se crea una copia automática con la pestaña abierta.
 
+### 1.1.7 Idiomas ✅
+1. ✅ Interfaz en 9 idiomas: español, inglés, chino simplificado, portugués (Brasil), francés, alemán, japonés, coreano y ruso. Todo va dentro del binario (sin descargas).
+2. ✅ El texto en español es la clave (`t("…")`); cada idioma es un JSON en `src/i18n/locales/`. Plurales con `Intl.PluralRules` (ruso: one/few/many) y fechas con los locales de date-fns e `Intl`.
+3. ✅ Idioma del sistema por defecto; selector en la pantalla de desbloqueo y en Configuración → General. Se guarda solo en el equipo.
+4. ✅ Notificaciones de recordatorios y títulos de diálogos del sistema (Rust) en el idioma elegido; mensajes de validación del backend traducidos.
+5. ✅ `scripts/i18n-check.mjs` y `i18n.test.ts`: ningún idioma puede tener textos sin traducir, sobrantes o con marcadores `{n}` rotos.
+6. Añadir un idioma: copiar `en.json`, traducirlo, registrarlo en `LANGUAGES` (`src/i18n/index.ts`) y en `src-tauri/src/i18n.rs`.
+
 ## Versión 1.2 — Funciones de productividad
 
 ### 1.2.1 Menú de comandos (`Ctrl+K`)

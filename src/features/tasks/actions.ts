@@ -5,6 +5,7 @@ import { useTaskStore } from "@/stores/taskStore";
 import { toast } from "@/stores/toastStore";
 import { useUiStore } from "@/stores/uiStore";
 import type { NewTask } from "@/types/domain";
+import { t as tr } from "@/i18n";
 
 /**
  * Crea una tarea «Nueva tarea» y la abre en el panel con el título seleccionado
@@ -13,7 +14,7 @@ import type { NewTask } from "@/types/domain";
 export async function createTask(input: Partial<NewTask> = {}) {
   try {
     const t = await useTaskStore.getState().create({
-      title: "Nueva tarea",
+      title: tr("Nueva tarea"),
       dueAt: todayAllDay(),
       isAllDay: true,
       ...input,
@@ -32,8 +33,8 @@ export async function deleteTask(id: string) {
   try {
     const removed = await useTaskStore.getState().remove(id);
     if (useUiStore.getState().selectedTaskId === id) useUiStore.getState().selectTask(null);
-    toast.info("Tarea eliminada", {
-      label: "Deshacer",
+    toast.info(tr("Tarea eliminada"), {
+      label: tr("Deshacer"),
       run: () => {
         useTaskStore
           .getState()

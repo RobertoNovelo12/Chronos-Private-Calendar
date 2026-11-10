@@ -17,8 +17,8 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { es } from "date-fns/locale";
 import type { CalendarEvent } from "@/types/domain";
+import { dateLocale, getLanguage, intlLocale, t, tp } from "@/i18n";
 
 export const DAY_MS = 86_400_000;
 export const MINUTE_MS = 60_000;
@@ -129,19 +129,34 @@ export function shiftAnchor(view: ViewKind, anchor: Date, dir: 1 | -1, customDay
 }
 
 function cap(s: string): string {
-  return s.charAt(0).toLocaleUpperCase("es") + s.slice(1);
+  return s.charAt(0).toLocaleUpperCase(intlLocale()) + s.slice(1);
+}
+
+/** Chino, japonés y coreano ordenan año-mes-día: se usa `Intl` en lugar de patrones fijos. */
+const cjk = () => ["zh-CN", "ja", "ko"].includes(intlLocale());
+
+/** "Noviembre 2026", "November 2026", "2026年11月". */
+export function monthYear(d: Date, short = false): string {
+  if (cjk()) return new Intl.DateTimeFormat(intlLocale(), { year: "numeric", month: short ? "short" : "long" }).format(d);
+  return cap(format(d, short ? "LLL yyyy" : "LLLL yyyy", { locale: dateLocale() }).replace(".", ""));
+}
+
+/** "6 nov", "6 Nov", "11月6日". */
+export function dayMonthShort(d: Date): string {
+  if (getLanguage() === "es") return format(d, "d MMM", { locale: dateLocale() });
+  return new Intl.DateTimeFormat(intlLocale(), { month: "short", day: "numeric" }).format(d);
 }
 
 /** Título principal ("Noviembre 2026") según los días visibles. */
 export function rangeTitle(view: ViewKind, anchor: Date, range: VisibleRange): string {
-  if (view === "month") return cap(format(anchor, "LLLL yyyy", { locale: es }));
+  if (view === "month") return monthYear(anchor);
   const first = range.days[0]!;
   const last = range.days[range.days.length - 1]!;
-  if (isSameMonth(first, last)) return cap(format(first, "LLLL yyyy", { locale: es }));
-  if (isSameYear(first, last)) {
-    return `${cap(format(first, "LLL", { locale: es }).replace(".", ""))} – ${cap(format(last, "LLL yyyy", { locale: es }).replace(".", ""))}`;
+  if (isSameMonth(first, last)) return monthYear(first);
+  if (isSameYear(first, last) && !cjk()) {
+    return `${cap(format(first, "LLL", { locale: dateLocale() }).replace(".", ""))} – ${monthYear(last, true)}`;
   }
-  return `${cap(format(first, "LLL yyyy", { locale: es }).replace(".", ""))} – ${cap(format(last, "LLL yyyy", { locale: es }).replace(".", ""))}`;
+  return `${monthYear(first, true)} – ${monthYear(last, true)}`;
 }
 
 /** Número de semana: ISO si la semana empieza en lunes; norteamericano si empieza en domingo. */
@@ -175,19 +190,19 @@ export function formatHourLabel(h: number): string {
 /** Duración legible: "30 min", "1 h", "1 h 30 min", "2 días". */
 export function formatDuration(ms: number): string {
   const min = Math.round(ms / MINUTE_MS);
-  if (min < 60) return `${min} min`;
+  if (min < 60) return t("{n} min", { n: min });
   if (min < 24 * 60) {
     const h = Math.floor(min / 60);
     const r = min % 60;
-    return r ? `${h} h ${r} min` : `${h} h`;
+    return r ? t("{h} h {m} min", { h, m: r }) : t("{n} h", { n: h });
   }
-  const days = Math.round(min / (24 * 60));
-  return days === 1 ? "1 día" : `${days} días`;
+  return tp(Math.round(min / (24 * 60)), "{n} día", "{n} días");
 }
 
 /** "Vie 6 nov" */
 export function formatShortDate(d: Date): string {
-  return cap(format(d, "EEE d MMM", { locale: es }).replace(/\./g, ""));
+  if (cjk()) return new Intl.DateTimeFormat(intlLocale(), { weekday: "short", month: "short", day: "numeric" }).format(d);
+  return cap(format(d, "EEE d MMM", { locale: dateLocale() }).replace(/\./g, ""));
 }
 
 /** "9:00 – 10:30", o con fechas si cruza días. */
@@ -196,13 +211,13 @@ export function formatEventTime(e: CalendarEvent): string {
   const en = eventEnd(e);
   if (e.isAllDay) {
     const days = differenceInCalendarDays(en, s);
-    if (days <= 1) return "Todo el día";
-    return `${format(s, "d MMM", { locale: es })} – ${format(addDays(en, -1), "d MMM", { locale: es })}`;
+    if (days <= 1) return t("Todo el día");
+    return `${dayMonthShort(s)} – ${dayMonthShort(addDays(en, -1))}`;
   }
   if (differenceInCalendarDays(en, s) === 0 || (en.getTime() === startOfDay(en).getTime() && differenceInCalendarDays(en, s) === 1)) {
     return `${formatTime(s)} – ${formatTime(en)}`;
   }
-  return `${format(s, "d MMM", { locale: es })} ${formatTime(s)} – ${format(en, "d MMM", { locale: es })} ${formatTime(en)}`;
+  return `${dayMonthShort(s)} ${formatTime(s)} – ${dayMonthShort(en)} ${formatTime(en)}`;
 }
 
 /** Redondea al múltiplo de `SNAP_MINUTES` más cercano (o hacia abajo/arriba). */
@@ -221,7 +236,7 @@ export function minutesFromDayStart(date: Date, day: Date): number {
 }
 
 export function monthGridTitle(d: Date): string {
-  return cap(format(d, "LLLL yyyy", { locale: es }));
+  return monthYear(d);
 }
 
 export { endOfMonth, startOfMonth };

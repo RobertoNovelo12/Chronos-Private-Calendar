@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { api } from "@/lib/ipc";
 import type { CalendarEvent, EditScope, EventPatch, NewEvent, SeriesSnapshot } from "@/types/domain";
+import { msg } from "@/i18n";
 
 /** Identificador del borrador (evento aún no guardado). */
 export const DRAFT_ID = "draft";
@@ -133,7 +134,7 @@ export const useEventStore = create<EventState>((set, get) => {
       }
       upsert(created);
       record({
-        label: "crear evento",
+        label: msg("crear evento"),
         undo: async () => void (await rawRemove(created.id)),
         redo: async () => void (await rawRestore(created)),
       });
@@ -149,13 +150,13 @@ export const useEventStore = create<EventState>((set, get) => {
         const updated = await api.events.update(id, patch, scope ?? "this");
         await get().reload();
         // «Este y los siguientes» crea una serie nueva: también es parte del cambio.
-        await recordSeries("editar evento repetido", before, updated.recurrenceMasterId ?? updated.id);
+        await recordSeries(msg("editar evento repetido"), before, updated.recurrenceMasterId ?? updated.id);
         return updated;
       }
       const inverse = inversePatch(prev, patch);
       const updated = await rawUpdate(id, patch);
       record({
-        label: "editar evento",
+        label: msg("editar evento"),
         undo: async () => void (await rawUpdate(id, inverse)),
         redo: async () => void (await rawUpdate(id, patch)),
       });
@@ -168,12 +169,12 @@ export const useEventStore = create<EventState>((set, get) => {
         const before = await snapshotOf(id);
         const removed = await api.events.remove(id, scope ?? "this");
         await get().reload();
-        await recordSeries("eliminar evento repetido", before, null);
+        await recordSeries(msg("eliminar evento repetido"), before, null);
         return removed;
       }
       const removed = await rawRemove(id);
       record({
-        label: "eliminar evento",
+        label: msg("eliminar evento"),
         undo: async () => void (await rawRestore(removed)),
         redo: async () => void (await rawRemove(removed.id)),
       });
@@ -184,7 +185,7 @@ export const useEventStore = create<EventState>((set, get) => {
       const copy = await api.events.duplicate(id);
       upsert(copy);
       record({
-        label: "duplicar evento",
+        label: msg("duplicar evento"),
         undo: async () => void (await rawRemove(copy.id)),
         redo: async () => void (await rawRestore(copy)),
       });

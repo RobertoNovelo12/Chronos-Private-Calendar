@@ -9,6 +9,7 @@ import { AgendaView } from "./AgendaView";
 import { MonthView } from "./MonthView";
 import { TimeGridView } from "./TimeGridView";
 import { Toolbar } from "./Toolbar";
+import { t } from "@/i18n";
 
 export function useVisibleRange(): VisibleRange {
   const view = useUiStore((s) => s.view);
@@ -42,7 +43,7 @@ export function CalendarView() {
       <div className="flex shrink-0 items-baseline gap-2 px-5 pb-2.5 pt-1">
         <h1 className="text-[22px] font-bold tracking-tight text-strong">{rangeTitle(view, anchor, range)}</h1>
         {view !== "month" && view !== "agenda" && (
-          <span className="text-[12px] font-medium text-muted">Semana {weekNumber(weekRef, weekStartsOn)}</span>
+          <span className="text-[12px] font-medium text-muted">{t("Semana {n}", { n: weekNumber(weekRef, weekStartsOn) })}</span>
         )}
       </div>
       {view === "month" ? (

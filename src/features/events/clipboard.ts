@@ -12,6 +12,7 @@ import { DRAFT_ID, useEventStore } from "@/stores/eventStore";
 import { toast } from "@/stores/toastStore";
 import { useUiStore } from "@/stores/uiStore";
 import type { CalendarEvent } from "@/types/domain";
+import { t } from "@/i18n";
 
 /** Destino de un pegado: un instante (rejilla horaria) o un día (día completo / mes). */
 export interface Slot {
@@ -39,7 +40,7 @@ export function copyEvent(id: string) {
   const e = useEventStore.getState().events[id];
   if (!e) return;
   useClipboard.setState({ copied: structuredClone(e) });
-  toast.info("Evento copiado");
+  toast.info(t("Evento copiado"));
 }
 
 /** Tiempos del evento pegado en `slot`, conservando la duración. */

@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 import { COMMON_ZONES, allTimeZones, cityName, formatOffsetLong, longZoneName, matchesZone, offsetMinutes } from "@/lib/timezones";
 import { cn } from "@/lib/utils";
 import { Popover } from "./popover";
+import { t } from "@/i18n";
 
 interface Props {
   open: boolean;
@@ -83,7 +84,7 @@ export function TimeZonePicker({ open, onClose, anchorRef, selected, onSelect, f
             pick(flat[active]!);
           }
         }}
-        placeholder="Zona horaria"
+        placeholder={t("Zona horaria")}
         spellCheck={false}
         className="h-10 w-full border-b border-border-strong bg-transparent px-3 text-[13px] text-strong placeholder:text-muted focus:outline-none"
       />
@@ -95,7 +96,7 @@ export function TimeZonePicker({ open, onClose, anchorRef, selected, onSelect, f
         {rest.map((tz, i) => (
           <ZoneRow key={tz} tz={tz} active={common.length + i === active} selected={tz === selected} onPick={() => pick(tz)} />
         ))}
-        {flat.length === 0 && <div className="px-2 py-2 text-[12px] text-muted">Sin resultados</div>}
+        {flat.length === 0 && <div className="px-2 py-2 text-[12px] text-muted">{t("Sin resultados")}</div>}
       </div>
       {footer && (
         <div className="border-t border-border-strong/60 p-1">

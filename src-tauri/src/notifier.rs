@@ -6,9 +6,10 @@
 //!   texto genérico: los detalles del evento no permanecen en memoria.
 //! * Ningún aviso sale del equipo: no hay servicios de notificaciones remotos.
 
+use crate::i18n::{self, Key};
 use crate::state::AppState;
 use chronos_core::database::now_ms;
-use chronos_core::reminders::{self, describe_offset, DueReminder};
+use chronos_core::reminders::{self, DueReminder};
 use chronos_core::repositories::settings;
 use std::collections::HashSet;
 use std::time::Duration;
@@ -96,20 +97,20 @@ fn notify_detailed(app: &AppHandle, d: &DueReminder, show_details: bool) {
         return notify_generic(app, d.offset_minutes, d.is_task);
     }
     let title = if d.title.trim().is_empty() {
-        "Sin título"
+        i18n::text(Key::Untitled)
     } else {
         d.title.as_str()
     };
     let mut body = if d.is_task {
         if d.is_all_day {
-            format!("Tarea para {}", describe_day(d.offset_minutes))
+            i18n::fmt(Key::TaskFor, &[&i18n::day(d.offset_minutes)])
         } else {
-            format!("Tarea · vence {}", describe_offset(d.offset_minutes))
+            i18n::fmt(Key::TaskDueAt, &[&i18n::offset(d.offset_minutes)])
         }
     } else if d.is_all_day {
-        format!("Todo el día · {}", describe_offset(d.offset_minutes))
+        i18n::fmt(Key::AllDayAt, &[&i18n::offset(d.offset_minutes)])
     } else {
-        format!("Empieza {}", describe_offset(d.offset_minutes))
+        i18n::fmt(Key::StartsAt, &[&i18n::offset(d.offset_minutes)])
     };
     if !d.location.trim().is_empty() {
         body.push_str(" · ");
@@ -119,21 +120,16 @@ fn notify_detailed(app: &AppHandle, d: &DueReminder, show_details: bool) {
 }
 
 fn notify_generic(app: &AppHandle, offset_minutes: i32, is_task: bool) {
-    let what = if is_task { "una tarea" } else { "un evento" };
+    let key = if is_task {
+        Key::YouHaveTask
+    } else {
+        Key::YouHaveEvent
+    };
     show(
         app,
         "Chronos",
-        &format!("Tienes {what} {}", describe_offset(offset_minutes)),
+        &i18n::fmt(key, &[&i18n::offset(offset_minutes)]),
     );
-}
-
-/// «hoy», «mañana» o «dentro de N días» para tareas de día completo.
-fn describe_day(offset_minutes: i32) -> String {
-    match offset_minutes / (24 * 60) {
-        0 => "hoy".into(),
-        1 => "mañana".into(),
-        n => format!("dentro de {n} días"),
-    }
 }
 
 fn show(app: &AppHandle, title: &str, body: &str) {

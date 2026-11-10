@@ -16,6 +16,7 @@ import { useUiStore } from "@/stores/uiStore";
 import type { Task, TaskPatch } from "@/types/domain";
 import { deleteTask, toggleTask } from "./actions";
 import { TaskCheckbox } from "./TaskCheckbox";
+import { intlLocale, t } from "@/i18n";
 
 const inlineSelect =
   "h-7 max-w-full cursor-pointer appearance-none rounded-md px-1.5 text-[13px] text-strong hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-ring";
@@ -108,12 +109,12 @@ function TaskBody({ task }: { task: Task }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex h-10 shrink-0 items-center justify-between pl-4 pr-2">
-        <span className="text-[13px] font-semibold text-strong">Tarea</span>
+        <span className="text-[13px] font-semibold text-strong">{t("Tarea")}</span>
         <div className="flex">
-          <Button variant="ghost" size="icon" onClick={() => void deleteTask(task.id)} aria-label="Eliminar tarea" title="Eliminar tarea">
+          <Button variant="ghost" size="icon" onClick={() => void deleteTask(task.id)} aria-label={t("Eliminar tarea")} title={t("Eliminar tarea")}>
             <Trash2 />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => selectTask(null)} aria-label="Cerrar">
+          <Button variant="ghost" size="icon" onClick={() => selectTask(null)} aria-label={t("Cerrar")}>
             <X />
           </Button>
         </div>
@@ -127,7 +128,7 @@ function TaskBody({ task }: { task: Task }) {
               color={color}
               size={16}
               onToggle={() => void toggleTask(task.id)}
-              label={done ? "Marcar como pendiente" : "Completar tarea"}
+              label={done ? t("Marcar como pendiente") : t("Completar tarea")}
             />
           </span>
           <textarea
@@ -135,7 +136,7 @@ function TaskBody({ task }: { task: Task }) {
             value={title}
             rows={1}
             maxLength={1000}
-            placeholder="Título de la tarea"
+            placeholder={t("Título de la tarea")}
             onChange={(e) => setTitle(e.target.value.replace(/\n/g, " "))}
             onBlur={() => !title.trim() && setTitle(saved.current.title)}
             onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), e.currentTarget.blur())}
@@ -147,7 +148,7 @@ function TaskBody({ task }: { task: Task }) {
         </section>
         {done && (
           <p className="px-4 pb-2 pl-[50px] text-[12px] text-muted">
-            Completada el {new Date(task.completedAt!).toLocaleString("es", { dateStyle: "medium", timeStyle: "short" })}
+            {t("Completada el {date}", { date: new Date(task.completedAt!).toLocaleString(intlLocale(), { dateStyle: "medium", timeStyle: "short" }) })}
           </p>
         )}
         <div className="mx-3 border-t border-border" />
@@ -156,13 +157,13 @@ function TaskBody({ task }: { task: Task }) {
           <Row icon={<Clock className="size-4" />}>
             {due ? (
               <>
-                <DateSelect value={due} onChange={setDate} weekStartsOn={weekStartsOn} label="Fecha de vencimiento" />
-                {!task.isAllDay && <TimeSelect value={due} onChange={(d) => void commit({ dueAt: d.getTime() })} label="Hora de vencimiento" />}
+                <DateSelect value={due} onChange={setDate} weekStartsOn={weekStartsOn} label={t("Fecha de vencimiento")} />
+                {!task.isAllDay && <TimeSelect value={due} onChange={(d) => void commit({ dueAt: d.getTime() })} label={t("Hora de vencimiento")} />}
                 <button
                   className="ml-auto flex size-6 items-center justify-center rounded text-muted hover:bg-surface-hover hover:text-strong"
                   onClick={() => void commit({ dueAt: null })}
-                  aria-label="Quitar fecha"
-                  title="Quitar fecha"
+                  aria-label={t("Quitar fecha")}
+                  title={t("Quitar fecha")}
                 >
                   <X className="size-3.5" />
                 </button>
@@ -172,7 +173,7 @@ function TaskBody({ task }: { task: Task }) {
                 className="h-7 rounded-md px-1.5 text-[13px] text-muted hover:bg-surface-hover hover:text-strong"
                 onClick={() => void commit({ dueAt: todayAllDay(), isAllDay: true })}
               >
-                Añadir fecha
+                {t("Añadir fecha")}
               </button>
             )}
           </Row>
@@ -180,7 +181,7 @@ function TaskBody({ task }: { task: Task }) {
             <Row>
               <label className="flex h-7 cursor-pointer items-center gap-2 rounded-md px-1.5 text-[13px] text-muted hover:bg-surface-hover hover:text-strong">
                 <input type="checkbox" className="accent-[var(--accent)]" checked={task.isAllDay} onChange={toggleAllDay} />
-                Todo el día
+                {t("Todo el día")}
               </label>
             </Row>
           )}
@@ -189,11 +190,11 @@ function TaskBody({ task }: { task: Task }) {
               value={task.priority}
               onChange={(e) => void commit({ priority: Number(e.target.value) })}
               className={inlineSelect}
-              aria-label="Prioridad"
+              aria-label={t("Prioridad")}
             >
               {PRIORITY_LABEL.map((l, i) => (
                 <option key={l} value={i}>
-                  {i === 0 ? l : `Prioridad ${l.toLowerCase()}`}
+                  {i === 0 ? t(l) : t("Prioridad {level}", { level: t(l).toLocaleLowerCase(intlLocale()) })}
                 </option>
               ))}
             </select>
@@ -207,9 +208,9 @@ function TaskBody({ task }: { task: Task }) {
               value={task.calendarId ?? ""}
               onChange={(e) => void commit({ calendarId: e.target.value || null })}
               className={cn(inlineSelect, "font-medium")}
-              aria-label="Calendario"
+              aria-label={t("Calendario")}
             >
-              <option value="">Sin calendario</option>
+              <option value="">{t("Sin calendario")}</option>
               {calendars.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -227,12 +228,12 @@ function TaskBody({ task }: { task: Task }) {
             value={notes}
             maxLength={50_000}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Notas"
+            placeholder={t("Notas")}
             className="field-sizing-content min-h-[72px] w-full resize-none rounded-md bg-transparent px-1.5 py-1 text-[13px] leading-relaxed text-strong placeholder:text-muted hover:bg-surface-hover focus:bg-control focus:outline-none"
           />
         </section>
       </div>
-      <div className="shrink-0 px-4 py-2 text-[11px] text-faint">Guardado automáticamente · cifrado en este equipo</div>
+      <div className="shrink-0 px-4 py-2 text-[11px] text-faint">{t("Guardado automáticamente · cifrado en este equipo")}</div>
     </div>
   );
 }

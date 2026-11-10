@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { api } from "@/lib/ipc";
 import { useEventStore } from "./eventStore";
 import type { Label, LabelPatch, NewLabel } from "@/types/domain";
+import { intlLocale } from "@/i18n";
 
 interface LabelState {
   labels: Label[];
@@ -16,7 +17,7 @@ interface LabelState {
   clear: () => void;
 }
 
-const byName = (a: Label, b: Label) => a.name.localeCompare(b.name, "es", { sensitivity: "base" });
+const byName = (a: Label, b: Label) => a.name.localeCompare(b.name, intlLocale(), { sensitivity: "base" });
 
 export const useLabelStore = create<LabelState>((set, get) => ({
   labels: [],
