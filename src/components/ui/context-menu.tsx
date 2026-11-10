@@ -1,12 +1,37 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** Contenedor de menú contextual: se mantiene dentro de la ventana y se cierra con Esc o clic fuera. */
-export function ContextMenuShell({ x, y, onClose, children }: { x: number; y: number; onClose: () => void; children: ReactNode }) {
+/** Combinación normalizada de una pulsación: "c", "mod+v", "delete"… */
+function comboOf(e: KeyboardEvent): string {
+  const key = e.key.toLowerCase();
+  const name = key === "backspace" ? "delete" : key;
+  return e.ctrlKey || e.metaKey ? `mod+${name}` : name;
+}
+
+/**
+ * Contenedor de menú contextual: se mantiene dentro de la ventana y se cierra
+ * con Esc o clic fuera. `keys` asocia atajos a acciones mientras el menú está
+ * abierto (p. ej. "c" crea en el hueco del clic derecho, no en la hora actual).
+ */
+export function ContextMenuShell({
+  x,
+  y,
+  onClose,
+  keys,
+  children,
+}: {
+  x: number;
+  y: number;
+  onClose: () => void;
+  keys?: Record<string, () => void>;
+  children: ReactNode;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ x, y });
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
+  const keysRef = useRef(keys);
+  keysRef.current = keys;
 
   useLayoutEffect(() => {
     if (!ref.current) return;
@@ -23,6 +48,14 @@ export function ContextMenuShell({ x, y, onClose, children }: { x: number; y: nu
       if (e.key === "Escape") {
         e.stopPropagation();
         close();
+        return;
+      }
+      const action = keysRef.current?.[comboOf(e)];
+      if (action) {
+        // El atajo pertenece al menú: no llega a los atajos globales.
+        e.preventDefault();
+        e.stopPropagation();
+        action();
       }
     };
     window.addEventListener("pointerdown", onDown, true);

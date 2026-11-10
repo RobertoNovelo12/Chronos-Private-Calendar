@@ -28,18 +28,21 @@ export function SlotContextMenu() {
     }
   }
 
+  function paste() {
+    if (!menu || !copied) return;
+    close();
+    void pasteEvent({ time: menu.time, allDay: menu.allDay });
+  }
+
   return (
-    <ContextMenuShell key={`${menu.x}-${menu.y}`} x={menu.x} y={menu.y} onClose={close}>
+    <ContextMenuShell key={`${menu.x}-${menu.y}`} x={menu.x} y={menu.y} onClose={close} keys={{ c: create, "mod+v": paste }}>
       <ContextMenuItem icon={<Plus />} label="Crear evento" shortcut="C" onSelect={create} />
       <ContextMenuItem
         icon={<ClipboardPaste />}
         label="Pegar evento"
         shortcut={`${MOD}V`}
         disabled={!copied}
-        onSelect={() => {
-          close();
-          void pasteEvent({ time: menu.time, allDay: menu.allDay });
-        }}
+        onSelect={paste}
       />
     </ContextMenuShell>
   );

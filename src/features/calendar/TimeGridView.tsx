@@ -471,7 +471,6 @@ export function TimeGridView({ days }: Props) {
                     <div
                       className="absolute inset-x-0 bottom-0 h-1.5 cursor-ns-resize"
                       onPointerDown={(e) => onEventPointerDown(e, s.event, true)}
-                      title="Arrastra para cambiar la duración"
                     />
                   )}
                 </div>

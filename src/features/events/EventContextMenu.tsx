@@ -32,7 +32,17 @@ export function EventContextMenu() {
   };
 
   return (
-    <ContextMenuShell key={`${menu.eventId}-${menu.x}-${menu.y}`} x={menu.x} y={menu.y} onClose={close}>
+    <ContextMenuShell
+      key={`${menu.eventId}-${menu.x}-${menu.y}`}
+      x={menu.x}
+      y={menu.y}
+      onClose={close}
+      keys={{
+        "mod+c": run(() => copyEvent(event.id)),
+        "mod+d": run(() => void duplicateEvent(event.id)),
+        delete: () => useUiStore.getState().askDelete(event.id),
+      }}
+    >
       <ContextMenuItem icon={<PanelRight />} label="Abrir detalles" onSelect={run(() => useUiStore.getState().select(event.id))} />
       <ContextMenuItem icon={<ClipboardCopy />} label="Copiar" shortcut={`${MOD}C`} onSelect={run(() => copyEvent(event.id))} />
       <ContextMenuItem icon={<Copy />} label="Duplicar" shortcut={`${MOD}D`} onSelect={run(() => void duplicateEvent(event.id))} />
