@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Copy, Download, Heart, Loader2, RefreshCw } from "lucide-react";
+import logoUrl from "@/assets/logo.svg";
 import { Button } from "@/components/ui/button";
 import { Row, Section } from "@/features/data/shared";
 import { api, errorMessage } from "@/lib/ipc";
@@ -40,6 +41,7 @@ export function AboutTab() {
 
   return (
     <div className="space-y-7 text-[13px]">
+      <img src={logoUrl} alt="" aria-hidden="true" className="size-14" draggable={false} />
       <Section title="Chronos Private Calendar" description={t("Calendario local, privado y cifrado. Sin cuentas, sin nube y sin telemetría.")}>
         <Row label={t("Versión")}>
           <span className="text-muted">{info?.version ?? "…"}</span>

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { Eye, EyeOff, Lock, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import logoUrl from "@/assets/logo.svg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { errorMessage } from "@/lib/ipc";
@@ -50,9 +51,7 @@ export function UnlockScreen({ mode }: { mode: "setup" | "locked" }) {
         onSubmit={onSubmit}
         className="w-[380px] rounded-2xl border border-border bg-background p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.18)]"
       >
-        <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-xl bg-foreground text-background">
-          {isSetup ? <ShieldCheck className="size-5" /> : <Lock className="size-5" />}
-        </div>
+        <img src={logoUrl} alt="" aria-hidden="true" className="mb-6 size-12 -translate-x-1 drop-shadow-sm" draggable={false} />
         <h1 className="text-xl font-semibold tracking-tight">
           {isSetup ? t("Protege tu calendario") : t("Chronos está bloqueado")}
         </h1>
