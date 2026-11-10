@@ -20,6 +20,7 @@ import { usePrefsStore } from "@/stores/prefsStore";
 import { toast } from "@/stores/toastStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { autoCheckForUpdates } from "@/features/updates/updateStore";
 import { RightPanel } from "./RightPanel";
 import { Sidebar } from "./Sidebar";
 import { t } from "@/i18n";
@@ -40,6 +41,11 @@ export function AppShell() {
   useEffect(() => {
     load().catch((e) => toast.error(errorMessage(e)));
   }, [load]);
+
+  // Solo si el usuario activó la comprobación diaria (Configuración → Acerca de).
+  useEffect(() => {
+    void autoCheckForUpdates();
+  }, []);
 
   const onLock = useCallback(async () => {
     try {

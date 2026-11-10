@@ -35,6 +35,10 @@ pub fn run() {
         // Solo para abrir la página de donaciones desde Rust (URL fija); el
         // frontend no tiene permisos `opener:*`.
         .plugin(tauri_plugin_opener::init())
+        // Actualizaciones: solo desde los comandos `update_*` de Rust, cuando el
+        // usuario lo pide; el frontend no tiene permisos `updater:*`.
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(commands::update::PendingUpdate::default())
         .setup(|app| {
             // Carpeta LOCAL (no "roaming"): en Windows, %LOCALAPPDATA% no se
             // sincroniza con perfiles móviles del dominio.
@@ -98,6 +102,8 @@ pub fn run() {
             commands::about::app_about,
             commands::about::open_donation_link,
             commands::about::app_set_language,
+            commands::update::update_check,
+            commands::update::update_install,
         ])
         .run(tauri::generate_context!());
 

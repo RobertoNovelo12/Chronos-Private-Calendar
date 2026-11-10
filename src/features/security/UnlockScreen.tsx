@@ -106,7 +106,7 @@ export function UnlockScreen({ mode }: { mode: "setup" | "locked" }) {
         <Button type="submit" size="lg" className="mt-6 w-full" disabled={!canSubmit}>
           {busy ? (isSetup ? t("Creando bóveda cifrada…") : t("Descifrando…")) : isSetup ? t("Crear y entrar") : t("Desbloquear")}
         </Button>
-        <p className="mt-4 text-center text-[11px] text-muted">{t("Sin cuenta · Sin conexión · Tus datos no salen de este equipo")}</p>
+        <p className="mt-4 text-center text-[11px] text-muted">{t("Sin cuenta · Sin servidores · Tus datos no salen de este equipo")}</p>
         <div className="mt-3 flex justify-center">
           <LanguageSelect compact />
         </div>

@@ -10,6 +10,7 @@ import type {
   NewTask,
   SeriesSnapshot,
   Task,
+  UpdateInfo,
   TaskPatch,
   BackupInfo,
   BackupRecord,
@@ -139,6 +140,12 @@ export const api = {
     /** Abre la página de donaciones (URL fija en Rust) en el navegador. */
     openDonation: () => call<void>("open_donation_link"),
   },
+  /** Única conexión de red: solo cuando el usuario lo pide (o lo activa). */
+  updates: {
+    check: () => call<UpdateInfo | null>("update_check"),
+    /** Copia de seguridad, descarga, verificación de firma, instalación y reinicio. */
+    install: () => call<void>("update_install"),
+  },
 };
 
 /** Mensaje por código de error (cuando el texto del backend no está traducido). */
@@ -161,6 +168,10 @@ const CODE_MESSAGES: Record<string, string> = {
   serialization: msg("Error de serialización"),
   internal: msg("Error interno de la aplicación"),
   open_failed: msg("No se pudo abrir el navegador"),
+  update_network: msg("No se pudo conectar con el servidor de actualizaciones"),
+  update_signature: msg("La actualización no tiene una firma válida y no se ha instalado"),
+  update_unsupported: msg("No hay una actualización automática para este sistema"),
+  update_failed: msg("No se pudo completar la actualización"),
 };
 
 /** Prefijos con los que Rust envuelve el detalle («datos no válidos: …»). */

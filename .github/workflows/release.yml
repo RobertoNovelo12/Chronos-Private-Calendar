@@ -58,19 +58,37 @@ jobs:
 
       - run: npm ci
 
+      # Las actualizaciones en línea exigen paquetes firmados (ver README,
+      # «Firmar las actualizaciones»). Sin la clave, se avisa en vez de publicar
+      # algo que las instalaciones existentes no podrían verificar.
+      - name: Comprobar la clave de firma de actualizaciones
+        shell: bash
+        env:
+          KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "::error::Falta el secreto TAURI_SIGNING_PRIVATE_KEY (Settings → Secrets and variables → Actions). Consulta el README."
+            exit 1
+          fi
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Firma los paquetes de actualización y genera latest.json.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
           releaseName: "Chronos Private Calendar ${{ github.ref_name }}"
           releaseBody: |
             Calendario local, privado y cifrado. Sin cuentas, sin servidores, sin telemetría.
-            Consulta docs/USER_GUIDE.md para instalarlo. Los instaladores no están firmados:
-            Windows y macOS mostrarán un aviso la primera vez.
+            Consulta docs/USER_GUIDE.md para instalarlo. Los instaladores no llevan firma de código:
+            Windows y macOS mostrarán un aviso la primera vez. Las actualizaciones desde la app
+            (Configuración → Acerca de) sí van firmadas y se verifican antes de instalarse.
           releaseDraft: true
           prerelease: false
-          args: ${{ matrix.args }}
+          includeUpdaterJson: true
+          args: ${{ matrix.args }} --config src-tauri/tauri.release.conf.json
 
       # Ejecución manual (sin etiqueta): los instaladores quedan como archivos
       # descargables en la propia ejecución de Actions.

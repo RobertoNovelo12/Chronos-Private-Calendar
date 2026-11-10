@@ -295,6 +295,9 @@
   "Apoya el proyecto": {
     "plural": false
   },
+  "Buscar actualizaciones": {
+    "plural": false
+  },
   "Atajos de teclado": {
     "plural": false
   },
@@ -1232,6 +1235,39 @@
   "Se abrirá {url} en tu navegador. Chronos no envía ningún dato: es tu navegador el que carga la página, y la aplicación sigue sin conectarse a internet. Donar no desbloquea ninguna función.": {
     "plural": false
   },
+  "Actualizaciones": {
+    "plural": false
+  },
+  "Chronos solo se conecta a internet cuando buscas actualizaciones: consulta el número de la última versión en GitHub y, si la instalas, la descarga de allí. No envía ningún dato tuyo (GitHub ve tu dirección IP, como cualquier web). Cada actualización se comprueba con la firma del autor antes de instalarse.": {
+    "plural": false
+  },
+  "Buscando…": {
+    "plural": false
+  },
+  "Tienes la última versión ({version}).": {
+    "plural": false
+  },
+  "Versión instalada: {version}": {
+    "plural": false
+  },
+  "Versión {version} disponible": {
+    "plural": false
+  },
+  "Descargando e instalando…": {
+    "plural": false
+  },
+  "Descargar e instalar": {
+    "plural": false
+  },
+  "Antes de instalar se guarda una copia cifrada de tus datos. Chronos se cerrará y volverá a abrirse con la versión nueva.": {
+    "plural": false
+  },
+  "Esta instalación no se actualiza sola (por ejemplo, el paquete .deb). Descarga la versión nueva desde la página de Releases del repositorio.": {
+    "plural": false
+  },
+  "Buscar actualizaciones automáticamente una vez al día al abrir Chronos (desactivado por defecto).": {
+    "plural": false
+  },
   "General": {
     "plural": false
   },
@@ -1452,6 +1488,12 @@
   "Tarea eliminada": {
     "plural": false
   },
+  "Hay una versión nueva de Chronos: {version}": {
+    "plural": false
+  },
+  "Ver": {
+    "plural": false
+  },
   "búsqueda demasiado larga": {
     "plural": false
   },
@@ -1654,6 +1696,18 @@
     "plural": false
   },
   "No se pudo abrir el navegador": {
+    "plural": false
+  },
+  "No se pudo conectar con el servidor de actualizaciones": {
+    "plural": false
+  },
+  "La actualización no tiene una firma válida y no se ha instalado": {
+    "plural": false
+  },
+  "No hay una actualización automática para este sistema": {
+    "plural": false
+  },
+  "No se pudo completar la actualización": {
     "plural": false
   },
   "Error inesperado": {

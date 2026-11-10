@@ -183,6 +183,14 @@ Principio: la aplicación **no se conecta a PayPal**. Solo abre el enlace en el 
 1. ✅ Configuración → General: horario para cada día de la semana en tramos de 30 min, o día libre. Por defecto, lunes a viernes de 9:00 a 18:00; el horario único anterior se migra a todos los días.
 2. ✅ Sombreado de la rejilla según el día (los días libres, enteros).
 
+### 1.2.6 Actualizaciones en línea
+1. ✅ `tauri-plugin-updater` usado solo desde Rust (`update_check`, `update_install`); el frontend no tiene permisos `updater:*`.
+2. ✅ Solo bajo petición (Configuración → Acerca de o `Ctrl+K`), con comprobación diaria **opcional y desactivada por defecto**.
+3. ✅ Dirección fija (`latest.json` de los Releases oficiales) y descargas solo desde ese repositorio; firma minisign verificada con la clave pública del autor.
+4. ✅ Copia cifrada `pre_update` antes de instalar; reinicio automático. Linux: solo AppImage (el `.deb` se reinstala).
+5. ✅ `release.yml` firma los paquetes y publica `latest.json` (secretos `TAURI_SIGNING_PRIVATE_KEY` y `…_PASSWORD`); las compilaciones locales no necesitan la clave.
+6. ✅ Pruebas de privacidad nuevas y SECURITY.md actualizado; textos «sin conexión» corregidos para no prometer de más.
+
 ## Versión 1.3 — Privacidad y comodidad
 
 ### 1.3.1 Desbloqueo con Windows Hello (opcional)
@@ -206,7 +214,7 @@ Principio: la aplicación **no se conecta a PayPal**. Solo abre el enlace en el 
 ### Distribución
 * ⬜ Firma de código de los instaladores (Windows: certificado de firma; macOS: cuenta de desarrollador de Apple y notarización).
 * ⬜ Probar en un Mac real.
-* ⬜ Buscar actualizaciones **solo cuando el usuario lo pide** (única excepción de red del enunciado), con verificación de firma.
+* ✅ Buscar actualizaciones **solo cuando el usuario lo pide** (única excepción de red del enunciado), con verificación de firma (1.2.6).
 
 ### Nuevas plataformas
 * ⬜ Android e iPhone con Tauri 2 (adaptar la interfaz a pantallas táctiles).

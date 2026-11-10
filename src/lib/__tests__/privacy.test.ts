@@ -5,6 +5,8 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { shouldAutoCheck } from "@/features/updates/updateStore";
+import { parsePrefs } from "@/stores/prefsStore";
 
 const root = join(__dirname, "..", "..", "..");
 const read = (p: string) => readFileSync(join(root, p), "utf8");
@@ -62,8 +64,71 @@ describe("privacidad: sin red", () => {
       /analytics|sentry|posthog|mixpanel|segment|amplitude|datadog|bugsnag|firebase|supabase|axios|plugin-http|plugin-updater|plugin-shell/i.test(d),
     );
     expect(suspicious).toEqual([]);
-    const cargo = read("src-tauri/Cargo.toml") + read("crates/chronos-core/Cargo.toml");
-    expect(cargo).not.toMatch(/^(reqwest|hyper|ureq|surf|isahc|tauri-plugin-(http|updater|shell))\s*=/m);
+    // Ningún cliente HTTP directo. La única excepción es el complemento oficial de
+    // actualizaciones, solo en la capa de escritorio (ver «actualizaciones» abajo).
+    const desktop = read("src-tauri/Cargo.toml");
+    const core = read("crates/chronos-core/Cargo.toml");
+    expect(desktop).not.toMatch(/^(reqwest|hyper|ureq|surf|isahc|tauri-plugin-(http|shell|upload|websocket))\s*=/m);
+    expect(core).not.toMatch(/^(reqwest|hyper|ureq|surf|isahc|tokio|tauri[\w-]*)\s*=/m);
+  });
+});
+
+describe("privacidad: actualizaciones (única conexión de red)", () => {
+  const conf = JSON.parse(read("src-tauri/tauri.conf.json"));
+  const updater = conf.plugins.updater;
+
+  it("solo consulta el latest.json de los Releases oficiales, por https", () => {
+    expect(updater.endpoints).toEqual([
+      "https://github.com/RobertoNovelo12/Chronos-Private-Calendar/releases/latest/download/latest.json",
+    ]);
+    expect(JSON.stringify(updater)).not.toMatch(/dangerous/i);
+  });
+
+  it("verifica la firma con la clave pública del autor (fijada)", () => {
+    const decoded = Buffer.from(updater.pubkey, "base64").toString("utf8");
+    expect(decoded).toMatch(/^untrusted comment: minisign public key: 0020B85FAC59BFE2\n/);
+    expect(decoded).not.toMatch(/secret key/i);
+  });
+
+  it("solo descarga desde los Releases oficiales", () => {
+    const rs = read("src-tauri/src/commands/update.rs");
+    expect(rs).toContain(
+      'pub const DOWNLOAD_PREFIX: &str =\n    "https://github.com/RobertoNovelo12/Chronos-Private-Calendar/releases/download/";',
+    );
+    expect(rs).toMatch(/download_url\.as_str\(\)\.starts_with\(DOWNLOAD_PREFIX\)/);
+  });
+
+  it("el frontend no puede usar el actualizador por su cuenta", () => {
+    expect(read("src-tauri/capabilities/default.json")).not.toContain("updater");
+    expect(read("package.json")).not.toContain("plugin-updater");
+  });
+
+  it("solo commands/update.rs usa el actualizador", () => {
+    const rustFiles = (dir: string): string[] =>
+      readdirSync(dir).flatMap((name) => {
+        const p = join(dir, name);
+        if (statSync(p).isDirectory()) return rustFiles(p);
+        return name.endsWith(".rs") ? [p] : [];
+      });
+    const users = rustFiles(join(root, "src-tauri", "src")).filter((f) => /\.updater\(\)|UpdaterExt/.test(readFileSync(f, "utf8")));
+    expect(users.map((f) => f.replace(/\\/g, "/").split("/src-tauri/")[1])).toEqual(["src/commands/update.rs"]);
+  });
+
+  it("la comprobación automática está desactivada por defecto y es como mucho diaria", () => {
+    expect(parsePrefs(null).autoUpdateCheck).toBe(false);
+    expect(parsePrefs(JSON.stringify({ autoUpdateCheck: "sí" })).autoUpdateCheck).toBe(false);
+    const day = 86_400_000;
+    expect(shouldAutoCheck(false, 0, 10 * day)).toBe(false);
+    expect(shouldAutoCheck(true, 10 * day - 1000, 10 * day)).toBe(false);
+    expect(shouldAutoCheck(true, 9 * day, 10 * day)).toBe(true);
+  });
+
+  it("los paquetes firmados solo se generan en la publicación", () => {
+    expect(conf.bundle.createUpdaterArtifacts).toBeUndefined();
+    expect(JSON.parse(read("src-tauri/tauri.release.conf.json"))).toEqual({ bundle: { createUpdaterArtifacts: true } });
+    const wf = read(".github/workflows/release.yml");
+    expect(wf).toContain("--config src-tauri/tauri.release.conf.json");
+    expect(wf).toContain("TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}");
   });
 });
 

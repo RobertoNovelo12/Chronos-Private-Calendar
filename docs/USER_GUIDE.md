@@ -110,9 +110,10 @@ En la barra izquierda, sección **Etiquetas**: **Añadir etiqueta**, doble clic 
 ## 8. Privacidad
 
 - La base de datos completa está cifrada (SQLCipher, AES-256); la clave se deriva de tu contraseña con Argon2id.
-- Chronos no tiene código de red: no hay cuentas, sincronización, estadísticas, anuncios ni informes de errores.
+- No hay cuentas, sincronización, estadísticas, anuncios ni informes de errores. Chronos solo se conecta a internet si buscas actualizaciones (ver abajo).
 - **Eliminar todos mis datos** (Configuración → Privacidad y seguridad): pide escribir ELIMINAR y tu contraseña. Puedes conservar o borrar también las copias.
 
+- **Actualizaciones** (Configuración → Acerca de, o «Buscar actualizaciones» en `Ctrl+K`): pulsa **Buscar actualizaciones**; si hay una versión nueva, **Descargar e instalar** guarda antes una copia cifrada, comprueba la firma del autor, instala y vuelve a abrir Chronos. Puedes activar que lo compruebe solo una vez al día (desactivado por defecto). En Linux se actualiza sola la versión AppImage; el paquete `.deb` se actualiza reinstalándolo.
 - **Configuración → Acerca de** muestra la versión y el repositorio. El botón **Donar con PayPal** es la única opción que abre una página web: lo hace en tu navegador, solo cuando lo pulsas, y Chronos no envía ningún dato.
 
 Detalles técnicos y limitaciones: [SECURITY.md](SECURITY.md).

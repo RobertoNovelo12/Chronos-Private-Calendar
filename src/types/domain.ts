@@ -294,3 +294,15 @@ export interface AboutInfo {
   repository: string;
   donationUrl: string;
 }
+
+// --- Actualizaciones (1.2) ---
+
+export interface UpdateInfo {
+  version: string;
+  currentVersion: string;
+  /** Fecha de publicación (ms UTC), si el servidor la indica. */
+  date: number | null;
+  notes: string | null;
+  /** Falso si esta instalación no puede actualizarse sola (p. ej. un .deb). */
+  canInstall: boolean;
+}

@@ -24,6 +24,7 @@ Sin cuentas, sin servidores, sin telemetría: tus datos no salen de tu equipo.
 * **Navegación con teclado**: `↓`/`Tab` enfoca eventos, flechas para moverse entre ellos, `Enter` abre, `Alt+flechas` los mueve 15 min o un día; foco visible y etiquetas para lectores de pantalla
 * **Horario laboral por día** de la semana (o día libre), sombreado en la rejilla
 * Atajos de teclado (lista completa con `?`)
+* **Actualizaciones en línea** (Configuración → Acerca de): solo cuando las pides —o una vez al día si lo activas—, descargadas de los *Releases* oficiales y **verificadas con la firma del autor**; antes de instalar se guarda una copia cifrada
 * **Tareas** con fecha opcional, prioridad, notas y recordatorios: lista en la barra lateral (vencidas, hoy, próximas, sin fecha, completadas) y en el calendario (Día, Semana, Agenda y recuento en Mes)
 * **Participantes** como nota local (nombre, correo, papel y respuesta); Chronos no envía invitaciones
 * **Etiquetas** de color en los eventos (varias por evento), con creación rápida y filtro desde la barra lateral
@@ -101,6 +102,16 @@ git tag v1.2.0
 git push origin v1.2.0
 ```
 
+### Firmar las actualizaciones
+
+Las instalaciones existentes solo aceptan una actualización si está firmada con la clave del autor. La clave pública va en `src-tauri/tauri.conf.json` (`plugins.updater.pubkey`); la privada **nunca** entra en el repositorio:
+
+1. Se genera una vez: `npx.cmd tauri signer generate -w %USERPROFILE%\.tauri\chronos-updater.key` (guarda el archivo y su contraseña en tu gestor de contraseñas: si se pierden, las instalaciones existentes ya no podrán actualizarse solas).
+2. En GitHub → Settings → Secrets and variables → Actions: `TAURI_SIGNING_PRIVATE_KEY` (contenido del archivo `.key`) y `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`.
+3. Al subir la etiqueta, el flujo firma los paquetes y añade `latest.json` al borrador del *Release*. **Las apps solo ven la versión nueva cuando publicas el borrador** (pulsando *Publish release*).
+
+Las compilaciones locales (`npm run tauri build`) no necesitan la clave: los paquetes firmados solo se generan en la publicación (`src-tauri/tauri.release.conf.json`).
+
 Además, `.github/workflows/ci.yml` compila y ejecuta todas las pruebas en Windows, Linux y macOS en cada `push`.
 
 ## Pruebas
@@ -109,7 +120,7 @@ Además, `.github/workflows/ci.yml` compila y ejecuta todas las pruebas en Windo
 cargo test -p chronos-core      # 70 pruebas: cifrado, migraciones, eventos, recurrencias, recordatorios, tareas,
                                 # etiquetas, participantes, deshacer en series, copias, importar/exportar,
                                 # rendimiento con 20 000 eventos, errores sin datos
-npm.cmd test                    # 159 pruebas: fechas, disposición, repetición, pegar, tareas, etiquetas, intérprete
+npm.cmd test                    # 166 pruebas: fechas, disposición, repetición, pegar, tareas, etiquetas, intérprete
                                 # de fechas y eventos escritos, menú de comandos, navegación con teclado, horario
                                 # laboral, rendimiento, garantías de privacidad y traducciones completas
 node scripts/i18n-check.mjs     # textos sin traducir o con marcadores rotos en cada idioma
@@ -134,7 +145,7 @@ Chronos es gratuito y de código abierto. Si te resulta útil, puedes apoyar su 
 
 **[paypal.me/robertonovelo](https://paypal.me/robertonovelo)**
 
-También desde la app: **Configuración → Acerca de → Donar con PayPal** (abre el enlace en tu navegador; la aplicación no se conecta a internet ni envía datos). Donar no desbloquea ninguna función.
+También desde la app: **Configuración → Acerca de → Donar con PayPal** (abre el enlace en tu navegador; la aplicación no envía datos). Donar no desbloquea ninguna función.
 
 ## Licencia
 

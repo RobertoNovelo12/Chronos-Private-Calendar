@@ -9,4 +9,5 @@ pub mod events;
 pub mod labels;
 pub mod settings;
 pub mod tasks;
+pub mod update;
 pub mod vault;

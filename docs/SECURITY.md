@@ -62,14 +62,22 @@ SQLCipher: PRAGMA key = "x'<DEK en hex>'"   (clave en bruto: sin PBKDF2 adiciona
 
 ## Privacidad: garantías de funcionamiento
 
-* **Sin red en el backend:** ni `chronos-core` ni `src-tauri` dependen de clientes HTTP. Verificable con `cargo tree | grep -Ei "reqwest|hyper|ureq|surf"` (sin resultados).
+* **Sin red en el núcleo:** `chronos-core` (datos, cifrado, copias) no depende de ningún cliente HTTP ni de Tauri. Verificable con `cargo tree -p chronos-core | grep -Ei "reqwest|hyper|ureq|surf"` (sin resultados).
+* **Única conexión de red: actualizaciones (desde 1.2)**, en `src-tauri/src/commands/update.rs` con `tauri-plugin-updater`:
+  * Solo cuando el usuario pulsa **Buscar actualizaciones**, o una vez al día si activa la casilla correspondiente (**desactivada por defecto**).
+  * Solo consulta `https://github.com/RobertoNovelo12/Chronos-Private-Calendar/releases/latest/download/latest.json` (fijo en `tauri.conf.json`) y solo descarga desde `…/releases/download/` del mismo repositorio; cualquier otra dirección se rechaza.
+  * Es una petición anónima: no se envía ningún dato del calendario, identificador ni estadística. GitHub ve la dirección IP y la versión del sistema (como en cualquier descarga).
+  * El paquete se verifica con **minisign** contra la clave pública incluida en la app (ID `0020B85FAC59BFE2`) **antes** de instalarlo; si la firma no coincide, se descarta. La clave privada no está en el repositorio: solo en el equipo del autor y como secreto cifrado de GitHub Actions.
+  * Antes de instalar se crea una copia cifrada `pre_update` (si la app está desbloqueada); sin copia no se instala.
+  * El frontend no tiene permisos `updater:*`: solo puede llamar a `update_check` y `update_install`, que no aceptan direcciones ni parámetros.
+  * `privacy.test.ts` falla si cambia la dirección, la clave pública, los permisos, el valor por defecto de la comprobación automática o si otro código usa el actualizador.
 * **CSP de producción** (`tauri.conf.json`): `default-src 'self'`, `connect-src ipc: http://ipc.localhost` (solo el puente interno de Tauri), sin `frame-src`, `object-src`, ni formularios hacia fuera.
 * **Sin recursos remotos:** fuentes e iconos van dentro del binario.
 * **Capacidades mínimas de Tauri:** `core:default` y `notification:default` (notificaciones locales); el frontend no tiene acceso a shell, sistema de archivos, HTTP, apertura de enlaces ni actualizador.
 * **Selector de archivos solo desde Rust:** `tauri-plugin-dialog` se usa en los comandos de Rust; el frontend no recibe el permiso `dialog:*` ni puede elegir rutas de escritura: solo decide formato y qué exportar. Las rutas de lectura que vuelven del selector se validan otra vez (extensión, tamaño máx. 20 MB, máx. 50 000 eventos).
 * **Sin telemetría, analítica, informes de errores remotos ni publicidad.**
 * **Única acción que abre un sitio externo: «Donar con PayPal»** (Configuración → Acerca de). La inicia siempre el usuario con un clic; Rust abre en el navegador del sistema la URL fija `https://paypal.me/robertonovelo` mediante `tauri-plugin-opener`. El frontend no tiene permisos `opener:*`, por lo que no puede abrir otras direcciones, y Chronos no envía ningún dato: es el navegador el que carga la página. Las pruebas (`privacy.test.ts`) fallan si cambia la URL, si se concede `opener` al frontend o si otro código abre enlaces.
-* **Prueba realizada (Fase 2):** con la aplicación en ejecución en Linux, `ss -tunp` no mostró ninguna conexión TCP/UDP del proceso; solo sockets Unix locales entre los procesos de WebKit.
+* **Prueba realizada (Fase 2):** con la aplicación en ejecución en Linux, `ss -tunp` no mostró ninguna conexión TCP/UDP del proceso; solo sockets Unix locales entre los procesos de WebKit. (Desde 1.2 sigue siendo así mientras no se busquen actualizaciones.)
 * **Logs:** solo locales (salida estándar; nivel con `CHRONOS_LOG`). Registran códigos de error, identificadores y recuentos, nunca títulos, descripciones, ubicaciones, contraseñas ni claves.
 
 ### WebView en Windows
@@ -104,6 +112,6 @@ Exige escribir `ELIMINAR` y la contraseña. Orden: se verifica la contraseña, s
 ## Distribución (versión 1.0)
 
 * **Instaladores sin firma.** Windows SmartScreen y macOS Gatekeeper muestran un aviso la primera vez. Comprueba que descargas el instalador desde la página *Releases* del repositorio oficial.
-* **WebView2 en Windows.** El instalador incluye el *bootstrapper* de Microsoft: solo si el equipo no tiene WebView2 (Windows 10/11 ya lo traen) lo descarga de Microsoft **durante la instalación**. La aplicación instalada no se conecta a internet.
+* **WebView2 en Windows.** El instalador incluye el *bootstrapper* de Microsoft: solo si el equipo no tiene WebView2 (Windows 10/11 ya lo traen) lo descarga de Microsoft **durante la instalación**. La aplicación instalada solo se conecta a internet para buscar actualizaciones cuando el usuario lo pide.
 * **Revisión de dependencias** (noviembre de 2026): `npm audit` y `cargo audit` sin vulnerabilidades. `cargo audit` señala 5 avisos de mantenimiento (`proc-macro-error`, `zbus_names`, `zvariant`, `zvariant_derive`, `glib`), todos en dependencias de Tauri exclusivas de Linux (GTK/D-Bus), sin uso en la versión de Windows.
 * **Prueba sin red** (Fase 7): la aplicación instalada se ejecutó en un espacio de red aislado (solo `lo`, apagada) y funcionaron desbloqueo, creación de eventos, copias automáticas y manuales, y restauración.

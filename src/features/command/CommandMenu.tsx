@@ -18,6 +18,7 @@ import {
   Moon,
   PanelLeft,
   PanelRight,
+  RefreshCw,
   Search,
   Settings,
   ShieldCheck,
@@ -28,6 +29,7 @@ import {
 } from "lucide-react";
 import { createEventNow, createQuickEvent } from "@/features/events/actions";
 import { createTask } from "@/features/tasks/actions";
+import { useUpdateStore } from "@/features/updates/updateStore";
 import { useCalendarMap } from "@/hooks/useCalendarData";
 import { rankCommands } from "@/lib/commands";
 import { eventStart, formatEventTime, formatLongDate, formatMediumDate, formatTime, localeDayFirst } from "@/lib/dates";
@@ -131,6 +133,15 @@ function useActions(onLock: () => void, close: () => void): Action[] {
       { id: "settings-data", key: msg("Configuración: Importar y exportar"), icon: Database, run: settings("data") },
       { id: "settings-privacy", key: msg("Configuración: Privacidad y seguridad"), icon: ShieldCheck, keywords: [msg("Cambiar contraseña")], run: settings("privacy") },
       { id: "settings-about", key: msg("Configuración: Acerca de"), icon: Info, keywords: [msg("Apoya el proyecto"), "PayPal"], run: settings("about") },
+      {
+        id: "updates",
+        key: msg("Buscar actualizaciones"),
+        icon: RefreshCw,
+        run: () => {
+          ui().openSettings("about");
+          void useUpdateStore.getState().check();
+        },
+      },
       { id: "shortcuts", key: msg("Atajos de teclado"), icon: Keyboard, hint: ["?"], run: () => ui().setShortcutsOpen(true) },
       { id: "theme-light", key: msg("Tema: Claro"), icon: Sun, run: () => useThemeStore.getState().setPreference("light") },
       { id: "theme-dark", key: msg("Tema: Oscuro"), icon: Moon, run: () => useThemeStore.getState().setPreference("dark") },

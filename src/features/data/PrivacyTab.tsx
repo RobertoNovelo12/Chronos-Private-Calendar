@@ -22,7 +22,7 @@ export function PrivacyTab() {
         description={
           <Rich
             text={t(
-              "La base de datos de este equipo está cifrada por completo con SQLCipher. La clave se deriva de tu contraseña con Argon2id y nunca se guarda en claro. Chronos no se conecta a internet ni envía estadísticas. Las exportaciones ICS, JSON y CSV <b>no</b> van cifradas: guárdalas en un lugar seguro.",
+              "La base de datos de este equipo está cifrada por completo con SQLCipher. La clave se deriva de tu contraseña con Argon2id y nunca se guarda en claro. Chronos no envía estadísticas ni tus datos a ningún sitio, y solo se conecta a internet si buscas actualizaciones. Las exportaciones ICS, JSON y CSV <b>no</b> van cifradas: guárdalas en un lugar seguro.",
             )}
           />
         }

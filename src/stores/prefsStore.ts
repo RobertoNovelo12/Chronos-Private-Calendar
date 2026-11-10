@@ -56,6 +56,8 @@ export interface Prefs {
   rightPanelOpen: boolean;
   /** Segunda columna de horas en la rejilla (zona IANA) o null. */
   secondaryTimeZone: string | null;
+  /** Buscar actualizaciones una vez al día al abrir (desactivado por defecto: es una conexión de red). */
+  autoUpdateCheck: boolean;
 }
 
 const KEY = "chronos.prefs";
@@ -72,6 +74,7 @@ const DEFAULTS: Prefs = {
   leftSidebarOpen: true,
   rightPanelOpen: true,
   secondaryTimeZone: null,
+  autoUpdateCheck: false,
 };
 
 function load(): Prefs {
@@ -112,6 +115,7 @@ export function parsePrefs(raw: string | null): Prefs {
     if (!Number.isInteger(p.customDays) || p.customDays < 2 || p.customDays > MAX_CUSTOM_DAYS) p.customDays = 3;
     if (p.secondaryTimeZone !== null && typeof p.secondaryTimeZone !== "string") p.secondaryTimeZone = null;
     if (p.timeFormat !== "12h" && p.timeFormat !== "24h") p.timeFormat = "12h";
+    if (typeof p.autoUpdateCheck !== "boolean") p.autoUpdateCheck = false;
     return p;
   } catch {
     return DEFAULTS;
